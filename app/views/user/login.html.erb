@@ -1,0 +1,14 @@
+<%= form_tag("/login", id: "login-form", method: 'post', enctype: 'multipart/form-data') do %>
+
+<%= text_field(:user, :username, :helpText=> "Enter Username", 
+    :textCase => "lower",
+    :field_type => "password",
+    :tt_pageonload=>"loadBarcodePage") %><br>
+<label for="user_password">Password</label>
+<%= password_field(:user, :password, :helpText => "Enter Password", 
+    :textCase => "lower",
+    :field_type => "password") %><br>
+<label for="user_location">Location</label>
+<%= text_field_tag('location_name', '', :helpText=> "Scan location barcode", :tt_pageonload=>"loadBarcodePage") %><br>
+
+<%end%>

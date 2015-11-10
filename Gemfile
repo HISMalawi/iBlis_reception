@@ -38,3 +38,9 @@ gem 'spring',        group: :development
 # Use debugger
 # gem 'debugger', group: [:development, :test]
 
+gem 'passenger'
+gem 'mysql'
+gem 'mysql2'
+
+#gem 'bcrypt-ruby', :require => 'bcrypt' 
+gem 'bcrypt'
