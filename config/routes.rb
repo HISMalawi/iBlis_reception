@@ -1,5 +1,13 @@
 Rails.application.routes.draw do
 
+  ############## people controller ####################
+  get 'people/find'
+  post 'people/search'
+  post '/people_search_results' => 'people#people_search_results'
+  get 'people/given_names'
+  get 'people/family_names'
+  ############## end people controller ####################
+
   ############## user controller ####################
   get '/login' => 'user#login'
   post '/login' => 'user#login'
