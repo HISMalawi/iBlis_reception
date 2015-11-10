@@ -1,0 +1,19 @@
+
+<script type="text/javascript">
+  var tt_cancel_destination = "/"
+</script>
+
+<%= form_tag("/people_search_results", id: "search-form", method: 'post', enctype: 'multipart/form-data') do %>
+  <%= text_field(:name, 'given_name', {:field_type => 'alpha', 
+      :helpText => 'First name', 
+      :ajaxURL => '/people/given_names?search_string=', 
+      :allowFreeText => true })%>
+  <%= text_field(:name, 'family_name', {:field_type => 'alpha', 
+      :helpText => 'Last name', 
+      :ajaxURL => '/people/family_names?search_string=', 
+      :allowFreeText => true })%>
+  <%= select_tag(:gender, options_for_select({"" => "", "Male" => "0", "Female" => "1"}), {:helpText => "Gender"})%>
+
+<%= hidden_field_tag :create_patient, params[:create_patient] %>
+<%= hidden_field_tag :relation, params[:relation] %>
+<% end %>
