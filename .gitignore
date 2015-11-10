@@ -1,0 +1,16 @@
+.DS_Store
+*.swp
+*.swo
+config/database.yml
+config/email.yml
+config/application.yml
+config/settings.yml
+config/secrets.yml
+schema.rb
+*~
+Gemfile.lock
+log/*
+.idea/*
+.ruby-version
+tmp/*
+tmp/pids/*
