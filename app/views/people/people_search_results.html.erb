@@ -138,6 +138,11 @@ td {
 <script>
 
 function newPatient() {
+  <%unless @patients.blank?%>
+    document.location = "/people/new?given_name=<%=@patients.first.name.split(' ')[0]%>&?family_name=<%=@patients.first.name.split(' ')[1]%>&gender=<%=@patients.first.gender%>";
+  <%else%>
+    document.location = "/people/new"
+  <%end%>
 }
 
 

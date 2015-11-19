@@ -1,11 +1,17 @@
 Rails.application.routes.draw do
 
+  ############## test controller ####################
+  get 'tests/:status' => 'test#index'
+  ############## test controller end ####################
+
   ############## people controller ####################
   get 'people/find'
-  post 'people/search'
+  post 'people/create'
   post '/people_search_results' => 'people#people_search_results'
   get 'people/given_names'
   get 'people/family_names'
+  get 'people/new'
+  get 'people/addresses'
   ############## end people controller ####################
 
   ############## user controller ####################
