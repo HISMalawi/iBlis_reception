@@ -1,0 +1,80 @@
+
+<style>
+
+    li {
+        color: black;
+        font-family: "Nimbus Sans L","Arial Narrow",sans-serif;
+        font-size: 1.5em;
+        list-style: outside none none;
+        margin-bottom: 5px;
+        margin-top: 5px;
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+</style>
+
+
+
+<script>
+  var tt_cancel_destination = "/";
+  selectAll = false;
+  var skipped = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+  function seen(page) {
+    return;
+    for (var i = page; i >= 0; i--) {
+      skipped[i] = 1;
+    }
+  }
+
+  function set_ajaxURL_for_suggestions(url, filter_value) {
+      $('touchscreenInput'+tstCurrentPage).setAttribute('ajaxURL', url + filter_value + "&search_string=");
+      listSuggestions(tstCurrentPage);
+  }
+
+</script>
+
+
+<%= form_tag("/test/create", id: "create-form", method: 'post', enctype: 'multipart/form-data') do %>
+
+<input type="hidden" name="patient_id" value="<%= params[:patient_id]%>" />
+
+<%= select_tag "visit_type", options_for_select(@visit_types),
+        {:helpText => 'Visit type',
+        :id => "visit_type",
+        :tt_requireNextClick => false,
+        :tt_onLoad => "__$('keyboard').style.display = 'none'; $('nextButton').style.display = 'none'; seen(tstCurrentPage)"
+        }%>
+
+<%= text_field_tag "ward", nil,
+        {:id => 'ward',
+        :tt_requireNextClick => false,
+        :field_type => 'alpha',
+        :tt_pageStyleClass => "azButton",
+        :helpText => 'Requesting ward/location',
+        :ajaxURL => '',
+        :tt_onLoad => "set_ajaxURL_for_suggestions('/people/ward?filter_value=' ,document.getElementById('visit_type').value);$('nextButton').style.display = 'none';"
+        } %>
+
+<%= text_field_tag "clinician",  nil,
+        {:id => 'clinician',
+        :helpText => 'Requesting clinician',
+        :tt_onLoad => "$('nextButton').style.display = 'inline';"
+        }%>
+
+<%= select_tag "specimen_type", options_for_select(@specimen_types),
+        {:helpText => 'Specimen type',
+        :id => "specimen_type",
+        :tt_requireNextClick => false,
+        :tt_onLoad => "__$('nextButton').style.display = 'none'; seen(tstCurrentPage)"
+        }%>
+
+<%= select_tag 'test_types[]', nil,
+        :helpText => "Select test types" ,
+        :tt_onLoad => "__$('nextButton').style.display = 'inline';
+                __$('keyboard').style.display = 'block'; set_ajaxURL_for_suggestions('/test/types?filter_value=' ,document.getElementById('specimen_type').value);",
+        :multiple =>  true,
+        :tt_pageStyleClass => "longSelectList"
+%>
+
+<% end %>

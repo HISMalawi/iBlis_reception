@@ -31,12 +31,23 @@ class PeopleController < ApplicationController
   end
 
   def create
-    Patient.create(:name => "#{params[:person]['names']['given_name']} #{params[:person]['names']['family_name']}",
+    patient = Patient.create(:name => "#{params[:person]['names']['given_name']} #{params[:person]['names']['family_name']}",
       :created_by => User.current.id,:address => params[:person]['addresses']['physical_address'],
       :phone_number => params[:cell_phone_number],:gender => params[:gender],:patient_number => (Patient.count + 1),
       :dob => calDOB(params),:external_patient_number => "T-#{rand(10000).to_s.rjust(9,'0')}")
 
-    redirect_to '/'
+    redirect_to "/test/new?patient_id=#{patient.id}"
+  end
+
+  def ward
+    visit_id = (params[:filter_value])
+    wards = Ward.find_by_sql("SELECT * FROM wards WHERE id IN (SELECT ward_id FROM visittype_wards WHERE visit_type_id = #{visit_id})").map(&:name).uniq
+    if wards.include?("Facilities")
+      wards += Ward.find_by_sql("SELECT name from facilities").map(&:name)
+    end
+
+    wards = wards.reject{|w| !w.match(/#{params[:search_string]}/i) || w.match(/^facilities$/i)}
+    render :text => "<li>" + wards.uniq.map{|n| n } .join("</li><li>") + "</li>"
   end
 
   private

@@ -120,17 +120,22 @@ body {
 </div>
 
 
+<script>
+    function popup(){
+        var popup =  document.createElement("popup");
+        popup.id = "popup";
+        popup.style.display = "absolute";
+        document.appendChild(popup);
 
+    }
+</script>
 <div class="tests-div">
   <div class="row header-row">
     <div class="left primary-row" style="width: 15%;">
       <label><b>Date Ordered</b></label>
     </div>
-    <div class="middle-1 primary-row" style="width: 7%;">
+    <div class="middle-1 primary-row" style="width: 8%;">
       <label><b>Patient No.</b></label>
-    </div>
-    <div class="middle-2 primary-row" style="width: 6%;">
-      <label><b>Visit No.</b></label>
     </div>
     <div class="middle-3 primary-row" style="width: 20%;">
       <label><b>Patient name</b></label>
@@ -144,44 +149,41 @@ body {
     <div class="middle-6 primary-row" style="width: 15%;">
       <label><b>Test Location</b></label>
     </div>
-    <div class="right primary-row" style="width: 18%">
+    <div class="right primary-row" style="width: 16%">
       <label><b>Test Status:</b></label>
     </div>
   </div>
 
-  <%(@tests || {}).each do |test_id, specimens|%>
-    <%(specimens.values || []).each do |specimen_tests|%>
-      <%(specimen_tests.values || []).each do |test|%>
-        <div class="row" onclick="javascript:alert('<%=test_id%>');">
+  <%(@tests || {}).each do |specimen_id, tests| %>
+
+      <%(tests || {}).each do |name, test|%>
+        <div class="row <%= cycle('even', 'odd')%>" onclick="javascript:alert('<%=test[:test_id]%>');">
           <div class="left" style="width: 15%;">
             <label class="data"><%=test[:date_ordered]%></label>
           </div>
-          <div class="middle-1" style="width: 7%;">
+          <div class="middle-1" style="width: 8%;">
             <label class="data"><%=test[:patient_number]%></label>
-          </div>
-          <div class="middle-2" style="width: 6%;">
-            <label class="data"><%=test[:visit_number]%></label>
           </div>
           <div class="middle-3" style="width: 20%;">
             <label class="data"><%=test[:patient_name]%></label>
           </div>
-          <div class="middle-4" style="width: 12%;">
-            <label class="data"><%=test[:specimen_id]%></label>
+          <div class="middle-4" style="width: 12%">
+            <label class="data"><%=test[:accession_number]%></label>
           </div>
           <div class="middle-5" style="width: 20%;">
-            <label class="data"><%=test[:specimen_name]%></label>
+            <label class="data"><%=name%></label>
           </div>
           <div class="middle-6" style="width: 15%;">
             <label class="data"><%=test[:location]%></label>
           </div>
-          <div class="right" style="width: 18%">
+          <div class="right" style="width: 16%">
             <label class="data"><%=test[:specimen_status]%></label>
           </div>
         </div>
         <%break%>
       <%end%>
     <%end%>
-  <%end%>
+
 
 </div>  
 
@@ -192,7 +194,8 @@ body {
 
 <style>
 .primary-row {
-  background-color: transparent !important;
+    background-color: lightgray;
+
 }
 
 .tests-div {
@@ -204,9 +207,10 @@ body {
 }
 
 .row div {
+  cursor: pointer;
   border-spacing: 0px;
-  padding-top: 2%;
-  background-color: #ddd;
+  padding-top: 1.2%;
+  padding-bottom: 1.2%;
   border-style: solid;
   border-width: 1px 0px 0px 0px;
   padding-left: 2px;
@@ -222,5 +226,12 @@ body {
 
 .data {
   padding-left: 10px;
+}
+
+.even{
+    background-color: transparent !important;
+}
+.odd{
+    background-color: white;
 }
 </style>

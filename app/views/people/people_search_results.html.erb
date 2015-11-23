@@ -113,7 +113,7 @@ td {
       </thead>
       <tbody>
       <%(@patients || []).each do |patient|%>
-      <tr onmousedown="alert('<%=patient.patient_number%>')">
+      <tr onmousedown="window.location = 'test/new?patient_id=<%= patient.id%>'">
         <td><%=patient.patient_number%></td>
         <td><%=patient.external_patient_number%></td>
         <td><%=patient.name%></td>
