@@ -17,6 +17,9 @@ Rails.application.routes.draw do
   get 'people/new'
   get 'people/addresses'
   get 'people/ward'
+  get 'people/view'
+  get 'people/barcode'
+
   ############## end people controller ####################
 
   ############## user controller ####################

@@ -56,6 +56,32 @@ class PeopleController < ApplicationController
     render :text => "<li>" + wards.uniq.map{|n| n } .join("</li><li>") + "</li>"
   end
 
+  def view
+    @patient = Patient.find(params[:patient_id])
+    render :layout => false
+  end
+
+  def barcode
+    patient = Patient.find(params["patient_id"])
+    s = "N
+          q801
+          Q329,026
+          ZT
+          B50,180,0,1,4,15,120,N,'#{patient.external_patient_number}'
+          A35,30,0,2,2,2,N,'#{patient.name}'
+          A35,76,0,2,2,2,N,'#{patient.external_patient_number} (#{patient.dob})'
+          P1
+        "
+    send_data(s,
+              :type=>"application/label; charset=utf-8",
+              :stream=> false,
+              :filename=>"#{patient.external_patient_number}.lbl",
+              :disposition => "inline"
+    ) and return
+
+    redirect_to request.referrer
+  end
+
   private
 
   def calDOB(params)
