@@ -1,5 +1,11 @@
 class PeopleController < ApplicationController
   def find
+    @patients = Patient.where(:external_patient_number => params[:identifier])
+
+    unless @patients.blank?
+      render :layout => false, :template => '/people/people_search_results'
+    end
+
   end
 
   def family_names
@@ -34,7 +40,7 @@ class PeopleController < ApplicationController
     patient = Patient.create(:name => "#{params[:person]['names']['given_name']} #{params[:person]['names']['family_name']}",
       :created_by => User.current.id,:address => params[:person]['addresses']['physical_address'],
       :phone_number => params[:cell_phone_number],:gender => params[:gender],:patient_number => (Patient.count + 1),
-      :dob => calDOB(params),:external_patient_number => "T-#{rand(10000).to_s.rjust(9,'0')}")
+      :dob => calDOB(params),:external_patient_number => "KJ#{rand(100).to_s.rjust(6,'0')}")
 
     redirect_to "/test/new?patient_id=#{patient.id}"
   end
