@@ -5,5 +5,8 @@ class Test < ActiveRecord::Base
   belongs_to :visit, class_name: 'Visit', foreign_key: "visit_id"
   belongs_to :specimen, class_name: 'Specimen', foreign_key: "specimen_id"
   belongs_to :status, class_name: 'TestStatus', foreign_key: "test_status_id"
-  
+
+  def name
+    self.test_type.name
+  end
 end

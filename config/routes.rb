@@ -4,6 +4,12 @@ Rails.application.routes.draw do
   get 'tests/:status' => 'test#index'
   get 'test/new'
   get 'test/types'
+  get 'test/accept'
+  get 'test/reject'
+  post 'test/do_reject'
+  get 'test/add_test'
+  post 'test/do_add_test'
+  get 'test/view'
   post 'test/create'
 
   ############## test controller end ####################
@@ -18,7 +24,10 @@ Rails.application.routes.draw do
   get 'people/addresses'
   get 'people/ward'
   get 'people/view'
+  get 'people/edit'
+  post 'people/update'
   get 'people/barcode'
+  get 'people/print_barcode'
 
   ############## end people controller ####################
 

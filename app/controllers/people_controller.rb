@@ -1,6 +1,10 @@
 class PeopleController < ApplicationController
   def find
-    @patients = Patient.where(:external_patient_number => params[:identifier])
+    @patients = Patient.where(:external_patient_number => params[:identifier]) #Or search from remote
+
+    if (!params[:identifier].blank? && @patients.length == 1 )
+      redirect_to '/people/view?patient_id=' + @patients.first.id.to_s and return
+    end
 
     unless @patients.blank?
       render :layout => false, :template => '/people/people_search_results'
@@ -42,7 +46,30 @@ class PeopleController < ApplicationController
       :phone_number => params[:cell_phone_number],:gender => params[:gender],:patient_number => (Patient.count + 1),
       :dob => calDOB(params),:external_patient_number => "KJ#{rand(100).to_s.rjust(6,'0')}")
 
-    redirect_to "/test/new?patient_id=#{patient.id}"
+      print_and_redirect("/people/print_barcode?patient_id=#{patient.id}", "/test/new?patient_id=#{patient.id}&return_uri=#{request.referrer}")
+  end
+
+  def print_barcode
+    patient = Patient.find(params[:patient_id])
+    name = patient.name rescue "Unknown"
+    npid = patient.external_patient_number rescue "Unknown"
+    dob = patient.dob.strftime("%d-%m-%Y") rescue "Unknown"
+    s = '
+N
+q801
+Q329,026
+ZT
+B50,180,0,1,4,15,120,N,"' + npid + '"
+A35,30,0,2,2,2,N,"' +  npid + '"
+A35,76,0,2,2,2,N,"' + patient.name + '(' + dob + ')"
+P1'
+
+        send_data(s,
+                  :type=>"application/label; charset=utf-8",
+                  :stream=> false,
+                  :filename=>"#{patient.external_patient_number}#{patient.id}#{rand(10000)}.lbl",
+                  :disposition => "inline"
+        )
   end
 
   def ward
@@ -61,25 +88,45 @@ class PeopleController < ApplicationController
     render :layout => false
   end
 
+  def edit
+    @patient = Patient.find(params[:patient_id])
+  end
+
+  def update
+    Patient.find(params[:patient_id]).update_attributes(
+          :name => "#{params[:given_name]} #{params[:family_name]}",
+          :address => params[:physical_address],
+          :phone_number => params[:cell_phone_number],
+          :gender => params[:gender],
+          :dob => calDOB(params)
+    )
+
+    redirect_to params[:return_uri]
+  end
+
   def barcode
     patient = Patient.find(params["patient_id"])
-    s = "N
-          q801
-          Q329,026
-          ZT
-          B50,180,0,1,4,15,120,N,'#{patient.external_patient_number}'
-          A35,30,0,2,2,2,N,'#{patient.name}'
-          A35,76,0,2,2,2,N,'#{patient.external_patient_number} (#{patient.dob})'
-          P1
-        "
+    name = patient.name rescue "Unknown"
+    npid = patient.external_patient_number rescue "Unknown"
+    dob = patient.dob.strftime("%d-%m-%Y") rescue "Unknown"
+    s = '
+N
+q801
+Q329,026
+ZT
+B50,180,0,1,4,15,120,N,"' + npid + '"
+A35,30,0,2,2,2,N,"' +  npid + '"
+A35,76,0,2,2,2,N,"' + patient.name + '(' + dob + ')"
+P1'
+
     send_data(s,
               :type=>"application/label; charset=utf-8",
               :stream=> false,
-              :filename=>"#{patient.external_patient_number}.lbl",
+              :filename=>"#{patient.external_patient_number}#{patient.id}#{rand(10000)}.lbl",
               :disposition => "inline"
     ) and return
 
-    redirect_to request.referrer
+    redirect_to request.referrer and return
   end
 
   private

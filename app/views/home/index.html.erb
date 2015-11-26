@@ -1,5 +1,6 @@
 
 <%= stylesheet_link_tag 'extras/main-dashboard' %>
+
 <title>iBlis Reception</title>
 <style>
 
@@ -7,9 +8,9 @@
 
 <div class="main-container">
 
-<div class="left-container">
+<div class="panel left-container">
   <div class="left-container-header">
-    Home Page
+    <h3>Home Page</h3>
   </div>
   
   <div class="left-container-barcode-scanner">
@@ -27,7 +28,7 @@
   <!-- buttons start here -->
   <div class="table-container-row">
     <div id="apps" style="width: 100%; text-align: center;" class="table-cell">
-      <div class="button-div app big" onclick="document.location='/people/find'" id="">
+      <div class="button-div app big" onmousedown="document.location='/people/find'" id="">
         <span class="icons"><%= image_tag("extras/person.png", class: "logo") %></span>
         <p>Find/Register patient</p>
       </div>
@@ -36,7 +37,7 @@
 
   <div class="table-container-row">
     <div id="apps" style="width: 100%; text-align: center;" class="table-cell">
-      <div class="button-div app big" onclick="document.location='/tests/all'" id="">
+      <div class="button-div app big" onmousedown="document.location='/tests/all'" id="">
         <span class="icons"><%= image_tag("extras/test-tube-icon.png", class: "logo") %></span> 
         <p>Tests</p>
       </div>
@@ -45,7 +46,7 @@
 
   <div class="table-container-row">
     <div id="apps" style="width: 100%; text-align: center;" class="table-cell">
-      <div class="button-div app big" onclick="document.location='/login'" id="" style="background-color: tomato; color: black;">
+      <div class="button-div app big" onmousedown="document.location='/login'" id="" style="background-color: tomato; color: black;">
         <span class="icons"><%= image_tag("extras/logout.png", class: "logo") %></span> 
         <p>Logout</p>
       </div>

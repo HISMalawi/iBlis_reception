@@ -6,6 +6,15 @@ class ApplicationController < ActionController::Base
   before_filter :check_logged_in, :except => ['login']
 
 
+  def print_and_redirect(print_url, redirect_url, message = "Printing, please wait...", show_next_button = false, patient_id = nil)
+    @print_url = print_url
+    @redirect_url = redirect_url
+    @message = message
+    @show_next_button = show_next_button
+    @patient_id = patient_id
+    render :template => 'print/print', :layout => nil
+  end
+
   protected
 
   def check_logged_in

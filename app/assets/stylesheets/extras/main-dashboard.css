@@ -12,7 +12,6 @@ body {
   float: left;
   width: 75%;
   height:100%;
-  background-color: clear;
   border-style: solid;
   border-width: 1px;
   border-color: blue;
@@ -20,13 +19,11 @@ body {
   border-top-left-radius: 3px;
   border-top-right-radius: 3px;
   padding: 10px 15px;
-  overflow: hidden;
 }
 
 .right-container {
   float: right;
   width: 20%;
-  background-color: clear;
   height:100%;
   border-style: solid;
   border-width: 1px;
@@ -40,13 +37,12 @@ body {
 }
 
 .left-container-header {
-  background-image: linear-gradient(to bottom, #428bca 0px, #357ebd 100%);
-  background-repeat: repeat-x;
   border-top-left-radius: 3px;
   border-top-right-radius: 3px;
+  background-color: #d9edf7;
   box-sizing: border-box;
-  color: white;
-  padding: 2% 1%;
+  color: black;
+  padding: 4px 4px;
 }
 
 

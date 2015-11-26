@@ -75,19 +75,20 @@
     }
 
     .btn-home {
-      background-image: linear-gradient(to bottom, #5cb85c 0px, #5cb85c 100%);
-      background-repeat: repeat-x;
-      border-color: #5cb85c;
-      margin-top: 10px;
-      margin-left: 10px;
-      min-width: 140px;
-      float: left;
-     -moz-user-select: none;
-      border: 0 none;
-      color: white;
-      cursor: pointer;
-      font-weight: bold;
-      height: 80%;
+        background-image: linear-gradient(to bottom, #5cb85c 0px, #5cb85c 100%);
+        background-repeat: repeat-x;
+        border-color: #5cb85c;
+        margin-top: 10px;
+        margin-left: 10px;
+        min-width: 140px;
+        float: left;
+        -moz-user-select: none;
+        border: 0 none;
+        color: white;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 1.4em;
+        height: 80%;
     }
 
     .btn-new-patient {
@@ -103,6 +104,7 @@
       color: white;
       cursor: pointer;
       font-weight: bold;
+      font-size: 1.4em;
       height: 80%;
     }
 
@@ -141,16 +143,6 @@
           <%else%>
           document.location = "/people/new"
           <%end%>
-        }
-
-        function showModal(id){
-            $('#my_modal').attr("patient_number", id);
-            $('#my_modal').modal("show");
-        }
-
-        function hideModal(){
-            $('#my_modal').attr("patient_number", "");
-            $('#my_modal').modal("hide");
         }
 
     </script>
@@ -199,32 +191,6 @@
       <button class="btn-new-patient" onmousedown="newPatient();">New patient</button>
     </div>
 
-    <!-- Modal -->
-    <div id="my_modal" class="modal fade" role="dialog" data-backdrop="static" data-keyboard="false">
-      <div class="modal-dialog">
-
-        <!-- Modal content-->
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
-            <h4 class="modal-title">Actions</h4>
-          </div>
-
-          <div class="modal-body">
-
-            <div class="modal-data">
-              <button onclick="" type="button" class="btn btn-lg btn-success" style="width:25%; font-size: 1.4em;margin-left: 10%"><span>View</span></button>
-              <button onclick="window.location='/test/new?patient_id=' + $('#my_modal').attr('patient_number')" type="button" class="btn btn-lg btn-primary" style="width:25%; font-size: 1.4em;margin-left: 25%"><span>New Test</span></button>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button onclick="hideModal()" type="button" class="btn btn-success">Hide</button>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
- </body>
+  </body>
 
 </html>

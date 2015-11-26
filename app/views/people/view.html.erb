@@ -14,10 +14,10 @@
         padding-top: 0px;
     }
     .footer {
-      bottom: 6px;
+      bottom: 2px;
       height: 100px;
       position: fixed;
-      width: 97.7%;
+      width: 100%;
       background-color: #333333;
       display: block;
       height: 80px;
@@ -37,22 +37,7 @@
       color: white;
       cursor: pointer;
       font-weight: bold;
-      height: 80%;
-    }
-
-    .btn-new-patient {
-      background-image: linear-gradient(to bottom, #5bc0de 0px, #5bc0de 100%);
-      background-repeat: repeat-x;
-      border-color: #5bc0de;
-      margin-top: 10px;
-      margin-left: 10px;
-      min-width: 140px;
-      float: right;
-     -moz-user-select: none;
-      border: 0 none;
-      color: white;
-      cursor: pointer;
-      font-weight: bold;
+      font-size: 1.4em;
       height: 80%;
     }
 
@@ -71,7 +56,10 @@
         height: 20px;
         max-height: 20px;
     }
-
+    .btn-header{
+        font-size: 1.1em;;
+        font-weight: bold;
+    }
 
     </style>
 
@@ -88,26 +76,26 @@
       <div class="panel-primary header header">
 
         </div>
-      <div class="panel-primary header header">
+      <div class="panel-info header header">
         <div class="panel-heading">
           <table class="table" style="margin:0px;padding:0px;border: none;">
             <tr class="row">
                 <td style="width: 80%;padding: 0px;margin: 0px;border: none;">
-                  <h3>Patient Details</h3>
+                  <h3><strong>Patient Details</strong></h3>
                 </td>
               <td style="padding-left: 0px;border: none;">
-              <a style="width: 130px" class="btn btn-lg btn-info" href="/people/edit?patient_id=<%=@patient.id%>">
+              <a style="width: 130px" class="btn btn-lg btn-primary btn-header" href="/people/edit?patient_id=<%=@patient.id%>">
                       Edit
                     </a>
               </td>
               <td style="padding-left: 10px; border: none;">
-                <a style="width: 150px" class="btn btn-lg btn-info" href="/people/barcode?patient_id=<%=@patient.id%>">
+                <a style="width: 150px" class="btn btn-lg btn-primary btn-header" href="/people/barcode?patient_id=<%=@patient.id%>">
                   Print Barcode
                 </a>
               </td>
               <td style="padding-left: 10px; border: none;">
 
-              <a style="width: 130px" class="btn btn-lg btn-info"
+              <a style="width: 130px" class="btn btn-lg btn-primary btn-header"
                        href="/test/new?patient_id=<%=@patient.id%>">
                       New Test
                     </a>
@@ -189,10 +177,10 @@
             </tr>
             <tr class="view">
               <td>
-                <p><strong>E-mail</strong></p>
+                <p><strong>Phone Number</strong></p>
               </td>
               <td>
-                <p ><%= @patient.email %>&nbsp;</p>
+                <p ><%= @patient.phone_number %>&nbsp;</p>
               </td>
               <td style="width: 50%;">
                 &nbsp;
@@ -215,32 +203,7 @@
 </div>
 
     <div class="footer">
-      <button class="btn-home" onmousedown="document.location='/'">|< Back Home</button>
-      <button class="btn-new-patient" onmousedown="newPatient();">New patient</button>
+      <button class="btn-home btn btl-lg btn-success" onmousedown="document.location='/'">|< Back Home</button>
     </div>
 
-    <!-- Modal -->
-    <div id="my_modal" class="modal fade" role="dialog" data-backdrop="static" data-keyboard="false">
-      <div class="modal-dialog">
 
-        <!-- Modal content-->
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
-            <h4 class="modal-title">Actions</h4>
-          </div>
-
-          <div class="modal-body">
-
-            <div class="modal-data">
-              <button onclick="" type="button" class="btn btn-lg btn-success" style="width:25%; font-size: 1.4em;margin-left: 10%"><span>View</span></button>
-              <button onclick="window.location='/test/new?patient_id=' + $('#my_modal').attr('patient_number')" type="button" class="btn btn-lg btn-primary" style="width:25%; font-size: 1.4em;margin-left: 25%"><span>New Test</span></button>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button onclick="hideModal()" type="button" class="btn btn-success">Hide</button>
-          </div>
-        </div>
-
-      </div>
-    </div>
