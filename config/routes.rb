@@ -28,6 +28,7 @@ Rails.application.routes.draw do
   post 'people/update'
   get 'people/barcode'
   get 'people/print_barcode'
+  get 'test/print_accession_number'
 
   ############## end people controller ####################
 

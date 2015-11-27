@@ -105,28 +105,7 @@ P1'
   end
 
   def barcode
-    patient = Patient.find(params["patient_id"])
-    name = patient.name rescue "Unknown"
-    npid = patient.external_patient_number rescue "Unknown"
-    dob = patient.dob.strftime("%d-%m-%Y") rescue "Unknown"
-    s = '
-N
-q801
-Q329,026
-ZT
-B50,180,0,1,4,15,120,N,"' + npid + '"
-A35,30,0,2,2,2,N,"' +  npid + '"
-A35,76,0,2,2,2,N,"' + patient.name + '(' + dob + ')"
-P1'
-
-    send_data(s,
-              :type=>"application/label; charset=utf-8",
-              :stream=> false,
-              :filename=>"#{patient.external_patient_number}#{patient.id}#{rand(10000)}.lbl",
-              :disposition => "inline"
-    ) and return
-
-    redirect_to request.referrer and return
+    print_and_redirect("/people/print_barcode?patient_id=#{params[:patient_id]}", "/people/view?patient_id=#{params[:patient_id]}")
   end
 
   private

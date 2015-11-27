@@ -68,6 +68,7 @@ class TestController < ApplicationController
   end
 
   def create
+
     visit = Visit.new
     visit.patient_id = params[:patient_id]
     visit.visit_type = VisitType::find(params[:visit_type]).name
@@ -116,7 +117,7 @@ class TestController < ApplicationController
       end
     end
 
-    redirect_to "/tests/all"
+    print_and_redirect("/test/print_accession_number?specimen_id=#{specimen.id}", "/tests/all")
   end
 
   def accept
@@ -177,6 +178,47 @@ class TestController < ApplicationController
       end
     end
     @testtypes = tests - already_ordered
+  end
+
+  def print_accession_number
+    specimen = Specimen.find(params[:specimen_id])
+    tests = specimen.tests
+    accession_number = specimen.accession_number
+    npid = tests.first.visit.patient.external_patient_number
+    name = tests.first.visit.patient.name
+    date = tests.first.time.created
+
+    test_names = []
+    panels = []
+    tests.each do |t|
+      next if !t.panel_id.blank?  and panels.include?(t.panel_id)
+      if t.panel_id.blank?
+        test_names << t.name
+      else
+        test_names << TestPanel.find(t.panel_id).panel_type.name
+      end
+
+    end
+
+    tname = test_names.join('&')
+
+    s='
+N
+q500
+Q165,026
+ZT
+B50,105,0,1,4,8,50,N,"' + accession_number + '"
+A35,30,0,2,1,1,N,"' + name + ' ' + npid + '"
+A35,56,0,2,1,1,N,"' + tests + '"
+A35,82,0,2,1,1,N,"' + date + '"
+P1'
+
+    send_data(s,
+              :type=>"application/label; charset=utf-8",
+              :stream=> false,
+              :filename=>"#{specimen.id}-#{rand(10000)}.lbl",
+              :disposition => "inline"
+    )
   end
 
   def do_add_test
