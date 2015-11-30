@@ -1,6 +1,5 @@
 <%= javascript_include_tag "jquery" %>
 <%= javascript_include_tag "bootstrap" %>
-<%= javascript_include_tag "modal" %>
 <%= stylesheet_link_tag "bootstrap" %>
 <style>
 
@@ -105,7 +104,7 @@ body {
 
     <div id="left" style="width: 70%;">
       <span class="icons"><%= image_tag("extras/barcode-2.png", class: "logo") %></span>
-      <input type="text" name="scanned-barcode" id="barcode-txt" />
+      <input type="text" class="barcode" name="scanned-barcode" id="barcode-txt" />
     </div>
 
     <div id="middle" style="text-align: right;">
@@ -113,7 +112,7 @@ body {
     </div>
 
     <div id="right">
-      <select onchange="searchByTestStatus(this.value)" name="test-status" id="test-status">
+      <select onchange="searchByTestStatus(this.value)" name="test-status" id="test-status" onmousedown='$(this).toggleClass("force-open")'>
 
         <option  value='0'>All</option>
         <%(TestStatus.all || []).each do |status|%>
@@ -153,12 +152,13 @@ body {
 <div class="tests-data-div">
 <table class="table" style="width: 100%">
         <%(@tests || []).each do |test|%>
-        <tr class="row <%= cycle('even', 'odd')%>" onmousedown="javascript:showModal('<%=test[:specimen_id]%>',
+        <tr class="row <%= cycle('odd', 'even')%>" onmousedown="javascript:showModal('<%=test[:specimen_id]%>',
                 '<%=test[:specimen_status]%>',
                 '<%=test[:specimen_name]%>',
                 '<%=test[:accession_number]%>',
                 '<%=test[:patient_name]%>',
-                '<%=test[:test_name]%>'
+                '<%=test[:test_name]%>',
+                '<%=test[:test_id]%>'
                 );">
           <td style="width: 14%;">
             <span class="data"><%=test[:date_ordered]%></span>
@@ -252,7 +252,7 @@ body {
 
                 <button id="view"
                         style="display: none"
-                        onmousedown="window.location= '/test/details?specimen_id='+$('#my_modal').attr('specimen_id')"
+                        onmousedown="window.location= '/test/details?test_id='+$('#my_modal').attr('test_id')"
                         type="button"
                         class="btn btn-lg btn-success"
                         style="width:auto; font-size: 1.4em;margin-left: 13px">
@@ -359,7 +359,8 @@ body {
 
 <script>
 
-    function showModal(id, specimen_status, sample_type, accession_number, patient_name, tests_ordered){
+    function showModal(id, specimen_status, sample_type, accession_number, patient_name, tests_ordered, test_id){
+
         $("#name").html(patient_name);
         $("#tests").html(tests_ordered);
         $("#sample_type").html(sample_type);
@@ -368,19 +369,20 @@ body {
 
         $('#my_modal').attr("patient_number", id);
         $('#my_modal').attr("specimen_id", id);
+        $('#my_modal').attr("test_id", test_id);
 
         var actions = ['view', 'accept', 'reject', 'add'];
         var map = {
-                'specimen-not-collected' : ['accept', 'reject', 'add'],
+                'specimen-not-collected' : ['view', 'accept', 'reject', 'add'],
                 'specimen-accepted' : {
-                                        'not-received' : [],
-                                        'pending' : [],
-                                        'started' : [],
-                                        'completed' : [],
-                                        'verified' : []
+                                        'not-received' : ['view'],
+                                        'pending' : ['view'],
+                                        'started' : ['view'],
+                                        'completed' : ['view'],
+                                        'verified' : ['view']
                                     },
                 'specimen-rejected' : [],
-                'not-received' : []
+                'not-received' : ['view']
             };
 
         for(var i = 0; i < actions.length; i++){
@@ -411,13 +413,14 @@ body {
         $("#accession_number").html("&nbsp;");
         $('#my_modal').attr("patient_number", "");
         $('#my_modal').attr("specimen_id", "");
+        $('#my_modal').attr("test_id", "");
 
         $('#my_modal').modal("hide");
     }
 
     function searchByTestStatus(status_id){
         showSpinner(null, false, true);
-        window.location = "/tests/all?test_status_id=" + status_id;
+        window.location = "/tests/all?test_status_id=" + status_id + "&patient_id=<%= params[:patient_id]%>";
     }
 
     function __$(id){
@@ -518,4 +521,34 @@ body {
     }
 
     adjust();
+
+    function checkBarcode(){
+        var node = document.getElementsByClassName('barcode')[0];
+        if(node){
+
+            if (node.value.match(/\$$/)){
+                barcodeScan();
+            }else{
+                if($(".force-open").size() == 0) {
+                    node.focus();
+                }
+                setTimeout(function(){
+                    checkBarcode();
+                }, 200);
+            }
+        }
+    }
+
+    function barcodeScan(){
+        usertext=document.getElementById("barcode-txt");
+        if (usertext.value.match(/.+\$$/i) != null){
+            usertext.value=usertext.value.substring(0,usertext.value.length -1);
+            document.location = "/tests/all?accession_number=" + usertext.value;
+        }
+    }
+
+    setTimeout(function(){
+        checkBarcode();
+    }, 500);
+
 </script>

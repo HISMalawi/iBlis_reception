@@ -1,0 +1,291 @@
+
+
+        <%= javascript_include_tag "jquery" %>
+        <%= javascript_include_tag "bootstrap" %>
+        <%= stylesheet_link_tag "bootstrap" %>
+
+    <style>
+
+    .content{
+        width: 100%;
+        height: 100%;
+        margin-top: 0px;
+        padding-top: 0px;
+    }
+    .footer {
+      bottom: 2px;
+      height: 100px;
+      position: fixed;
+      width: 100%;
+      background-color: #333333;
+      display: block;
+      height: 80px;
+      padding-right: 20px;
+    }
+
+    .btn-home {
+      background-image: linear-gradient(to bottom, #5cb85c 0px, #5cb85c 100%);
+      background-repeat: repeat-x;
+      border-color: #5cb85c;
+      margin-top: 10px;
+      margin-left: 10px;
+      min-width: 140px;
+      float: left;
+      -moz-user-select: none;
+      border: 0 none;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1.4em;
+      height: 80%;
+    }
+
+    .view{
+        font-size: 1.18em;
+        opacity: 0.95;
+        padding: 6px;
+    }
+    .view:hover {
+        background-color: #F5F5F5;
+    }
+
+    .btn-header{
+        font-size: 1.1em;;
+        font-weight: bold;
+    }
+
+    </style>
+
+        <script>
+
+        function newTest() {
+
+            document.location = "/test/new?patient_id=<%= @patient.id%>";
+
+        }
+
+    </script>
+    <div class="content">
+      <div class="panel-primary header header">
+
+        </div>
+      <div class="panel-info header header">
+        <div class="panel-heading">
+          <table class="table" style="margin:0px;padding:0px;border: none;">
+            <tr class="row">
+                <td style="width: 80%;padding: 0px;margin: 0px;border: none;">
+                  <h3><strong>Test Details</strong></h3>
+                </td>
+              <td style="padding-left: 0px;border: none;">
+
+              <td style="padding-left: 10px; border: none;">
+                <a style="width: 250px" class="btn btn-lg btn-primary btn-header" href="/test/specimen_barcode?test_id=<%=@test.id%>">
+                  Print Accession Number
+                </a>
+              </td>
+            </tr>
+          </table>
+
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <div class="display-details">
+          <table class="table pull-left" style="width:48%;font-size: 1.18em;">
+            <tr  class="view">
+                <td>
+                  <p><strong>Test Type</strong></p>
+                </td>
+              <td>
+                <p ><%= @test.test_type.name%></p>
+              </td>
+              <td style="width: 10%;">
+                &nbsp;
+              </td>
+            </tr>
+            <tr class="view">
+              <td>
+                <p ><strong>Date Ordered</strong></p>
+              </td>
+              <td>
+                <p ><%= @test.time_created.strftime("%Y-%m-%d %H:%M:%S") %></p>
+              </td>
+              <td style="width: 10%;">
+                &nbsp;
+              </td>
+            </tr>
+            <tr class="view">
+              <td>
+                <p ><strong>Receipt Date</strong></p>
+              </td>
+              <td>
+                <p ><%= @specimen.time_accepted.strftime("%Y-%m-%d %H:%M:%S") rescue ''%></p>
+              </td>
+              <td style="width: 10%;">
+                &nbsp;
+              </td>
+            </tr>
+            <tr class="view">
+              <td>
+                <p ><strong>Test Status</strong></p>
+              </td>
+              <td>
+                <p ><%= TestStatus.find(@test.test_status_id).name.titleize %>&nbsp;</p>
+              </td>
+              <td style="width: 10%;">
+                &nbsp;
+              </td>
+            </tr>
+            <tr class="view">
+              <td>
+                <p><strong>Request Origin</strong></p>
+              </td>
+              <td>
+                <p> <%= @test.visit.visit_type %>&nbsp;</p>
+              </td>
+              <td style="width: 10%;">
+                &nbsp;
+              </td>
+            </tr>
+
+            <tr class="view">
+              <td>
+                <p><strong>Requesting Ward/Location</strong></p>
+              </td>
+              <td>
+                <p ><%= @test.visit.ward_or_location %>&nbsp;</p>
+              </td>
+              <td style="width: 10%;">
+                &nbsp;
+              </td>
+            </tr>
+
+            <tr class="view">
+              <td>
+                <p><strong>Requesting Physician</strong></p>
+              </td>
+              <td>
+                <p> <%= @test.requested_by %>&nbsp;</p>
+              </td>
+              <td style="width: 10%;">
+                &nbsp;
+              </td>
+            </tr>
+
+            <% if @test.created_by.to_i > 0%>
+                <tr class="view">
+                  <td>
+                    <p><strong>Registered By</strong></p>
+                  </td>
+                  <td>
+                    <p> <%= User.find(@test.created_by).name %>&nbsp;</p>
+                  </td>
+                  <td style="width: 10%;">
+                    &nbsp;
+                  </td>
+                </tr>
+            <% end %>
+
+            <% if @test.tested_by.to_i > 0%>
+                <tr class="view">
+                  <td>
+                    <p><strong>Performed By</strong></p>
+                  </td>
+                  <td>
+                    <p> <%= User.find(@test.tested_by).name %>&nbsp;</p>
+                  </td>
+                  <td style="width: 10%;">
+                    &nbsp;
+                  </td>
+                </tr>
+            <% end %>
+
+          </table>
+
+          <div style="width:48%; font-size: 1.22em" class="pull-right">
+            <div class="panel panel-info">  <!-- Patient Details -->
+              <div class="panel-heading">
+                <h3 class="panel-title">Patient Details</h3>
+              </div>
+              <div class="panel-body">
+                <div class="container-fluid">
+                  <div class="row">
+                    <div class="col-md-3">
+                      <p><strong>Patient No.</strong></p></div>
+                    <div class="col-md-9">
+                      <%= @test.visit.patient.external_patient_number%></div></div>
+                  <div class="row">
+                    <div class="col-md-3">
+                      <p><strong>Patient Name</strong></p></div>
+                    <div class="col-md-9">
+                      <%= @test.visit.patient.name %></div></div>
+                  <div class="row">
+                    <div class="col-md-3">
+                      <p><strong>Age</strong></p></div>
+                    <div class="col-md-9">
+                      <%= @test.visit.patient.age%> yrs</div></div>
+                  <div class="row">
+                    <div class="col-md-3">
+                      <p><strong>Sex</strong></p></div>
+                    <div class="col-md-9">
+                      <%= @test.visit.patient.gender==0?"Male" : "Female"%>
+                    </div></div>
+                </div>
+              </div> <!-- ./ panel-body -->
+              </div>
+              <div class="panel panel-info"> <!-- Specimen Details -->
+                <div class="panel-heading">
+                  <h3 class="panel-title">Specimen Details</h3>
+                </div>
+                <div class="panel-body">
+                  <div class="container-fluid">
+                    <div class="row">
+                      <div class="col-md-4">
+                        <p><strong>Specimen Type</strong></p>
+                      </div>
+                      <div class="col-md-8">
+                        <%= @test.specimen.specimen_type.name%>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-md-4">
+                        <p><strong>Accession Number</strong></p>
+                      </div>
+                      <div class="col-md-8">
+                        <%= @test.specimen.accession_number%>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-md-4">
+                        <p><strong>Specimen Status</strong></p>
+                      </div>
+                      <div class="col-md-8">
+                        <%= SpecimenStatus.find(@test.specimen.specimen_status_id).name.titleize%>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+
+
+          </div>
+      </div>
+  </div>
+</div>
+
+    <% if request.referrer.match(/patient_id/)%>
+        <div class="footer">
+          <button class="btn-home btn btl-lg btn-success" onmousedown="document.location='/tests/all/?patient_id=<%= @patient.id%>'">|< Back</button>
+        </div>
+    <% elsif request.referrer.match(/all/)%>
+        <div class="footer">
+          <button class="btn-home btn btl-lg btn-success" onmousedown="document.location='/tests/all'">|< Back</button>
+        </div>
+    <% else %>
+        <div class="footer">
+          <button class="btn-home btn btl-lg btn-success" onmousedown="document.location='/'">|< Back</button>
+        </div>
+    <% end %>
+
+

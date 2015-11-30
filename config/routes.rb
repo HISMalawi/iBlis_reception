@@ -10,6 +10,7 @@ Rails.application.routes.draw do
   get 'test/add_test'
   post 'test/do_add_test'
   get 'test/view'
+  get 'test/details'
   post 'test/create'
 
   ############## test controller end ####################
@@ -29,6 +30,7 @@ Rails.application.routes.draw do
   get 'people/barcode'
   get 'people/print_barcode'
   get 'test/print_accession_number'
+  get 'test/specimen_barcode'
 
   ############## end people controller ####################
 

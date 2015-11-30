@@ -1,12 +1,30 @@
 class TestController < ApplicationController
   def index
-    if params[:status] == 'all'
-      if params[:test_status_id] and params[:test_status_id].to_i != 0
-        tests = Test.where(:test_status_id => params[:test_status_id]).order("time_created DESC").limit(100)
-      else
-        tests = Test.all().order("time_created DESC").limit(100)
-      end
 
+    accession_number_filter = ""
+
+    unless params[:accession_number].blank?
+      accession_number_filter = " AND tests.specimen_id IN (SELECT id FROM specimens WHERE accession_number = '#{params[:accession_number]}') "
+    end
+
+    if params[:status] == 'all'
+      if params[:patient_id].blank? #pull tests for all patients
+        if params[:test_status_id] and params[:test_status_id].to_i != 0
+          tests = Test.find_by_sql("SELECT * FROm tests WHERE test_status_id = #{params[:test_status_id]} #{accession_number_filter}
+                                    ORDER BY time_created DESC LIMIT 100")
+        else
+          tests = Test.find_by_sql("SELECT * FROM tests WHERE true #{accession_number_filter} ORDER BY time_created DESC LIMIT 100")
+        end
+      else #pull tests for one patient
+        if params[:test_status_id] and params[:test_status_id].to_i != 0
+          tests = Test.find_by_sql("SELECT * FROM tests where test_status_id = #{params[:test_status_id]}
+                              AND visit_id IN  (SELECT id FROM visits WHERE patient_id = #{params[:patient_id]}) #{accession_number_filter}
+                              ORDER BY time_created DESC LIMIT 100")
+        else
+          tests = Test.find_by_sql("SELECT * FROM tests where visit_id IN  (SELECT id FROM visits WHERE patient_id = #{params[:patient_id]}) #{accession_number_filter}
+                              ORDER BY time_created DESC LIMIT 100")
+        end
+      end
     end
     
     @tests = []
@@ -117,7 +135,7 @@ class TestController < ApplicationController
       end
     end
 
-    print_and_redirect("/test/print_accession_number?specimen_id=#{specimen.id}", "/tests/all")
+    print_and_redirect("/test/print_accession_number?specimen_id=#{specimen.id}", "/tests/all?patient_id=#{visit.patient_id}")
   end
 
   def accept
@@ -177,7 +195,7 @@ class TestController < ApplicationController
         end
       end
     end
-    @testtypes = tests - already_ordered
+    @testtypes = (tests - already_ordered).uniq
   end
 
   def print_accession_number
@@ -186,7 +204,7 @@ class TestController < ApplicationController
     accession_number = specimen.accession_number
     npid = tests.first.visit.patient.external_patient_number
     name = tests.first.visit.patient.name
-    date = tests.first.time.created
+    date = tests.first.time_created.strftime("%Y-%m-%d %H:%M:%S")
 
     test_names = []
     panels = []
@@ -200,7 +218,7 @@ class TestController < ApplicationController
 
     end
 
-    tname = test_names.join('&')
+    tname = test_names.uniq.join('&')
 
     s='
 N
@@ -209,7 +227,7 @@ Q165,026
 ZT
 B50,105,0,1,4,8,50,N,"' + accession_number + '"
 A35,30,0,2,1,1,N,"' + name + ' ' + npid + '"
-A35,56,0,2,1,1,N,"' + tests + '"
+A35,56,0,2,1,1,N,"' + tname + '"
 A35,82,0,2,1,1,N,"' + date + '"
 P1'
 
@@ -219,6 +237,12 @@ P1'
               :filename=>"#{specimen.id}-#{rand(10000)}.lbl",
               :disposition => "inline"
     )
+  end
+
+
+  def specimen_barcode
+    test = Test.find(params[:test_id])
+    print_and_redirect("/test/print_accession_number?specimen_id=#{test.specimen.id}", "/test/details?test_id=#{test.id}")
   end
 
   def do_add_test
@@ -258,6 +282,14 @@ P1'
       end
 
     redirect_to params[:return_uri]
+  end
+
+  def details
+    @test = Test.find(params[:test_id])
+    @specimen = @test.specimen
+    @patient = @test.visit.patient
+
+    render :layout => false
   end
 
   private

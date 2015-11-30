@@ -42,7 +42,7 @@
     }
 
     .view, .view-striped {
-        font-size: 20px;
+        font-size: 1.18em;
         opacity: 0.95;
         padding: 6px;
     }
@@ -84,9 +84,14 @@
                   <h3><strong>Patient Details</strong></h3>
                 </td>
               <td style="padding-left: 0px;border: none;">
-              <a style="width: 130px" class="btn btn-lg btn-primary btn-header" href="/people/edit?patient_id=<%=@patient.id%>">
-                      Edit
+              <a style="width: 130px" class="btn btn-lg btn-primary btn-header" href="/tests/all/?patient_id=<%=@patient.id%>">
+                      View Orders
                     </a>
+              </td>
+              <td style="padding-left: 10px;border: none;">
+                <a style="width: 130px" class="btn btn-lg btn-primary btn-header" href="/people/edit?patient_id=<%=@patient.id%>">
+                  Edit
+                </a>
               </td>
               <td style="padding-left: 10px; border: none;">
                 <a style="width: 150px" class="btn btn-lg btn-primary btn-header" href="/people/barcode?patient_id=<%=@patient.id%>">
