@@ -234,7 +234,7 @@ P1'
     send_data(s,
               :type=>"application/label; charset=utf-8",
               :stream=> false,
-              :filename=>"#{specimen.id}-#{rand(10000)}.lbl",
+              :filename=>"#{specimen.id}-#{rand(10000)}.lbs",
               :disposition => "inline"
     )
   end
