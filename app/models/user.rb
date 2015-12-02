@@ -8,27 +8,20 @@ class User < ActiveRecord::Base
   cattr_accessor :login_location
 
   def self.authenticate(username, password)
-		return user = self.where(:username => username).first
-    if !user.blank?
-      user.valid_password?(password) ? user : nil
-		end
 
-	end
-    
-  def encrypted_password
-    self.password
-  end 
+    user = User.where(:username => username).first
 
-  def valid_password?(password)
-    return false if encrypted_password.blank?
-    is_valid = Digest::SHA1.hexdigest("#{password}#{salt}") == encrypted_password || encrypt(password, salt) == encrypted_password || Digest::SHA512.hexdigest("#{password}#{salt}") == encrypted_password
+    if user && user.valid_password?(password)
+      user
+    else
+      nil
+    end
   end
 
-  def encrypt(plain, salt)
-    encoding = ""
-    digest = Digest::SHA1.digest("#{plain}#{salt}") 
-    (0..digest.size-1).each{|i| encoding << digest[i].to_s(16) }
-    encoding
+  def valid_password?(password)
+    laravel_pass = self.password
+    ruby_pass = BCrypt::Password.new laravel_pass.gsub('$2y$','$2a$')
+    ruby_pass.is_password? password
   end
 
 end

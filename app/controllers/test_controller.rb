@@ -67,7 +67,7 @@ class TestController < ApplicationController
     specimen_type_id = (params[:filter_value])
     tests = []
     testtypes = TestType.find_by_sql("SELECT * FROM test_types
-                  WHERE id IN (SELECT test_type_id FROM testtype_specimentypes WHERE specimen_type_id = #{specimen_type_id})")
+                  WHERE orderable_test = 1 AND id IN (SELECT test_type_id FROM testtype_specimentypes WHERE specimen_type_id = #{specimen_type_id})")
     testtypes.each do |type|
       tname = type.name
       tests << tname
@@ -180,7 +180,7 @@ class TestController < ApplicationController
     end
 
     testtypes = TestType.find_by_sql("SELECT * FROM test_types
-                  WHERE id IN (SELECT test_type_id FROM testtype_specimentypes WHERE specimen_type_id = #{@specimen.specimen_type_id})"
+                  WHERE orderable_test = 1 AND id IN (SELECT test_type_id FROM testtype_specimentypes WHERE specimen_type_id = #{@specimen.specimen_type_id})"
     )
 
     tests = []

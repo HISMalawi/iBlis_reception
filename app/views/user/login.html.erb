@@ -12,3 +12,30 @@
 <%= text_field_tag('location_name', '', :helpText=> "Scan location barcode", :tt_pageonload=>"loadBarcodePage") %><br>
 
 <%end%>
+
+<script>
+    var setFocusTimeout = 1000;
+    var checkForBarcodeTimeout = 1500;
+
+    function loadBarcodePage() {
+        window.setInterval("focusForBarcodeInput()", 400);
+        window.setInterval("focusForBarcodeInput()", 400);
+        window.setInterval("moveNext()", 400);
+    }
+
+    function focusForBarcodeInput(){
+        var barcode = document.getElementById("touchscreenInput2");
+        if (barcode) {
+            barcode.focus();
+        }
+    }
+
+
+    function moveNext(){
+        usertext=document.getElementById("touchscreenInput2");
+        if (usertext.value.match(/.+\$$/i) != null){
+            usertext.value=usertext.value.substring(0,usertext.value.length -1);
+            gotoNextPage();
+        }
+    }
+    window.setTimeout("loadBarcodePage()", checkForBarcodeTimeout);</script>
