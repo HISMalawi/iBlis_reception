@@ -296,7 +296,7 @@ P1'
   def new_accession_number
     # Generate the next accession number for specimen registration
 
-    max_acc_num = 1
+    max_acc_num = 0
     return_value = nil
     sentinel = 999999
 
