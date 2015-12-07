@@ -44,3 +44,5 @@ gem 'mysql2'
 
 #gem 'bcrypt-ruby', :require => 'bcrypt' 
 gem 'bcrypt'
+
+gem 'whenever',  :require => false
