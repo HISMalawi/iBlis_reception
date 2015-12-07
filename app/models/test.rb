@@ -7,6 +7,6 @@ class Test < ActiveRecord::Base
   belongs_to :status, class_name: 'TestStatus', foreign_key: "test_status_id"
 
   def name
-    self.test_type.name
+    self.test_type.name rescue nil
   end
 end

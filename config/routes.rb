@@ -31,6 +31,7 @@ Rails.application.routes.draw do
   get 'people/print_barcode'
   get 'test/print_accession_number'
   get 'test/specimen_barcode'
+  get 'api/dashboard_stats'
 
   ############## end people controller ####################
 
