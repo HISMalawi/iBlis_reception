@@ -32,7 +32,9 @@ Rails.application.routes.draw do
   get 'test/print_accession_number'
   get 'test/specimen_barcode'
   get 'api/dashboard_stats'
-
+  get 'api/dashboard_aggregates'
+  post 'api/dashboard_stats'
+  post 'api/dashboard_aggregates'
   ############## end people controller ####################
 
   ############## user controller ####################
