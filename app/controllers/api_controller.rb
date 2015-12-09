@@ -48,7 +48,9 @@ class ApiController < ApplicationController
                     'panel_id' => d[10],
                     'department' => d[11],
                     'last_update_date' => d[12],
-                    'date_ordered' => d[13]
+                    'date_ordered' => d[13],
+                    'priority' => 'S',
+                    'lifespan' => '8'
                   }
       end
 
@@ -59,6 +61,8 @@ class ApiController < ApplicationController
   def dashboard_aggregates
     result = {
         'not-received' => 0,
+        'received' => 0,
+        'ordered' => 0,
         'started' => 0,
         'rejected' => 0,
         'pending' => 0,
@@ -66,8 +70,8 @@ class ApiController < ApplicationController
         'verified' => 0
     }
     file_name = "/tmp/orders_aggregates"
-    departments = params[:department].split(",") rescue []
-    wards = params[:wards].split(",") rescue []
+    departments = params[:department].split(",").collect{|d| d.titleize if d != 'lab_reception'}.compact rescue []
+    wards = params[:ward].split(",") rescue []
 
     if File.exists?("#{file_name}.csv")
       data = CSV.table("#{file_name}.csv")
@@ -77,6 +81,8 @@ class ApiController < ApplicationController
         next if !wards.blank? and !d[3].blank? !wards.include?(d[3])
 
         result['not-received'] += d[4].to_i if !d[0].match(/rejected/i) and d[1].downcase.strip == 'not-received'
+        result['received'] += d[4].to_i if d[0] == 'specimen-accepted' and d[1].downcase.strip == 'pending'
+        result['ordered'] += d[4].to_i if d[0] == 'specimen-not-collected' #and d[1].downcase.strip == 'pending'
         result['started'] += d[4].to_i if !d[0].match(/rejected/i) and d[1].downcase.strip == 'started'
         result['rejected'] += d[4].to_i if d[0].match(/rejected/i)
         result['pending'] += d[4].to_i if !d[0].match(/rejected/i) and d[1].downcase.strip == 'pending'
