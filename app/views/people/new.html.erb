@@ -18,6 +18,7 @@
 
 <script>
   var tt_cancel_destination = "/";
+  var dob_year, dob_day, dob_month;
 
   var skipped = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
@@ -27,7 +28,6 @@
       skipped[i] = 1;
     }
   }
-
 
   function setDOB() {
     try {
@@ -84,10 +84,6 @@
     return true
   }
 
-  function test(){
-  alert($("person_addresses_city_village").value);
-  }
-
   function dateCreate(date_str){
     intyear = 0 ; intmonth = 0 ; intday = 0;
     intyear = parseInt(date_str.substring(0,4))
@@ -109,6 +105,26 @@
         document.getElementById("gender").value = "";
       <% end %>
   }
+
+   function validateDay(){
+       if (__$("tt_page_birth_day") == __$("page" + tstCurrentPage).parentNode){
+           if(validateDOB()){
+                __$('nextButton').onmousedown = function(){
+                    gotoNextPage();
+                }
+           }else{
+               __$('nextButton').onmousedown = function(){
+                   showMessage("Date of birth cannot be in the future!");
+               }
+           }
+       }else{
+           __$('nextButton').onmousedown = function(){
+               gotoNextPage();
+           }
+       }
+   }
+
+   window.setInterval('setDOB(); validateDay()', 250);
 
 </script>
 
@@ -166,13 +182,12 @@
       :tt_onLoad => "$('nextButton').style.display = 'block';", 
       :tt_pageStyleClass => "Numeric NumbersOnly"} %> 
 
-  <%= text_field_tag "person[birth_day]",  nil, :field_type => 'number', :helpText => 'Birth Day', 
+  <%= text_field_tag "person[birth_day]",  nil, :field_type => 'number',
+      :helpText => 'Birth Day',
       :condition => '($("person_birth_year").value != "Unknown") && ($("person_birth_month").value != "Unknown")', 
       :tt_onLoad => "getDayOfMonthPicker($('person_birth_year').value, $('person_birth_month').value);$('nextButton').style.display = 'block';" ,
-      :validationJS => "validateDOB()",:validationMessage => 'Please enter a valid date'%>
-
-
-
+      :validationJS => "validateDOB()",
+      :validationMessage => 'Please enter a valid date'%>
 
   <%= text_field_tag "person[addresses][physical_address]", params[:city_village],
     {

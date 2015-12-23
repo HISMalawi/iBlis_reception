@@ -79,6 +79,12 @@
               <td style="padding-left: 0px;border: none;">
 
               <td style="padding-left: 10px; border: none;">
+                <a style="width: 250px" class="btn btn-lg btn-primary btn-header" href="/people/view?patient_id=<%=@test.visit.patient.id%>">
+                  View Patient
+                </a>
+              </td>
+
+              <td style="padding-left: 10px; border: none;">
                 <a style="width: 250px" class="btn btn-lg btn-primary btn-header" href="/test/specimen_barcode?test_id=<%=@test.id%>">
                   Print Accession Number
                 </a>
@@ -130,7 +136,7 @@
                 <p ><strong>Test Status</strong></p>
               </td>
               <td>
-                <p ><%= TestStatus.find(@test.test_status_id).name.titleize %>&nbsp;</p>
+                <p ><%= TestStatus.find(@test.test_status_id).name.titleize.gsub("Verified", "Authorised") %>&nbsp;</p>
               </td>
               <td style="width: 10%;">
                 &nbsp;
