@@ -15,7 +15,7 @@ Rails.application.config.assets.precompile += %w( autoComplete/* )
 Rails.application.config.assets.precompile += %w( Diagnosis/* )
 =end
 
-Rails.application.config.assets.precompile += %w( extras/* bootstrap* jquery* modal.js)
+Rails.application.config.assets.precompile += %w( extra* extras/* bootstrap* jquery* modal.js)
 
 
 # Add additional assets to the asset load path

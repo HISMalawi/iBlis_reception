@@ -51,10 +51,10 @@ class TestController < ApplicationController
         :accession_number => test.specimen.accession_number,
         :test_id => test.id,
         :specimen_status => test.specimen.status.name,
+        :test_status => test.status.name,
         :patient_name => "#{test.visit.patient.name} (#{test.visit.patient.gender == 0 ? 'M' : 'F'},#{test.visit.patient.age})"}
     end
 
-    render :layout => false
   end
 
   def new

@@ -78,8 +78,14 @@ body {
   display: table-row;
 }
 
-#left, #right, #middle {
+#left, #right, #middle, #next-left {
   display: table-cell;
+}
+
+#next-left input{
+    font-size: 1.4em;
+    margin-left: 80px;
+    margin-top: 20px;
 }
 
 #header div {
@@ -102,9 +108,13 @@ body {
 <div id="header">
   <div id="row">
 
-    <div id="left" style="width: 70%;">
+    <div id="left" style="width: 40%;">
       <span class="icons"><%= image_tag("extras/barcode-2.png", class: "logo") %></span>
       <input type="text" class="barcode" name="scanned-barcode" id="barcode-txt" />
+    </div>
+
+    <div id="next-left" style="width: 30%;">
+      <input type="text" class="barcode" name="search-text" placeholder="Search" id="search" />
     </div>
 
     <div id="middle" style="text-align: right;">
@@ -145,15 +155,16 @@ body {
       <label><b>Test Location</b></label>
     </th>
     <th class="primary-row" style="width: 20%">
-      <label><b>Specimen Status</b></label>
+      <label><b>Test Status</b></label>
     </th>
   </tr>
 </table>
 <div class="tests-data-div">
 <table class="table" style="width: 100%">
         <%(@tests || []).each do |test|%>
-        <tr class="row <%= cycle('odd', 'even')%>" onmousedown="javascript:showModal('<%=test[:specimen_id]%>',
+        <tr class="row hidable <%= cycle('odd', 'even')%>" onmousedown="javascript:showModal('<%=test[:specimen_id]%>',
                 '<%=test[:specimen_status]%>',
+                '<%=test[:test_status]%>',
                 '<%=test[:specimen_name]%>',
                 '<%=test[:accession_number]%>',
                 '<%=test[:patient_name]%>',
@@ -179,7 +190,7 @@ body {
             <span class="data"><%=test[:location]%></span>
           </td>
           <td>
-            <label class="data"><%=test[:specimen_status].sub(/specimen\-/, '')%></label>
+            <label class="data"><%=test[:test_status].sub(/specimen\-/, '')%></label>
           </td>
         </tr>
 
@@ -250,41 +261,41 @@ body {
 
               <div class="modal-data">
 
-                <button id="view"
+                <div id="view"
                         style="display: none"
-                        onmousedown="window.location= '/test/details?test_id='+$('#my_modal').attr('test_id')"
+                        onmousedown="window.location= '/test/details?test_id='+jQuery('#my_modal').attr('test_id')"
                         type="button"
                         class="btn btn-lg btn-success"
                         style="width:auto; font-size: 1.4em;margin-left: 13px">
                         <span>View</span>
-                </button>
+                </div>
 
-                <button id="accept"
+                <div id="accept"
                         style="display: none"
-                        onmousedown="window.location = '/test/accept?specimen_id=' + $('#my_modal').attr('specimen_id')"
+                        onmousedown="window.location = '/test/accept?specimen_id=' + jQuery('#my_modal').attr('specimen_id')"
                         type="button"
                         class="btn btn-lg btn-success"
                         style="width:auto; font-size: 1.4em;margin-left: 13px">
                         <span>Accept</span>
-                </button>
+                </div>
 
-                <button id="reject"
+                <div id="reject"
                         style="display: none"
-                        onmousedown="window.location = '/test/reject?specimen_id=' + $('#my_modal').attr('specimen_id')"
+                        onmousedown="window.location = '/test/reject?specimen_id=' + jQuery('#my_modal').attr('specimen_id')"
                         type="button"
                         class="btn btn-lg btn-danger"
                         style="width:auto; font-size: 1.4em;margin-left: 13px">
                         <span>Reject</span>
-                </button>
+                </div>
 
-                <button id="add"
+                <div id="add"
                         style="display: none"
-                        onmousedown="window.location='/test/add_test?specimen_id=' + $('#my_modal').attr('specimen_id')"
+                        onmousedown="window.location='/test/add_test?specimen_id=' + jQuery('#my_modal').attr('specimen_id')"
                         type="button"
                         class="btn btn-lg btn-primary"
                         style="width:auto; font-size: 1.4em;margin-left: 13px">
                         <span>Add Test</span>
-                </button>
+                </div>
               </div>
             </div>
 
@@ -294,7 +305,16 @@ body {
       </div>
     </div>
 
+<div class="horizontal_line">
+  <hr width="100%" color="gray"/>
+</div>
+<div id="keypad">
+  <span class="keypad">
+  </span>
+</div>
+
 <style>
+
 .primary-row {
     background-color: lightgray;
 
@@ -337,10 +357,8 @@ body {
 
 }
 .data{
-    padding-top: 5px;
-    padding-bottom: 5px;
     padding-left: 11px;
-
+    font-size: 1.2em !important;
 }
 
 .even{
@@ -359,17 +377,18 @@ body {
 
 <script>
 
-    function showModal(id, specimen_status, sample_type, accession_number, patient_name, tests_ordered, test_id){
+    function showModal(id, specimen_status, test_status, sample_type, accession_number, patient_name, tests_ordered, test_id){
 
-        $("#name").html(patient_name);
-        $("#tests").html(tests_ordered);
-        $("#sample_type").html(sample_type);
-        $("#specimen_status").html(specimen_status);
-        $("#accession_number").html(accession_number);
+        jQuery("#name").html(patient_name);
+        jQuery("#tests").html(tests_ordered);
+        jQuery("#sample_type").html(sample_type);
+        jQuery("#specimen_status").html(specimen_status);
+        jQuery("#test_status").html(test_status);
+        jQuery("#accession_number").html(accession_number);
 
-        $('#my_modal').attr("patient_number", id);
-        $('#my_modal').attr("specimen_id", id);
-        $('#my_modal').attr("test_id", test_id);
+        jQuery('#my_modal').attr("patient_number", id);
+        jQuery('#my_modal').attr("specimen_id", id);
+        jQuery('#my_modal').attr("test_id", test_id);
 
         var actions = ['view', 'accept', 'reject', 'add'];
         var map = {
@@ -386,11 +405,11 @@ body {
             };
 
         for(var i = 0; i < actions.length; i++){
-            $("#" + actions[i]).hide();
+            jQuery("#" + actions[i]).hide();
         }
         recursive_hunt(map[specimen_status]);
 
-        $('#my_modal').modal("show");
+        jQuery('#my_modal').modal("show");
     }
 
     function recursive_hunt(map){
@@ -400,22 +419,22 @@ body {
             if (typeof(map[key]) == 'object'){
                 recursive_hunt(map[key]);
             }else{
-                $("#" + map[key]).show();
+                jQuery("#" + map[key]).show();
             }
         }
     }
 
     function hideModal(){
-        $("#name").html("&nbsp;");
-        $("#tests").html("&nbsp;");
-        $("#sample_type").html("&nbsp;");
-        $("#specimen_status").html("&nbsp;");
-        $("#accession_number").html("&nbsp;");
-        $('#my_modal').attr("patient_number", "");
-        $('#my_modal').attr("specimen_id", "");
-        $('#my_modal').attr("test_id", "");
+        jQuery("#name").html("&nbsp;");
+        jQuery("#tests").html("&nbsp;");
+        jQuery("#sample_type").html("&nbsp;");
+        jQuery("#test_status").html("&nbsp;");
+        jQuery("#accession_number").html("&nbsp;");
+        jQuery('#my_modal').attr("patient_number", "");
+        jQuery('#my_modal').attr("specimen_id", "");
+        jQuery('#my_modal').attr("test_id", "");
 
-        $('#my_modal').modal("hide");
+        jQuery('#my_modal').modal("hide");
     }
 
     function searchByTestStatus(status_id){
@@ -522,24 +541,21 @@ body {
 
     adjust();
 
-    function checkBarcode(){
+    function checkBarcodeX(){
         var node = document.getElementsByClassName('barcode')[0];
         if(node){
 
             if (node.value.match(/\$$/)){
-                barcodeScan();
+                barcodeScanX();
             }else{
-                if($(".force-open").size() == 0) {
-                    node.focus();
-                }
                 setTimeout(function(){
-                    checkBarcode();
+                    checkBarcodeX();
                 }, 500);
             }
         }
     }
 
-    function barcodeScan(){
+    function barcodeScanX(){
         usertext=document.getElementById("barcode-txt");
         if (usertext.value.match(/.+\$$/i) != null){
             usertext.value=usertext.value.substring(0,usertext.value.length -1);
@@ -547,8 +563,146 @@ body {
         }
     }
 
-    setTimeout(function(){
-        checkBarcode();
+    function showKeyboardX(){
+        key = document.getElementById("keypad")
+        if(key.style.display == 'none' || key.style.display == ""){
+            key.style.display = "inline";
+            return
+        }
+
+        key.style.display = "none";
+    }
+
+    function search(value){
+        jQuery('.hidable').hide();
+        jQuery('.hidable :Contains("'+value+'")').parent('tr').show();
+
+    }
+
+    function pressX(pressedChar){
+        searchVal = document.getElementById("search")
+        switch (pressedChar) {
+            case 'backspace':
+                searchVal.value = searchVal.value.substring(0,searchVal.value.length-1);
+                search(searchVal.value)
+                return;
+            case 'Space':
+                searchVal.value+= " "
+                search(searchVal.value)
+                return
+            case 'clear':
+                searchVal.value = ""
+                search(searchVal.value)
+                return
+            case 'slash':
+                searchVal.value+= "/"
+                search(searchVal.value)
+                return
+            case 'dash':
+                searchVal.value+= "-"
+                search(searchVal.value)
+                return
+        }
+        searchVal.value+= pressedChar
+        search(searchVal.value)
+    }
+    //xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+
+    document.getElementById('search').setAttribute("onclick","showKeyboardX();");
+    //document.getElementById("find").innerHTML = "<span>Back</span>";
+    //document.getElementById("find").style.cssFloat = "left";
+    //xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    keyboard = document.getElementsByClassName("keypad")[0]
+    function getCharButtonSetID(character,id){
+        return '<button onMouseDown="pressX(\''+character+'\');" class="keyboardButton blue button" id="'+id+'">' +"<span>"+character+"</span>"+ "</button>";
+    }
+    function getButtonString(id,string){
+        return "<button \
+                            onMouseDown='pressX(this.id);' \
+                            class='keyboardButton' \
+                            id='"+id+"'>"+
+                string +
+                "</button>";
+    }
+
+    function getButtons(chars){
+        var buttonLine = "";
+        for(var i=0; i<chars.length; i++){
+            character = chars.substring(i,i+1)
+            buttonLine += getCharButtonSetID(character,character)
+        }
+        return buttonLine;
+    }
+
+    showAlphaKeypad();
+
+    function showAlphaKeypad(){
+        document.getElementById("keypad").style.height = "280";
+        keyboard.innerHTML= getButtons("0123456789") + "</br>"
+        keyboard.innerHTML+= getButtons("QWERTYUIOP") + "</br>"
+        keyboard.innerHTML+= getButtons("ASDFGHJKL:") + "</br>"
+        keyboard.innerHTML+= getButtons("ZXCVBNM,.?")
+        keyboard.innerHTML+= getButtonString('backspace','<span>Bksp</span>')
+        keyboard.innerHTML+= getButtonString('Space','<span>Space</span>')
+        keyboard.innerHTML+= getButtonString('clear','<span>Clear</span>')
+    }
+    jQuery.expr[":"].Contains = jQuery.expr.createPseudo(function(arg) {
+        return function( elem ) {
+            return jQuery(elem).text().toUpperCase().indexOf(arg.toUpperCase()) >= 0;
+        };
+    });
+
+
+setTimeout(function(){
+        checkBarcodeX();
     }, 500);
 
+
+
 </script>
+
+<style>
+    #backspace{
+        position:absolute;
+        left:100px;
+        bottom:2px;
+    }
+
+    #Space{
+        position:absolute;
+        left:220px;
+        bottom:2px;
+        width:200px;
+    }
+
+    #clear{
+        position:absolute;
+        left:470px;
+        bottom:2px;
+    }
+    #num{
+        position:absolute;
+        left:470px;
+        bottom:2px;
+        width:200px;
+    }
+    #keypad{
+        background-color: #FFFFFF;
+        border: 2px solid #9999FF;
+        border-radius: 15px 15px 15px 15px;
+        display: none;
+        height: 304px;
+        padding: 5px;
+        position: absolute;
+        right: 5px;
+        top: 65px;
+        width: 772px;
+        opacity: 0.8;
+    }
+
+    .keyboardButton{
+    }
+
+
+</style>
