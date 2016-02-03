@@ -87,6 +87,23 @@ class TestController < ApplicationController
 
   def create
 
+    json = {
+      'health_facility_name' => "Kamuzu Central Hospital",
+      'last_name' => "Last Name",
+      'First Name' => "First Name",
+      'middle_name' => 'Middle Name',
+      'date_of_birth' => 'Mon 1st Jan 2016',
+      'gender' => 'Male',
+      'national_patient_id' => 'NPID',
+      'tests' => ['FBC', 'WBC'],
+      'sample_collector_id' => '87',
+      'sample_collector_last_name' => 'SLName',
+      'sample_collector_first_name' => 'SName',
+      'sample_collector_phone_number' => '0991762543',
+      'sample_priority' => 'STAT',
+    }
+
+
     visit = Visit.new
     visit.patient_id = params[:patient_id]
     visit.visit_type = VisitType::find(params[:visit_type]).name
@@ -134,7 +151,6 @@ class TestController < ApplicationController
         test.save
       end
     end
-
     print_and_redirect("/test/print_accession_number?specimen_id=#{specimen.id}", "/tests/all?patient_id=#{visit.patient_id}")
   end
 
@@ -198,13 +214,24 @@ class TestController < ApplicationController
     @testtypes = (tests - already_ordered).uniq
   end
 
+  def age(dob)
+    now = Time.now.utc.to_date
+    now.year - dob.year - ((now.month > dob.month || (now.month == dob.month && now.day >= dob.day)) ? 0 : 1)
+  end
+  def format_ac(num)
+    num = num.insert(3, '-')
+    num = num.insert(-5, '-')
+    num
+  end
   def print_accession_number
+    require 'auto12epl'
     specimen = Specimen.find(params[:specimen_id])
     tests = specimen.tests
     accession_number = specimen.accession_number
-    npid = tests.first.visit.patient.external_patient_number
-    name = tests.first.visit.patient.name
-    date = tests.first.time_created.strftime("%Y-%m-%d %H:%M:%S")
+    patient = tests.first.visit.patient
+    npid = patient.external_patient_number
+    name = patient.name
+    date = tests.first.time_created.strftime("%d-%b-%Y %H:%M")
 
     test_names = []
     panels = []
@@ -220,6 +247,24 @@ class TestController < ApplicationController
 
     tname = test_names.uniq.join('&')
 
+    auto = Auto12Epl.new
+
+    first_name = name.strip.scan(/^\w+\s/).first.strip rescue ""
+    last_name = name.strip.scan(/\s\w+$/).last.strip rescue ""
+    middle_initial = name.strip.scan(/\s\w+\s/).first.strip[0 .. 2] rescue ""
+    dob = patient.dob.to_date.strftime("%d-%b-%Y")
+    age = age(dob.to_date).to_s
+    gender = patient.gender == 0 ? "F" : "M"
+    col_datetime = date
+    col_by = User.find(tests.first.created_by).username
+    acc_num = accession_number
+    formatted_acc_num = format_ac(accession_number)
+
+    s =  auto.generate_epl(last_name, first_name, middle_initial, npid, dob, age,
+                           gender, col_datetime, col_by, test_names,
+                           nil, formatted_acc_num, acc_num)
+
+=begin
     s='
 N
 q500
@@ -230,7 +275,7 @@ A35,30,0,2,1,1,N,"' + name + ' ' + npid + '"
 A35,56,0,2,1,1,N,"' + tname + '"
 A35,82,0,2,1,1,N,"' + date + '"
 P1'
-
+=end
     send_data(s,
               :type=>"application/label; charset=utf-8",
               :stream=> false,

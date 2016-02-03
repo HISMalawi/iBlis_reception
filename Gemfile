@@ -41,7 +41,7 @@ gem 'spring',        group: :development
 gem 'passenger'
 gem 'mysql'
 gem 'mysql2'
-
+gem 'rest-client'
 #gem 'bcrypt-ruby', :require => 'bcrypt' 
 gem 'bcrypt'
 
