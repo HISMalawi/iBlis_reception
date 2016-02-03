@@ -86,23 +86,45 @@ class TestController < ApplicationController
   end
 
   def create
+    settings = YAML.load_file("#{Rails.root}/config/application.yml")[Rails.env]
+    patient = Patient.find(params[:patient_id])
 
-    json = {
-      'health_facility_name' => "Kamuzu Central Hospital",
-      'last_name' => "Last Name",
-      'First Name' => "First Name",
-      'middle_name' => 'Middle Name',
-      'date_of_birth' => 'Mon 1st Jan 2016',
-      'gender' => 'Male',
-      'national_patient_id' => 'NPID',
-      'tests' => ['FBC', 'WBC'],
-      'sample_collector_id' => '87',
-      'sample_collector_last_name' => 'SLName',
-      'sample_collector_first_name' => 'SName',
-      'sample_collector_phone_number' => '0991762543',
-      'sample_priority' => 'STAT',
+    #Patient Details
+    first_name = patient.name.strip.scan(/^\w+\s/).first
+    last_name = patient.name.strip.scan(/\s\w+$/).last
+    middle_name = patient.name.strip.scan(/\s\w+\s/).last
+
+    #Specimen Details
+
+    json = { :return_path => "http://#{request.host}:#{request.port}",
+             :district => settings['district'],
+             :health_facility_name=> settings['facility_name'],
+             :first_name=> first_name,
+             :last_name=> last_name,
+             :middle_name=> middle_name,
+             :date_of_birth=> patient.dob,
+             :gender=> (patient.gender == 0 ? "F" : "M"),
+             :national_patient_id=> patient.external_patient_number,
+             :phone_number=> patient.phone_number,
+             :reason_for_test=> '',
+             :sample_collector_last_name=> '',
+             :sample_collector_first_name=> '',
+             :sample_collector_phone_number=> '',
+             :sample_collector_id=> '',
+             :sample_order_location=> params[:ward],
+             :sample_type=> SpecimenType.find(params[:specimen_type]).name,
+             :date_sample_drawn=> Date.today.to_s,
+             :tests=> params[:test_types],
+             :sample_priority=> 'Routine',
+             :target_lab=> settings['facility_name'],
+             :return_json => 'true'
     }
 
+    url = "#{settings['central_repo']}/create_hl7_order"
+    response = JSON.parse(RestClient.post(url, json))
+    paramz = response['params']
+
+    accession_number = paramz['accession_number']
 
     visit = Visit.new
     visit.patient_id = params[:patient_id]
@@ -114,7 +136,7 @@ class TestController < ApplicationController
       specimen = Specimen.new
       specimen.specimen_type_id = params[:specimen_type]
       specimen.accepted_by = User.current.id
-      specimen.accession_number = new_accession_number
+      specimen.accession_number = accession_number
       specimen.save
     end
 
@@ -245,10 +267,7 @@ class TestController < ApplicationController
 
     end
 
-    tname = test_names.uniq.join('&')
-
-    auto = Auto12Epl.new
-
+    tname = test_names.uniq.join(', ')
     first_name = name.strip.scan(/^\w+\s/).first.strip rescue ""
     last_name = name.strip.scan(/\s\w+$/).last.strip rescue ""
     middle_initial = name.strip.scan(/\s\w+\s/).first.strip[0 .. 2] rescue ""
@@ -260,8 +279,9 @@ class TestController < ApplicationController
     acc_num = accession_number
     formatted_acc_num = format_ac(accession_number)
 
+    auto = Auto12Epl.new
     s =  auto.generate_epl(last_name, first_name, middle_initial, npid, dob, age,
-                           gender, col_datetime, col_by, test_names,
+                           gender, col_datetime, col_by, tname,
                            nil, formatted_acc_num, acc_num)
 
 =begin
