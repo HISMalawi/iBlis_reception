@@ -1,11 +1,30 @@
 class PeopleController < ApplicationController
   def find
-    @patients = Patient.where(:external_patient_number => params[:identifier]) #Or search from remote
+    settings = YAML.load_file("#{Rails.root}/config/application.yml")["#{Rails.env}"]
 
-    if (!params[:identifier].blank? && @patients.length == 1 )
+    npid = ""
+    tracking_number = params[:identifier]
+
+    @openmrs_people = []
+    @local_people = []
+    @remote_results = []
+    @patients = []
+
+    if params[:identifier] && (params[:identifier].length == 6 || params[:identifier].length == 12)
+      npid = params[:identifier]
+
+      @local_people = Patient.where(:external_patient_number => params[:identifier])
+      @openmrs_people = Openmrs.search_by_npid(npid) #search from openmrs
+    end
+
+    remote_url = "#{settings['central_repo']}/query_order/#{tracking_number}"
+    @remote_results = JSON.parse(RestClient.get(remote_url))
+
+    if !params[:identifier].blank? && @patients.length == 1
       redirect_to '/people/view?patient_id=' + @patients.first.id.to_s and return
     end
 
+    @patients = @local_people
     unless @patients.blank?
       render :layout => false, :template => '/people/people_search_results'
     end
@@ -41,12 +60,18 @@ class PeopleController < ApplicationController
   end
 
   def create
-    patient = Patient.create(:name => "#{params[:person]['names']['given_name']} #{params[:person]['names']['family_name']}",
-      :created_by => User.current.id,:address => params[:person]['addresses']['physical_address'],
-      :phone_number => params[:cell_phone_number],:gender => params[:gender],:patient_number => (Patient.count + 1),
-      :dob => calDOB(params),:external_patient_number => "KJ#{rand(100).to_s.rjust(6,'0')}")
 
-      print_and_redirect("/people/print_barcode?patient_id=#{patient.id}", "/test/new?patient_id=#{patient.id}&return_uri=#{request.referrer}")
+    patient = Patient.create(:name => "#{params[:person]['names']['given_name']} #{params[:person]['names']['family_name']}",
+      :created_by => User.current.id,
+      :address => params[:person]['addresses']['physical_address'],
+      :phone_number => params[:cell_phone_number],
+      :gender => params[:gender],
+      :patient_number => (Patient.count + 1),
+      :dob => calDOB(params),
+      :external_patient_number => (params[:identifier] || '')
+    )
+
+    redirect_to "/test/new?patient_id=#{patient.id}&return_uri=#{request.referrer}"
   end
 
   def print_barcode

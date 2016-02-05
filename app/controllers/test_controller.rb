@@ -3,8 +3,8 @@ class TestController < ApplicationController
 
     accession_number_filter = ""
 
-    unless params[:accession_number].blank?
-      accession_number_filter = " AND tests.specimen_id IN (SELECT id FROM specimens WHERE accession_number = '#{params[:accession_number]}') "
+    unless params[:tracking_number].blank?
+      accession_number_filter = " AND tests.specimen_id IN (SELECT id FROM specimens WHERE tracking_number = '#{params[:tracking_number]}') "
     end
 
     if params[:status] == 'all'
@@ -102,7 +102,7 @@ class TestController < ApplicationController
              :first_name=> first_name,
              :last_name=> last_name,
              :middle_name=> middle_name,
-             :date_of_birth=> patient.dob,
+             :date_of_birth=> patient.dob.to_date.strftime("%a %b %d %Y"),
              :gender=> (patient.gender == 0 ? "F" : "M"),
              :national_patient_id=> patient.external_patient_number,
              :phone_number=> patient.phone_number,
@@ -113,10 +113,14 @@ class TestController < ApplicationController
              :sample_collector_id=> '',
              :sample_order_location=> params[:ward],
              :sample_type=> SpecimenType.find(params[:specimen_type]).name,
-             :date_sample_drawn=> Date.today.to_s,
+             :date_sample_drawn=> Date.today.strftime("%a %b %d %Y"),
              :tests=> params[:test_types],
              :sample_priority=> 'Routine',
              :target_lab=> settings['facility_name'],
+             :tracking_number => "",
+             :art_start_date => "",
+             :date_dispatched => "",
+             :date_received => Date.today.strftime("%a %b %d %Y"),
              :return_json => 'true'
     }
 
@@ -124,8 +128,8 @@ class TestController < ApplicationController
     response = JSON.parse(RestClient.post(url, json))
     paramz = response['params']
 
-    accession_number = paramz['accession_number']
-
+    tracking_number = paramz['tracking_number']
+    acc_num = new_accession_number
     visit = Visit.new
     visit.patient_id = params[:patient_id]
     visit.visit_type = VisitType::find(params[:visit_type]).name
@@ -136,7 +140,8 @@ class TestController < ApplicationController
       specimen = Specimen.new
       specimen.specimen_type_id = params[:specimen_type]
       specimen.accepted_by = User.current.id
-      specimen.accession_number = accession_number
+      specimen.accession_number = acc_num
+      specimen.tracking_number = tracking_number
       specimen.save
     end
 
@@ -280,22 +285,10 @@ class TestController < ApplicationController
     formatted_acc_num = format_ac(accession_number)
 
     auto = Auto12Epl.new
-    s =  auto.generate_epl(last_name, first_name, middle_initial, npid, dob, age,
+    s =  "\n" + auto.generate_epl(last_name, first_name, middle_initial, npid, dob, age,
                            gender, col_datetime, col_by, tname,
                            nil, formatted_acc_num, acc_num)
 
-=begin
-    s='
-N
-q500
-Q165,026
-ZT
-B50,105,0,1,4,8,50,N,"' + accession_number + '"
-A35,30,0,2,1,1,N,"' + name + ' ' + npid + '"
-A35,56,0,2,1,1,N,"' + tname + '"
-A35,82,0,2,1,1,N,"' + date + '"
-P1'
-=end
     send_data(s,
               :type=>"application/label; charset=utf-8",
               :stream=> false,
@@ -365,12 +358,14 @@ P1'
     return_value = nil
     sentinel = 999999
 
-    code = "KCH"
+    settings = YAML.load_file("#{Rails.root}/config/application.yml")[Rails.env]
+    code = settings['facility_code']
+    year = Date.today.year.to_s[2..3]
 
-    record = Specimen.find_by_sql("SELECT * FROM specimens  WHERE accession_number IS NOT NULL ORDER BY id DESC LIMIT 1").last.accession_number rescue nil
+    record = Specimen.find_by_sql("SELECT * FROM specimens WHERE accession_number IS NOT NULL ORDER BY id DESC LIMIT 1").last.accession_number rescue nil
 
     if !record.blank?
-      max_acc_num = record.match(/\d+/)[0].to_i
+      max_acc_num = record[5..20].match(/\d+/)[0].to_i #first 5 chars are for facility code and 2 digit year
     end
 
     if (max_acc_num < sentinel)
@@ -380,7 +375,7 @@ P1'
     end
 
     max_acc_num = max_acc_num.to_s.rjust(6, '0')
-    return_value = "#{code}#{max_acc_num}"
+    return_value = "#{code}#{year}#{max_acc_num}"
     return return_value
   end
 end

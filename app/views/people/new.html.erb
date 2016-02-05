@@ -130,8 +130,10 @@
 
 
 <%= form_tag("/people/create", id: "create-form", method: 'post', enctype: 'multipart/form-data') do %>
+ <% if !params[:identifier].blank? %>
+  <input type="hidden" name="identifier"  value="<%= params[:identifier]%>"
 
-
+ <% end %>
  <%= text_field_tag "person[names][given_name]", params[:given_name],
     {:id => 'given_name', 
      :field_type => 'alpha', 

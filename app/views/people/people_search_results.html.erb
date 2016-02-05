@@ -132,6 +132,16 @@
     .patient-row{
         cursor: pointer;
     }
+    .no-patients{
+        position: absolute;
+        top: 35%;
+        left: 0%;
+        width: 100%;
+        font-style: italic;
+        font-weight: bold;
+        font-size: 1.8em;
+        text-align: center;
+    }
     </style>
 
         <script>
@@ -139,7 +149,8 @@
         function newPatient() {
 
           <%unless params[:name].blank?%>
-          document.location = "/people/new?given_name=<%=params[:name][:given_name]%>&family_name=<%=params[:name][:family_name]%>&gender=<%=params[:gender]%>";
+          document.location = "/people/new?given_name=<%=params[:name][:given_name]%>&"+
+                  "family_name=<%=params[:name][:family_name]%>&gender=<%=params[:gender]%>" + "&identifier=<%= params[:identifier]%>";
           <%else%>
           document.location = "/people/new"
           <%end%>
@@ -181,6 +192,12 @@
           <%end%>
           </tbody>
         </table>
+        <% if @patients.blank?%>
+            <div class="no-patients">
+                No records matched! <br />
+              Create a new patient by clicking <span style="color: blue; font-style: italic">  'New patient'</span> below
+            </div>
+        <% end %>
       </div>
 
     </div>

@@ -19,7 +19,7 @@ body {
   height: 80px;
   padding-right: 20px;
 }
-.btn-home {
+.btn-home, .btn-home:active, .btn-home:hover {
     background-image: linear-gradient(to bottom, #5cb85c 0px, #5cb85c 100%);
     background-repeat: repeat-x;
     border-color: #5cb85c;
@@ -559,7 +559,7 @@ body {
         usertext=document.getElementById("barcode-txt");
         if (usertext.value.match(/.+\$$/i) != null){
             usertext.value=usertext.value.substring(0,usertext.value.length -1);
-            document.location = "/tests/all?accession_number=" + usertext.value;
+            document.location = "/tests/all?tracking_number=" + usertext.value;
         }
     }
 

@@ -1,0 +1,12 @@
+development:
+ facility_name: Kamuzu Central Hospital
+ facility_code: KCH
+ district: Lilongwe
+ central_repo: http://localhost:3014
+
+production:
+ facility_name: Kamuzu Central Hospital
+ facility_code: KCH
+ district: Lilongwe
+ central_repo: http://localhost:3014
+

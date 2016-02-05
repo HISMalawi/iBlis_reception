@@ -90,7 +90,7 @@ class Auto12Epl
 
       # truncate first?
       if concatName(last_name, first_name, middle_initial).length  > name_max_characters && first_name.length > 7
-          first_name = first_name[0..7] + '+'
+        first_name = first_name[0..7] + '+'
       end
     end
 
@@ -133,9 +133,9 @@ class Auto12Epl
 
     # combine EPL statements
     if stat == nil
-      "N\n#{name_element}\n#{pid_dob_age_gender_element}\n#{barcode_element}\n#{barcode_human_element}\n#{collector_element}\n#{tests_element}\nP1"
+      "N\n\R215,0\nZT\n#{name_element}\n#{pid_dob_age_gender_element}\n#{barcode_element}\n#{barcode_human_element}\n#{collector_element}\n#{tests_element}\nP1"
     else
-      "N\n#{name_element}\n#{pid_dob_age_gender_element}\n#{barcode_element}\n#{barcode_human_element}\n#{collector_element}\n#{tests_element}\n#{stat_element}\nP1"
+      "N\n\R215,0\n\ZT\n#{name_element}\n#{pid_dob_age_gender_element}\n#{barcode_element}\n#{barcode_human_element}\n#{collector_element}\n#{tests_element}\n#{stat_element}\nP1"
     end
 
   end
@@ -182,6 +182,7 @@ end
 if __FILE__ == $0
 
   auto = Auto12Epl.new
+
   puts auto.generate_epl("Banda", "Mary", "U", "Q23-HGF", "12-SEP-1997", "19y", "F", "01-JAN-2016 14:21", "byGD", "CHEM7,Ca,Mg", nil, "KCH-16-00001234", "1600001234")
   puts "\n"
   puts auto.generate_epl("Banda", "Mary", "U", "Q23-HGF", "12-SEP-1997", "19y", "F", "01-JAN-2016 14:21", "byGD", "CHEM7,Ca,Mg", "STAT CHEM", "KCH-16-00001234", "1600001234")
