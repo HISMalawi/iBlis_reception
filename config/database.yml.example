@@ -13,13 +13,23 @@ default: &default
   adapter: mysql
   encoding: utf8
   pool: 5
-  username: username
+  username: root
   password: password
   socket: /var/run/mysqld/mysqld.sock
 
 development:
   <<: *default
   database: iblis
+
+openmrs:
+  adapter: mysql
+  host: 0.0.0.0
+  database: anc_mlambe
+  username: root
+  password: password
+  reconnect: true
+  pool: 5
+
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".
@@ -49,9 +59,9 @@ development:
 #
 production:
   <<: *default
-  database: iblis_production
-  username: username
-  password: <%= ENV['IBLIS_DATABASE_PASSWORD'] %>
+  database: iblis
+  username: root
+  password: password
 
 
 
