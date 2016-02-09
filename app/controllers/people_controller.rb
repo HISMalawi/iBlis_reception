@@ -69,9 +69,9 @@ class PeopleController < ApplicationController
       @data = @result['data']
       render :layout => false, :template => "/test/preview_remote_order",
              :tracking_number => tracking_number and return
-    elsif @result['type'] == 'people' and @result['data'].length == 1
-      redirect_to '/people/view?patient_id=' + @result['data'].first['id'].to_s and return
-    elsif @result['type'] == "people" and @result['data'].length > 1
+    elsif @result['type'] == 'people' and @result['data'].length == 1 and !local_people.blank?
+      redirect_to '/people/view?patient_id=' + @result['data'].first.id.to_s and return
+    elsif @result['type'] == "people" and @result['data'].length > 0
       @patients = @result['data']
       render :layout => false, :template => '/people/people_search_results' and return
     end
