@@ -1,0 +1,334 @@
+
+
+<%= javascript_include_tag "jquery" %>
+<%= javascript_include_tag "bootstrap" %>
+<%= stylesheet_link_tag "bootstrap" %>
+
+<style>
+    body{
+        -moz-user-select: none;
+    }
+    .content{
+        width: 100%;
+        height: 100%;
+        margin-top: 0px;
+        padding-top: 0px;
+    }
+    .footer {
+        bottom: 2px;
+        height: 100px;
+        position: fixed;
+        width: 100%;
+        background-color: #333333;
+        display: block;
+        height: 80px;
+        padding-right: 20px;
+    }
+
+    .btn-home {
+        background-image: linear-gradient(to bottom, #5cb85c 0px, #5cb85c 100%);
+        background-repeat: repeat-x;
+        border-color: #5cb85c;
+        margin-top: 10px;
+        margin-left: 10px;
+        min-width: 140px;
+        float: left;
+        -moz-user-select: none;
+        border: 0 none;
+        color: white;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 1.4em;
+        height: 80%;
+    }
+
+    .view{
+        font-size: 1.18em;
+        opacity: 0.95;
+        padding: 6px;
+    }
+    .view:hover {
+        background-color: #F5F5F5;
+    }
+
+    .btn-header{
+        font-size: 1.1em;
+        font-weight: bold;
+    }
+        .panel{
+
+        }
+
+</style>
+
+<script>
+
+</script>
+<div class="content">
+
+<div class="panel-info header header"  style="padding: 0px !important;">
+  <div class="panel-heading" style="margin: 0px; padding: 0px;">
+    <table class="table" style="margin:0px;padding:0px;border: none;">
+      <tr class="row" >
+        <td class='pull-left' style="width: 80%;padding: 0px;margin: 0px;border: none;padding-left: 20px;">
+          <h3><strong>Test Details</strong></h3>
+        </td>
+        <td style="padding-left: 0px;border: none;">
+
+        </td>
+        <td style="padding-left: 10px; border: none;">
+
+        </td>
+
+        <td style="padding-left: 10px; border: none;">
+
+        </td>
+      </tr>
+    </table>
+
+  </div>
+</div>
+
+<div class="panel-body">
+  <div class="display-details">
+
+    <table class="table pull-left" style="width:48%;font-size: 1.15em;">
+      <tr  class="view">
+        <td  style="width: 40%;">
+          <p><strong>Test Types</strong></p>
+        </td>
+        <td>
+          <p ><%= @data['test_types'].join(', ')%></p>
+        </td>
+        <td style="width: 5%;">
+          &nbsp;
+        </td>
+      </tr>
+      <tr class="view">
+        <td>
+          <p ><strong>Date Ordered</strong></p>
+        </td>
+        <td>
+          <p ><%= @data['date_drawn']%></p>
+        </td>
+        <td style="width: 5%;">
+          &nbsp;
+        </td>
+      </tr>
+      <tr class="view">
+        <td>
+          <p ><strong>Receipt Date</strong></p>
+        </td>
+        <td>
+          <p ><%= @data['date_received']%></p>
+        </td>
+        <td style="width: 5%;">
+          &nbsp;
+        </td>
+      </tr>
+      <tr class="view">
+        <td>
+          <p ><strong>Sending Facility</strong></p>
+        </td>
+        <td>
+          <p ><%= @data['sending_facility']%>&nbsp;</p>
+        </td>
+        <td style="width: 5%;">
+          &nbsp;
+        </td>
+      </tr>
+      <tr class="view">
+        <td>
+          <p><strong>Receiving Facility</strong></p>
+        </td>
+        <td>
+          <p> <%= @data['receiving_facility'] %>&nbsp;</p>
+        </td>
+        <td style="width: 5%;">
+          &nbsp;
+        </td>
+      </tr>
+
+      <tr class="view">
+        <td>
+          <p><strong>Requesting Ward/Location</strong></p>
+        </td>
+        <td>
+          <p ><%= @data['order_location'] %>&nbsp;</p>
+        </td>
+        <td style="width: 5%;">
+          &nbsp;
+        </td>
+      </tr>
+
+      <tr >
+        <td colspan="3">
+          <h3><b>Test Results</b></h3>
+          <% (@data['test_types'] || []).each do |test|%>
+          <div class="panel panel-info" > <!-- Orderer -->
+            <div class="panel-heading">
+              <h3 class="panel-title"><b>Test Name</b></h3>
+            </div>
+            <div class="panel-body">
+              <div class="container-fluid">
+                <div class="row">
+                  <div class="col-md-4">
+                    <p><strong> Result 1</strong></p>
+                  </div>
+                  <div class="col-md-8">
+                    <%= 'Positive'%>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-4">
+                    <p><strong>Result 2</strong></p>
+                  </div>
+                  <div class="col-md-8">
+                    <%= 'Negative'%>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+              <% end %>
+        </td>
+      </tr>
+
+    </table>
+
+    <div style="width:48%; font-size: 1.12em" class="pull-right">
+      <div class="panel panel-info">  <!-- Patient Details -->
+        <div class="panel-heading">
+          <h3 class="panel-title"><b>Patient Details</b></h3>
+        </div>
+        <div class="panel-body">
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col-md-3">
+                <p><strong>Patient No.</strong></p></div>
+              <div class="col-md-9">
+                <%= @data['patient']['national_patient_id']%></div></div>
+            <div class="row">
+              <div class="col-md-3">
+                <p><strong>Patient Name</strong></p></div>
+              <div class="col-md-9">
+                <%= @data['patient']['first_name'] + @data['patient']['middle_name'] +  @data['patient']['last_name']  %></div></div>
+            <div class="row">
+              <div class="col-md-3">
+                <p><strong>Date of Birth</strong></p></div>
+              <div class="col-md-9">
+                <%= @data['patient']['date_of_birth']%></div></div>
+            <div class="row">
+              <div class="col-md-3">
+                <p><strong>Sex</strong></p></div>
+              <div class="col-md-9">
+                <%= {'F' => 'Female', 'M' => 'Male'}[@data['patient']['gender']]%>
+              </div></div>
+          </div>
+        </div> <!-- ./ panel-body -->
+      </div>
+      <div class="panel panel-info"> <!-- Specimen Details -->
+        <div class="panel-heading">
+          <h3 class="panel-title"><b>Specimen Details</b></h3>
+        </div>
+        <div class="panel-body">
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col-md-4">
+                <p><strong>Specimen Type</strong></p>
+              </div>
+              <div class="col-md-8">
+                <%= @data['sample_type']%>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4">
+                <p><strong>Tracking Number</strong></p>
+              </div>
+              <div class="col-md-8">
+                <%= @data['_id']%>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4">
+                <p><strong>Accession Number</strong></p>
+              </div>
+              <div class="col-md-8">
+                <%= %>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4">
+                <p><strong>Specimen Status</strong></p>
+              </div>
+              <div class="col-md-8">
+                <%= @data['status']%>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel panel-info"> <!-- Orderer -->
+        <div class="panel-heading">
+          <h3 class="panel-title"><b>Ordered By</b></h3>
+        </div>
+        <div class="panel-body">
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col-md-4">
+                <p><strong>First Name</strong></p>
+              </div>
+              <div class="col-md-8">
+                <%= @data['who_order_test']['first_name']%>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4">
+                <p><strong>Last Name Name</strong></p>
+              </div>
+              <div class="col-md-8">
+                <%= @data['who_order_test']['last_name']%>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4">
+                <p><strong>ID. Number</strong></p>
+              </div>
+              <div class="col-md-8">
+                <%= @data['who_order_test']['id_number']%>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4">
+                <p><strong>Phone Number</strong></p>
+              </div>
+              <div class="col-md-8">
+                <%= @data['who_order_test']['phone_number']%>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+
+<% if request.referrer.match(/patient_id/)%>
+    <div class="footer">
+      <button class="btn-home btn btl-lg btn-success" onmousedown="document.location='/tests/all/?patient_id=<%= @patient.id%>'">|< Back</button>
+    </div>
+<% elsif request.referrer.match(/all/)%>
+    <div class="footer">
+      <button class="btn-home btn btl-lg btn-success" onmousedown="document.location='/tests/all'">|< Back</button>
+    </div>
+<% else %>
+    <div class="footer">
+      <button class="btn-home btn btl-lg btn-success" onmousedown="document.location='/'">|< Back Home</button>
+    </div>
+<% end %>
+
+
