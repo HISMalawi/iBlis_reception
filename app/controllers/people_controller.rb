@@ -161,7 +161,7 @@ P1'
       ).last
 
       @patient = Patient.new if @patient.blank?
-      @patient.patient_number = Patient.count + 1
+      @patient.patient_number = Patient.count + 1 if @patient.patient_number.blank?
       @patient.external_patient_number = params[:external_patient_number]
       @patient.name = params[:name]
       @patient.dob = params[:dob].to_date
