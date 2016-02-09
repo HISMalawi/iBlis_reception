@@ -247,15 +247,15 @@ class TestController < ApplicationController
     now.year - dob.year - ((now.month > dob.month || (now.month == dob.month && now.day >= dob.day)) ? 0 : 1)
   end
   def format_ac(num)
-    num = num.insert(3, '-')
-    num = num.insert(-5, '-')
+    num = num.insert(4, '-')
+    num = num.insert(-4, '-')
     num
   end
   def print_accession_number
     require 'auto12epl'
     specimen = Specimen.find(params[:specimen_id])
     tests = specimen.tests
-    accession_number = specimen.accession_number
+    accession_number = specimen.tracking_number
     patient = tests.first.visit.patient
     npid = patient.external_patient_number
     name = patient.name

@@ -131,22 +131,22 @@
 
 <%= form_tag("/people/create", id: "create-form", method: 'post', enctype: 'multipart/form-data') do %>
  <% if !params[:identifier].blank? %>
-  <input type="hidden" name="identifier"  value="<%= params[:identifier]%>"
-
+         <%= hidden_field 'identifier', params[:identifier]%>
  <% end %>
+
  <%= text_field_tag "person[names][given_name]", params[:given_name],
-    {:id => 'given_name', 
-     :field_type => 'alpha', 
-     :helpText => 'First name', 
-     :ajaxURL => '/people/given_names?search_string=', 
-     :allowFreeText => true, 
+    {:id => 'given_name',
+     :field_type => 'alpha',
+     :helpText => 'First name',
+     :ajaxURL => '/people/given_names?search_string=',
+     :allowFreeText => true,
      :tt_onLoad => 'seen(tstCurrentPage);' } %>
 
   <%= text_field_tag "person[names][family_name]", params[:family_name],
       {:id => 'family_name', 
        :field_type => 'alpha', 
-       :helpText => 'Last name', 
-       :ajaxURL => '/people/family_names?search_string=', 
+       :helpText => 'Last name',
+       :ajaxURL => '/people/family_names?search_string=',
        :allowFreeText => true, 
        :tt_onLoad => 'seen(tstCurrentPage);' }%>
 
