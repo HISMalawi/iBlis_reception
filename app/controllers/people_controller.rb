@@ -1,34 +1,80 @@
 class PeopleController < ApplicationController
   def find
     settings = YAML.load_file("#{Rails.root}/config/application.yml")["#{Rails.env}"]
-
+    @result = {}
     npid = ""
     tracking_number = params[:identifier]
+    npid = params[:identifier]
 
-    @openmrs_people = []
-    @local_people = []
-    @remote_results = []
+    openmrs_people = []
+    local_people = []
+    remote_results = []
     @patients = []
 
-    if params[:identifier] && (params[:identifier].length == 6 || params[:identifier].length == 12)
-      npid = params[:identifier]
+    if tracking_number
+      remote_url = "#{settings['central_repo']}/query_order/#{tracking_number}"
+      remote_results = JSON.parse(RestClient.get(remote_url))
+      @result = {'type' => 'remote_order', 'data' => remote_results} if remote_results
 
-      @local_people = Patient.where(:external_patient_number => params[:identifier])
-      @openmrs_people = Openmrs.search_by_npid(npid) #search from openmrs
+      if @result['data'].blank?
+        @result = {'type' => 'local_order',
+                   'data' => Specimen.where(:tracking_number => tracking_number).last
+        }
+      end
     end
 
-    remote_url = "#{settings['central_repo']}/query_order/#{tracking_number}"
-    @remote_results = JSON.parse(RestClient.get(remote_url))
-
-    if !params[:identifier].blank? && @patients.length == 1
-      redirect_to '/people/view?patient_id=' + @patients.first.id.to_s and return
+    if @result['data'].blank? and params[:identifier]
+      local_people = Patient.where(:external_patient_number => params[:identifier]).to_a
+      openmrs_people = Openmrs.search_by_npid(npid).to_a rescue []
+      @result = {'type' => 'people',
+                 'data' => (local_people + openmrs_people)}
     end
 
-    @patients = @local_people
-    unless @patients.blank?
-      render :layout => false, :template => '/people/people_search_results'
-    end
+    @result = {} if @result['data'].blank?
 
+    if @result['type'] == 'local_order' and !@result['data'].blank?
+      redirect_to "/tests/all/?tracking_number=" + tracking_number
+    elsif @result['type'] == 'remote_order' and !@result['data'].blank?
+=begin
+      {"_id"=>"XKCH1625012",
+       "_rev"=>"1-153ce11d3484f0f5bc57c650ce4d8132",
+       "patient"=>{"national_patient_id"=>"",
+                   "first_name"=>"Hazard ",
+                   "middle_name"=>"",
+                   "last_name"=>" Patient",
+                   "date_of_birth"=>"Thu Jun 19 1986",
+                   "gender"=>"F", "phone_number"=>""},
+       "sample_type"=>"HVS",
+       "who_order_test"=>{"first_name"=>"",
+                          "last_name"=>"",
+                          "id_number"=>"",
+                          "phone_number"=>""},
+       "date_drawn"=>"Fri Feb 05 2016",
+       "date_dispatched"=>"",
+       "art_start_date"=>"",
+       "date_received"=>"Fri Feb 05 2016",
+       "sending_facility"=>"Kamuzu Central Hospital",
+       "receiving_facility"=>"Kamuzu Central Hospital",
+       "reason_for_test"=>"",
+       "test_types"=>["CSF Analysis", "Gram Stain", "HVS analysis"],
+       "status"=>"Drawn",
+       "district"=>"Lilongwe",
+       "priority"=>"Routine",
+       "order_location"=>"OPD 1",
+       "results"=>{},
+       "date_time"=>"Fri Feb 05 2016"
+      }
+=end
+
+      @data = @result['data']
+      render :layout => false, :template => "/test/preview_remote_order",
+             :tracking_number => tracking_number and return
+    elsif @result['type'] == 'people' and @result['data'].length == 1
+      redirect_to '/people/view?patient_id=' + @result['data'].first.id.to_s and return
+    elsif @result['type'] == "people" and @result['data'].length > 1
+      @patients = @result['data']
+      render :layout => false, :template => '/people/people_search_results' and return
+    end
   end
 
   def family_names
@@ -53,14 +99,13 @@ class PeopleController < ApplicationController
 
   def people_search_results
     given_name = params[:name]['given_name'] ; family_name = params[:name]['family_name']
-    @patients = Patient.where("name LIKE (?) AND gender = ?", 
-      "%#{given_name} #{family_name}",params[:gender]).limit(20)
+    @patients = Patient.where("name LIKE '#{given_name}%' AND name LIKE '%#{family_name}'  AND gender = ?",
+      params[:gender]).limit(20)
 
     render :layout => false
   end
 
   def create
-
     patient = Patient.create(:name => "#{params[:person]['names']['given_name']} #{params[:person]['names']['family_name']}",
       :created_by => User.current.id,
       :address => params[:person]['addresses']['physical_address'],
@@ -68,7 +113,7 @@ class PeopleController < ApplicationController
       :gender => params[:gender],
       :patient_number => (Patient.count + 1),
       :dob => calDOB(params),
-      :external_patient_number => (params[:identifier] || '')
+      :external_patient_number => params[:person]['npid']
     )
 
     redirect_to "/test/new?patient_id=#{patient.id}&return_uri=#{request.referrer}"
@@ -109,7 +154,23 @@ P1'
   end
 
   def view
-    @patient = Patient.find(params[:patient_id])
+    if params[:patient_id].blank? || params[:patient_id].to_i == 0
+      @patient = Patient.where(:external_patient_number => params[:external_patient_number],
+                               :name => params[:name],
+                               :gender => ({'Male' => 0, 'Female' => 1}[params[:gender]]) || params[:gender]
+      ).last
+
+      @patient = Patient.new if @patient.blank?
+      @patient.patient_number = Patient.count + 1
+      @patient.external_patient_number = params[:external_patient_number]
+      @patient.name = params[:name]
+      @patient.dob = params[:dob].to_date
+      @patient.gender = ({'Male' => 0, 'Female' => 1}[params[:gender]]) || params[:gender]
+      @patient.address = params[:address]
+      @patient.save!
+    else
+      @patient = Patient.find(params[:patient_id])
+    end
     render :layout => false
   end
 

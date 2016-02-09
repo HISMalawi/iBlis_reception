@@ -126,7 +126,7 @@
                 <p ><strong>Patient No</strong></p>
               </td>
               <td>
-                <p ><%= @patient.id%></p>
+                <p ><%= @patient.patient_number%></p>
               </td>
               <td style="width: 50%;">
                 &nbsp;
@@ -192,7 +192,7 @@
                 <p><strong>Date Created</strong></p>
               </td>
               <td>
-                <p > <%= @patient.created_at.strftime("%d-%m-%Y  &nbsp;&nbsp; %H:%M:%S").html_safe %></p>
+                <p > <%= @patient.created_at.to_time.strftime("%d-%m-%Y  &nbsp;&nbsp; %H:%M:%S").html_safe %></p>
               </td>
               <td style="width: 50%;">
                 &nbsp;

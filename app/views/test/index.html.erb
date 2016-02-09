@@ -175,7 +175,7 @@ body {
             <span class="data"><%=test[:date_ordered]%></span>
           </td>
           <td  style="width: 9%;">
-            <span class="data"><%=test[:external_patient_number]%></span>
+            <span class="data"><%=test[:external_patient_number].blank? ? test[:patient_number] : test[:external_patient_number]%></span>
           </td>
           <td style="width: 18%;">
             <span class="data"><%=test[:patient_name]%></span>

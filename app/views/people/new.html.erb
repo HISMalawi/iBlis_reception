@@ -211,4 +211,20 @@
         :id => 'cellphone'
       } %>
 
+    <%
+       identifier = ""
+       if params[:identifier] and params[:identifier].length == 6 or params[:identifier].length == 12
+        identifier = params[:identifier]
+       end
+    %>
+    <%= text_field_tag "person[npid]", identifier,
+                       {
+                               :field_type => 'alpha',
+                               :optional => true,
+                               :helpText => "External Patient Number (Optional)",
+                               :tt_requireNextClick => true,
+                               :tt_pageStyleClass => "azButton",
+                               :allowFreeText => true ,
+                               :tt_onLoad => ""}%>
+
 <% end %>

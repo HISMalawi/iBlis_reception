@@ -75,7 +75,7 @@ function barcodeScan(){
   usertext=document.getElementById("barcode-txt");
   if (usertext.value.match(/.+\$$/i) != null){
     usertext.value=usertext.value.substring(0,usertext.value.length -1);
-    document.location = "/people/find?identifier=" + usertext.value;
+    document.location = "/people/find?identifier=" + usertext.value.trim();
   }
 }
 

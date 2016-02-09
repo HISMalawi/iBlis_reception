@@ -122,6 +122,7 @@
     }
     .data{
         border: 1px solid lightgray;
+        padding-left: 20px;
       }
     .patients-div {
         display: flex;
@@ -142,6 +143,13 @@
         font-size: 1.8em;
         text-align: center;
     }
+    .source{
+        font-style: italic;
+        color:green;
+    }
+    .red{
+        color: darkred;
+    }
     </style>
 
         <script>
@@ -156,6 +164,33 @@
           <%end%>
         }
 
+        function route(url, row){
+            if (url.match(/0$/)){
+                //build a form of remote params
+                var nodes = row.getElementsByClassName('data')
+                var data = {
+                    'patient_number' : nodes[0].innerHTML,
+                    'external_patient_number' : nodes[1].innerHTML,
+                    'name' : nodes[2].innerHTML,
+                    'gender' : nodes[3].innerHTML,
+                    'dob' : nodes[4].innerHTML,
+                    'address' : nodes[5].innerHTML
+            }
+                var form = document.createElement("form")
+                form.action = url;
+                document.body.appendChild(form);
+                for(var k in data){
+                    var input = document.createElement('input');
+                    input.setAttribute('name', k);
+                    input.value = data[k];
+                    input.setAttribute('type', 'hidden');
+                    form.appendChild(input);
+                }
+                form.submit();
+            }else{
+                window.location = url;
+            }
+        }
     </script>
 
 </head>
@@ -164,7 +199,7 @@
     <div class="main-container">
 
       <div class="header">
-        List patients
+        <h3>Patients <%= !params[:identifier].blank? ? ('with identifier ' + params[:identifier]) : ""%></h3>
       </div>
 
       <div class="patients-div">
@@ -177,17 +212,21 @@
               <td class="primary-row">Sex</td>
               <td class="primary-row">Date of Birth</td>
               <td class="primary-row">Physical Address</td>
+              <td class="primary-row">Source</td>
+
             </tr>
           </thead>
           <tbody>
           <%(@patients || []).each do |patient|%>
-          <tr class="patient-row <%= cycle('even', 'odd')%>" onmousedown="window.location='/people/view?patient_id=' + <%=patient.patient_number%>">
-            <td class="data"><%=patient.patient_number%></td>
-            <td class="data"><%=patient.external_patient_number%></td>
-            <td class="data"><%=patient.name%></td>
-            <td class="data"><%=patient.gender == 0  ? 'Male' : 'Female'%></td>
-            <td class="data"><%=patient.dob.to_date.strftime('%d-%m-%Y')%></td>
-            <td class="data"><%=patient.address%></td>
+          <tr class="patient-row <%= cycle('even', 'odd')%>" onmousedown="route('/people/view?patient_id=' + <%=patient['id'] || '0'%>, this)">
+            <td class="data"><%= (patient['patient_number'] || '?')%></td>
+            <td class="data"><%=patient['external_patient_number']%></td>
+            <td class="data"><%=patient['name'].squish%></td>
+            <td class="data"><%=patient['gender'] == 0  ? 'Male' : 'Female'%></td>
+            <td class="data"><%=patient['dob'].to_date.strftime('%d-%m-%Y')%></td>
+            <td class="data"><%=patient['address']%></td>
+            <td class="source <%= patient['patient_number'].to_i == 0 ? 'red' : 'normal'%>"><span><%=patient['patient_number'].to_i == 0 ? 'Remote' : 'Local'%></span></td>
+
           </tr>
           <%end%>
           </tbody>
