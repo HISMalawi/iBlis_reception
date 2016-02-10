@@ -104,7 +104,7 @@ class TestController < ApplicationController
              :last_name=> last_name,
              :middle_name=> middle_name,
              :date_of_birth=> patient.dob.to_date.strftime("%a %b %d %Y"),
-             :gender=> (patient.gender == 0 ? "F" : "M"),
+             :gender=> (patient.gender == 1 ? "F" : "M"),
              :national_patient_id=> patient.external_patient_number,
              :phone_number=> patient.phone_number,
              :reason_for_test=> '',
@@ -231,12 +231,6 @@ class TestController < ApplicationController
     specimen.time_accepted = data['date_received']
     specimen.save!
 
-    visit = Visit.new
-    visit.patient_id = patient.id
-    visit.visit_type = VisitType.last
-    visit.ward_or_location = data['order_location']
-    visit.save!
-
     (data['test_types'] || []).each do |name|
       name = CGI.unescapeHTML(name)
       type = TestType.find_by_name(name).id rescue next
@@ -244,14 +238,22 @@ class TestController < ApplicationController
       test = specimen.tests.where(:test_type_id => type).last
       if test.blank?
         test = Test.new
-        test.visit_id = visit.id
         test.test_type_id = type
         test.specimen_id = specimen.id
         test.test_status_id = 2
         test.created_by = User.current.id
         test.requested_by = specimen.drawn_by_name
-        test.save
       end
+
+      visit = test.visit
+      visit = Visit.new if visit.blank?
+      visit.patient_id = patient.id
+      visit.visit_type = VisitType.last
+      visit.ward_or_location = data['order_location']
+      visit.save!
+
+      test.visit_id = visit.id
+      test.save
     end
 
     redirect_to "/tests/all?tracking_number=#{specimen.tracking_number}"
