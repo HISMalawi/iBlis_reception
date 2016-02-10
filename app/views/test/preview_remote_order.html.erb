@@ -42,6 +42,23 @@
         height: 80%;
     }
 
+    .btn-save{
+        background-image: linear-gradient(to bottom, #5bc0de 0px, #5bc0de 100%);
+        background-repeat: repeat-x;
+        border-color: #5bc0de;
+        margin-top: 10px;
+        margin-left: 10px;
+        min-width: 140px;
+        float: right;
+        -moz-user-select: none;
+        border: 0 none;
+        color: white;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 1.4em;
+        height: 80%;
+    }
+
     .view{
         font-size: 1.18em;
         opacity: 0.95;
@@ -317,6 +334,11 @@
 </div>
 </div>
 
+<form id = 'data-form' action="/test/save_remote">
+  <input type="hidden" value="<%= params[:identifier]%>" name="identifier"/>
+  <input type="hidden" value="<%= @data.to_json%>" name="data"/>
+</form>
+
 <% if request.referrer.match(/patient_id/)%>
     <div class="footer">
       <button class="btn-home btn btl-lg btn-success" onmousedown="document.location='/tests/all/?patient_id=<%= @patient.id%>'">|< Back</button>
@@ -324,10 +346,13 @@
 <% elsif request.referrer.match(/all/)%>
     <div class="footer">
       <button class="btn-home btn btl-lg btn-success" onmousedown="document.location='/tests/all'">|< Back</button>
+      <button class="btn-save btn btl-lg btn-success" onmousedown="document.location='/'"> Save Details</button>
     </div>
 <% else %>
     <div class="footer">
       <button class="btn-home btn btl-lg btn-success" onmousedown="document.location='/'">|< Back Home</button>
+      <button class="btn-save btn btl-lg btn-success" onmousedown="document.getElementById('data-form').submit()"> Save Details</button>
+
     </div>
 <% end %>
 

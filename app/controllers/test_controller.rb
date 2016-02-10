@@ -115,7 +115,7 @@ class TestController < ApplicationController
              :sample_order_location=> params[:ward],
              :sample_type=> SpecimenType.find(params[:specimen_type]).name,
              :date_sample_drawn=> Date.today.strftime("%a %b %d %Y"),
-             :tests=> params[:test_types],
+             :tests=> params[:test_types].collect{|t| CGI.unescapeHTML(t)},
              :sample_priority=> 'Routine',
              :target_lab=> settings['facility_name'],
              :tracking_number => "",
@@ -189,9 +189,70 @@ class TestController < ApplicationController
         :specimen_status_id => SpecimenStatus.find_by_name("specimen-accepted").id,
         :accepted_by => User.current.id,
         :time_accepted => Time.now
-      )
+    )
 
     redirect_to request.referrer
+  end
+
+  def save_remote
+    data = JSON.parse(params[:data])
+    identifier = params[:identifier]
+
+    patient = Patient.where(
+        :external_patient_number => data[:national_patient_id]
+    ).last
+
+    if patient.blank?
+      patient = Patient.new
+      patient.external_patient_number = data[:external_patient_number]
+    end
+
+    patient.name = (data['patient']['first_name'] + " " + data['patient']['middle_name'].to_s + " " + data['patient']['last_name']).squish
+    patient.dob = data['patient']['date_of_birth']
+    patient.gender = data['patient']['gender']
+    patient.phone_number = data['patient']['phone_number']
+    patient.patient_number = (Patient.count + 1) if patient.patient_number.blank?
+    patient.save!
+
+    specimen = Specimen.where(:tracking_number => data['_id'] ).last
+    if specimen.blank?
+      specimen = Specimen.new
+      specimen.specimen_type_id = SpecimenType.where(:name => data['sample_type']).last.id
+      specimen.accession_number = new_accession_number
+      specimen.tracking_number = data['_id']
+      specimen.drawn_by_name = (data['who_order_test']['first_name'].to_s + ' ' +
+          data['who_order_test']['middle_name'].to_s + ' ' +
+          data['who_order_test']['last_name'].to_s).squish
+      specimen.drawn_by_id = data['who_order_test']['id_number']
+    end
+
+    specimen.time_accepted = data['date_received']
+    specimen.save!
+
+    visit = Visit.new
+    visit.patient_id = patient.id
+    visit.visit_type = VisitType.last
+    visit.ward_or_location = data['order_location']
+    visit.save!
+
+    (data['test_types'] || []).each do |name|
+      name = CGI.unescapeHTML(name)
+      type = TestType.find_by_name(name).id rescue next
+
+      test = specimen.tests.where(:test_type_id => type).last
+      if test.blank?
+        test = Test.new
+        test.priority = data['priority']
+        test.visit_id = visit.id
+        test.test_type_id = type
+        test.specimen_id = specimen.id
+        test.test_status_id = 2
+        test.created_by = User.current.id
+        test.requested_by = specimen.drawn_by_name
+        test.save
+      end
+    end
+    redirect_to "/tests/all?patient_id=#{patient.id}"
   end
 
   def reject

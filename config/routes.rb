@@ -30,6 +30,8 @@ Rails.application.routes.draw do
   get 'people/barcode'
   get 'people/print_barcode'
   get 'test/print_accession_number'
+  post 'test/save_remote'
+  get 'test/save_remote'
   get 'test/specimen_barcode'
   get 'api/dashboard_stats'
   get 'api/dashboard_aggregates'
