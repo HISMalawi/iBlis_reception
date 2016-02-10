@@ -147,6 +147,7 @@ class TestController < ApplicationController
     end
 
     params[:test_types].each do |name|
+      name = CGI.unescapeHTML(name)
       type = TestType.find_by_name(name)
       panel_type = PanelType.find_by_name(name)
 
@@ -165,7 +166,7 @@ class TestController < ApplicationController
           test.test_status_id = 2
           test.created_by = User.current.id
           test.panel_id = test_panel.id
-          test.requested_by = params[:clinician]
+          test.requested_by = CGI.unescapeHTML(params[:clinician])
           test.save
         end
       else
@@ -175,7 +176,7 @@ class TestController < ApplicationController
         test.specimen_id = specimen.id
         test.test_status_id = 2
         test.created_by = User.current.id
-        test.requested_by = params[:clinician]
+        test.requested_by = CGI.unescapeHTML(params[:clinician])
         test.save
       end
     end
