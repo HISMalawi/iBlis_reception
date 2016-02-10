@@ -226,6 +226,7 @@ class TestController < ApplicationController
       specimen.drawn_by_id = data['who_order_test']['id_number']
     end
 
+    specimen.priority = data['priority']
     specimen.time_accepted = data['date_received']
     specimen.save!
 
@@ -242,7 +243,6 @@ class TestController < ApplicationController
       test = specimen.tests.where(:test_type_id => type).last
       if test.blank?
         test = Test.new
-        test.priority = data['priority']
         test.visit_id = visit.id
         test.test_type_id = type
         test.specimen_id = specimen.id
