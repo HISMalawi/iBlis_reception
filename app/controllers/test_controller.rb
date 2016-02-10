@@ -199,19 +199,20 @@ class TestController < ApplicationController
     identifier = params[:identifier]
 
     patient = Patient.where(
-        :external_patient_number => data[:national_patient_id]
+        :external_patient_number => data['patient']['national_patient_id']
     ).last
 
     if patient.blank?
       patient = Patient.new
-      patient.external_patient_number = data[:external_patient_number]
     end
 
+    patient.external_patient_number = data['patient']['national_patient_id']
     patient.name = (data['patient']['first_name'] + " " + data['patient']['middle_name'].to_s + " " + data['patient']['last_name']).squish
     patient.dob = data['patient']['date_of_birth']
     patient.gender = data['patient']['gender']
     patient.phone_number = data['patient']['phone_number']
     patient.patient_number = (Patient.count + 1) if patient.patient_number.blank?
+    patient.external_patient_number = data['patient']['national_patient_id']
     patient.save!
 
     specimen = Specimen.where(:tracking_number => data['_id'] ).last
@@ -252,7 +253,8 @@ class TestController < ApplicationController
         test.save
       end
     end
-    redirect_to "/tests/all?patient_id=#{patient.id}"
+
+    redirect_to "/tests/all?tracking_number=#{specimen.tracking_number}"
   end
 
   def reject
@@ -286,8 +288,7 @@ class TestController < ApplicationController
     end
 
     testtypes = TestType.find_by_sql("SELECT * FROM test_types
-                  WHERE orderable_test = 1 AND id IN (SELECT test_type_id FROM testtype_specimentypes WHERE specimen_type_id = #{@specimen.specimen_type_id})"
-    )
+                  WHERE orderable_test = 1 AND id IN (SELECT test_type_id FROM testtype_specimentypes WHERE specimen_type_id = #{@specimen.specimen_type_id})")
 
     tests = []
     testtypes.each do |type|
