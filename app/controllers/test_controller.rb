@@ -209,7 +209,7 @@ class TestController < ApplicationController
     patient.external_patient_number = data['patient']['national_patient_id']
     patient.name = (data['patient']['first_name'] + " " + data['patient']['middle_name'].to_s + " " + data['patient']['last_name']).squish
     patient.dob = data['patient']['date_of_birth']
-    patient.gender = data['patient']['gender']
+    patient.gender = (data['patient']['gender'].match(/m/i) ? 0 : 1)
     patient.phone_number = data['patient']['phone_number']
     patient.patient_number = (Patient.count + 1) if patient.patient_number.blank?
     patient.external_patient_number = data['patient']['national_patient_id']
