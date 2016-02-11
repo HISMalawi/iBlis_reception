@@ -174,6 +174,7 @@ class Auto12Epl
 
   # generate barcode EPL
   def generate_barcode_element(x, y, height, schema_track)
+    schema_track = schema_track.gsbu("-", "").strip
     "B#{x.to_s},#{y.to_s},#{BARCODE_ROTATION},#{BARCODE_TYPE},#{BARCODE_NARROW_WIDTH},#{BARCODE_WIDE_WIDTH},#{height.to_s},#{BARCODE_IS_HUMAN_READABLE},\"#{schema_track}\""
   end
 
