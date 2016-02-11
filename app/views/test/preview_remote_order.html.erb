@@ -177,7 +177,7 @@
           &nbsp;
         </td>
       </tr>
-
+<% if false %>
       <tr >
         <td colspan="3">
           <h3><b>Test Results</b></h3>
@@ -211,7 +211,7 @@
               <% end %>
         </td>
       </tr>
-
+    <% end %>
     </table>
 
     <div style="width:48%; font-size: 1.12em" class="pull-right">
@@ -272,7 +272,7 @@
                 <p><strong>Accession Number</strong></p>
               </div>
               <div class="col-md-8">
-                <%= %>
+                <%= Specimen.where(:tracking_number => @data['_id']).last.accession_number rescue nil%>
               </div>
             </div>
             <div class="row">

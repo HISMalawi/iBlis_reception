@@ -185,12 +185,14 @@ class TestController < ApplicationController
 
   def accept
     specimen = Specimen.find(params[:specimen_id])
+    patient = specimen.tests.last.visit.patient
+
     specimen.update_attributes(
         :specimen_status_id => SpecimenStatus.find_by_name("specimen-accepted").id,
         :accepted_by => User.current.id,
         :time_accepted => Time.now
     )
-
+    Sender.send_data(patient, specimen)
     redirect_to request.referrer
   end
 
@@ -259,12 +261,15 @@ class TestController < ApplicationController
     redirect_to "/tests/all?tracking_number=#{specimen.tracking_number}"
   end
 
+
   def reject
     @rejection_reasons = RejectionReason.all.map(&:reason)
   end
 
   def do_reject
     specimen = Specimen.find(params[:specimen_id])
+    patient = specimen.tests.last.visit.patient
+
     specimen.update_attributes(
         :specimen_status_id => SpecimenStatus.find_by_name("specimen-rejected").id,
         :rejected_by => User.current.id,
@@ -273,6 +278,7 @@ class TestController < ApplicationController
         :time_rejected => Time.now
     )
 
+    Sender.send_data(patient, specimen)
     redirect_to params[:return_uri]
   end
 
@@ -339,8 +345,8 @@ class TestController < ApplicationController
     end
 
     tname = test_names.uniq.join(', ')
-    first_name = name.strip.scan(/^\w+\s/).first.strip rescue ""
-    last_name = name.strip.scan(/\s\w+$/).last.strip rescue ""
+    first_name = name.strip.scan(/^\w+/).first.strip rescue ""
+    last_name = name.strip.scan(/\w+$/).last.strip rescue ""
     middle_initial = name.strip.scan(/\s\w+\s/).first.strip[0 .. 2] rescue ""
     dob = patient.dob.to_date.strftime("%d-%b-%Y")
     age = age(dob.to_date).to_s
@@ -404,6 +410,8 @@ class TestController < ApplicationController
         test.requested_by = specimen.tests.last.requested_by
         test.save
       end
+
+    Sender.send_data(visit.patient, specimen)
 
     redirect_to params[:return_uri]
   end
