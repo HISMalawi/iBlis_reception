@@ -329,6 +329,7 @@ class TestController < ApplicationController
     accession_number = specimen.tracking_number
     patient = tests.first.visit.patient
     npid = patient.external_patient_number
+    npid = "-" if npid.blank?
     name = patient.name
     date = tests.first.time_created.strftime("%d-%b-%Y %H:%M")
 
@@ -353,18 +354,19 @@ class TestController < ApplicationController
     gender = patient.gender == 0 ? "F" : "M"
     col_datetime = date
     col_by = User.find(tests.first.created_by).username
-    acc_num = accession_number
+    acc_num = specimen.tracking_number
+
     formatted_acc_num = format_ac(accession_number)
 
     auto = Auto12Epl.new
     s =  "\n" + auto.generate_epl(last_name, first_name, middle_initial, npid, dob, age,
                            gender, col_datetime, col_by, tname,
-                           nil, formatted_acc_num, acc_num)
+                           nil, formatted_acc_num, specimen.tracking_number)
 
     send_data(s,
               :type=>"application/label; charset=utf-8",
               :stream=> false,
-              :filename=>"#{specimen.id}-#{rand(10000)}.lbs",
+              :filename=>"#{specimen.id}-#{rand(10000)}.lbl",
               :disposition => "inline"
     )
   end
