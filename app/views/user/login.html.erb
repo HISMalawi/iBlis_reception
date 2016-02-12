@@ -8,12 +8,12 @@
 <%= password_field(:user, :password, :helpText => "Enter Password", 
     :textCase => "lower",
     :field_type => "password") %><br>
-<label for="user_location">Location</label>
-<%= text_field_tag('location_name', '', :helpText=> "Scan location barcode", :tt_pageonload=>"loadBarcodePage") %><br>
-
+    <%= hidden_field_tag "location_name", "Lab Reception"%>
 <%end%>
 
 <script>
+    tt_cancel_destination = '/';
+    tt_cancel_show = '/';
     var setFocusTimeout = 1000;
     var checkForBarcodeTimeout = 1500;
 
