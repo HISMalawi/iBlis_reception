@@ -318,15 +318,14 @@ class TestController < ApplicationController
     now.year - dob.year - ((now.month > dob.month || (now.month == dob.month && now.day >= dob.day)) ? 0 : 1)
   end
   def format_ac(num)
-    num = num.insert(4, '-')
-    num = num.insert(-4, '-')
+    num = num.insert(3, '-')
+    num = num.insert(-9, '-')
     num
   end
   def print_accession_number
     require 'auto12epl'
     specimen = Specimen.find(params[:specimen_id])
     tests = specimen.tests
-    accession_number = specimen.tracking_number
     patient = tests.first.visit.patient
     npid = patient.external_patient_number
     npid = "-" if npid.blank?
@@ -351,12 +350,10 @@ class TestController < ApplicationController
     middle_initial = name.strip.scan(/\s\w+\s/).first.strip[0 .. 2] rescue ""
     dob = patient.dob.to_date.strftime("%d-%b-%Y")
     age = age(dob.to_date).to_s
-    gender = patient.gender == 0 ? "F" : "M"
+    gender = patient.gender == 0 ? "M" : "F"
     col_datetime = date
     col_by = User.find(tests.first.created_by).username
-    acc_num = specimen.tracking_number
-
-    formatted_acc_num = format_ac(accession_number)
+    formatted_acc_num = format_ac(specimen.accession_number)
 
     auto = Auto12Epl.new
     s =  "\n" + auto.generate_epl(last_name, first_name, middle_initial, npid, dob, age,
@@ -422,6 +419,12 @@ class TestController < ApplicationController
     @test = Test.find(params[:test_id])
     @specimen = @test.specimen
     @patient = @test.visit.patient
+    @test_name = ""
+    if (@test.panel_id.blank?)
+      @test_name = @test.test_type.name
+    else
+      @test_name = TestPanel.find(@test.panel_id).panel_type.name
+    end
 
     render :layout => false
   end
@@ -429,10 +432,11 @@ class TestController < ApplicationController
   private
   def new_accession_number
     # Generate the next accession number for specimen registration
-
+    @mutex = Mutex.new if @mutex.blank?
+    @mutex.lock
     max_acc_num = 0
     return_value = nil
-    sentinel = 999999
+    sentinel = 99999999
 
     settings = YAML.load_file("#{Rails.root}/config/application.yml")[Rails.env]
     code = settings['facility_code']
@@ -450,8 +454,10 @@ class TestController < ApplicationController
         max_acc_num = 1
     end
 
-    max_acc_num = max_acc_num.to_s.rjust(6, '0')
+    max_acc_num = max_acc_num.to_s.rjust(8, '0')
     return_value = "#{code}#{year}#{max_acc_num}"
+    @mutex.unlock
+
     return return_value
   end
 end
