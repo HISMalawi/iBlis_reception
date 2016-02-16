@@ -169,7 +169,8 @@ body {
                 '<%=test[:accession_number]%>',
                 '<%=test[:patient_name]%>',
                 '<%=test[:test_name]%>',
-                '<%=test[:test_id]%>'
+                '<%=test[:test_id]%>',
+                '<%=test[:tracking_number]%>'
                 );">
           <td style="width: 14%;">
             <span class="data"><%=test[:date_ordered]%></span>
@@ -213,6 +214,14 @@ body {
 
             <table class="table table-condensed">
               <tr class="row primary-row">
+                <td>
+                  <b>Tracking Number</b>
+                </td>
+                <td id="tracking_number">
+                  &nbsp;
+                </td>
+              </tr>
+              <tr class="row">
                 <td>
                   <b>Accession Number</b>
                 </td>
@@ -377,7 +386,7 @@ body {
 
 <script>
 
-    function showModal(id, specimen_status, test_status, sample_type, accession_number, patient_name, tests_ordered, test_id){
+    function showModal(id, specimen_status, test_status, sample_type, accession_number, patient_name, tests_ordered, test_id, tracking_number){
 
         jQuery("#name").html(patient_name);
         jQuery("#tests").html(tests_ordered);
@@ -385,9 +394,11 @@ body {
         jQuery("#specimen_status").html(specimen_status);
         jQuery("#test_status").html(test_status);
         jQuery("#accession_number").html(accession_number);
+        jQuery("#tracking_number").html(tracking_number);
 
         jQuery('#my_modal').attr("patient_number", id);
         jQuery('#my_modal').attr("specimen_id", id);
+        jQuery('#my_modal').attr("tracking_number", tracking_number);
         jQuery('#my_modal').attr("test_id", test_id);
 
         var actions = ['view', 'accept', 'reject', 'add'];
@@ -433,7 +444,7 @@ body {
         jQuery('#my_modal').attr("patient_number", "");
         jQuery('#my_modal').attr("specimen_id", "");
         jQuery('#my_modal').attr("test_id", "");
-
+        jQuery('#my_modal').attr("tracking_number", "");
         jQuery('#my_modal').modal("hide");
     }
 

@@ -277,10 +277,63 @@
                         <%= SpecimenStatus.find(@test.specimen.specimen_status_id).name.titleize%>
                       </div>
                     </div>
-                  </div>
+
+                        <% if @test.specimen.referral_id
+                            @referral = Referral.find(@test.specimen.referral_id)
+
+                        %>
+                        <div class="row">
+                          &nbsp;
+                        </div>
+
+                        <div class="row">
+                          <div class="col-md-4">
+                            <p><strong>Specimen Reffered </strong></p>
+                          </div>
+                          <div class="col-md-8">
+                            <%= @referral.status == 0 ? ' In ' : ' Out '%>
+                          </div>
+                        </div>
+
+                        <div class="row">
+                          <div class="col-md-4">
+                            <p><strong> Facility </strong></p>
+                          </div>
+                          <div class="col-md-8">
+                            <%= Facility.find(@referral.facility_id).name %>
+                          </div>
+                        </div>
+
+                        <div class="row">
+                          <div class="col-md-4">
+                            <p><strong> <%= @referral.status == 0 ? ' Originating From ' : ' Intended Reciepient '%></strong></p>
+                          </div>
+                          <div class="col-md-8">
+                            <%= @referral.person %>
+                          </div>
+                        </div>
+
+                        <div class="row">
+                          <div class="col-md-4">
+                            <p><strong> Contacts </strong></p>
+                          </div>
+                          <div class="col-md-8">
+                            <%= @referral.contacts %>
+                          </div>
+                        </div>
+
+                        <div class="row">
+                          <div class="col-md-4">
+                            <p><strong> Referred By </strong></p>
+                          </div>
+                          <div class="col-md-8">
+                            <%= User.find(@referral.user_id).name %>
+                          </div>
+                        </div>
+                        <% end %>
+                    </div>
                 </div>
               </div>
-
 
           </div>
       </div>

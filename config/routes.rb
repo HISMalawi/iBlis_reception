@@ -21,6 +21,7 @@ Rails.application.routes.draw do
   post '/people_search_results' => 'people#people_search_results'
   get 'people/given_names'
   get 'people/family_names'
+  get 'test/clinicians_suggest'
   get 'people/new'
   get 'people/addresses'
   get 'people/ward'

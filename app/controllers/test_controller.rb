@@ -39,6 +39,7 @@ class TestController < ApplicationController
       end
 
       @tests << {
+        :tracking_number => test.specimen.tracking_number,
         :location => test.visit.ward_or_location,
         :date_ordered =>  test.time_created,
         :test_name => test_name,
@@ -141,6 +142,7 @@ class TestController < ApplicationController
       specimen = Specimen.new
       specimen.specimen_type_id = params[:specimen_type]
       specimen.accepted_by = User.current.id
+      specimen.priority = params[:priority].blank? ? 'Routine' : 'Stat'
       specimen.accession_number = acc_num
       specimen.tracking_number = tracking_number
       specimen.save
@@ -356,14 +358,14 @@ class TestController < ApplicationController
     formatted_acc_num = format_ac(specimen.accession_number)
 
     auto = Auto12Epl.new
-    s =  "\n" + auto.generate_epl(last_name, first_name, middle_initial, npid, dob, age,
+    s =  auto.generate_epl(last_name, first_name, middle_initial, npid, dob, age,
                            gender, col_datetime, col_by, tname,
                            nil, formatted_acc_num, specimen.tracking_number)
 
     send_data(s,
               :type=>"application/label; charset=utf-8",
               :stream=> false,
-              :filename=>"#{specimen.id}-#{rand(10000)}.lbl",
+              :filename=>"#{specimen.id}-#{rand(10000)}.lbs",
               :disposition => "inline"
     )
   end
@@ -427,6 +429,19 @@ class TestController < ApplicationController
     end
 
     render :layout => false
+  end
+
+  def clinicians_suggest
+    search_string = (params[:search_string] || "").upcase
+
+    search_insert = search_string.blank? ? " " : " AND requested_by REGEXP '#{search_string.strip}' "
+    clinicians = Test.find_by_sql("SELECT requested_by, count(*) AS cc
+                                      FROM tests
+                                        WHERE COALESCE(requested_by, '') != ''  #{search_insert}
+                                        GROUP BY requested_by
+                                        ORDER BY cc DESC LIMIT 100;").map(&:requested_by)
+
+    render :text => "<li></li><li " + clinicians.map{|clinician| "value=\"#{clinician}\">#{clinician}" }.join("</li><li ") + "</li>"
   end
 
   private
