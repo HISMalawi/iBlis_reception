@@ -70,6 +70,7 @@ class TestController < ApplicationController
     tests = []
     testtypes = TestType.find_by_sql("SELECT * FROM test_types
                   WHERE orderable_test = 1 AND id IN (SELECT test_type_id FROM testtype_specimentypes WHERE specimen_type_id = #{specimen_type_id})")
+    paneled_tests = []
     testtypes.each do |type|
       tname = type.name
       tests << tname
@@ -79,9 +80,11 @@ class TestController < ApplicationController
         if !tests.include?(pname)
           tests << pname
         end
+        paneled_tests << tname
       end
     end
 
+    tests = tests - paneled_tests
     tests = tests.reject{|w| !w.match(/#{params[:search_string]}/i)}
     tests.sort!
     render :text => "<li>" + tests.uniq.map{|n| n } .join("</li><li>") + "</li>"
@@ -301,6 +304,7 @@ class TestController < ApplicationController
                   WHERE orderable_test = 1 AND id IN (SELECT test_type_id FROM testtype_specimentypes WHERE specimen_type_id = #{@specimen.specimen_type_id})")
 
     tests = []
+    paneled_tests = []
     testtypes.each do |type|
       tname = type.name
       tests << tname
@@ -310,9 +314,10 @@ class TestController < ApplicationController
         if !tests.include?(pname)
           tests << pname
         end
+        paneled_tests << tname
       end
     end
-    @testtypes = (tests - already_ordered).uniq
+    @testtypes = (tests - already_ordered - paneled_tests).uniq
   end
 
   def age(dob)
