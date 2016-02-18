@@ -133,9 +133,9 @@ class Auto12Epl
 
     # combine EPL statements
     if stat == nil
-      "\nN\nQ160,22\nq406\nR215,0\nZT\n#{name_element}\n#{pid_dob_age_gender_element}\n#{barcode_element}\n#{barcode_human_element}\n#{collector_element}\n#{tests_element}\nP1"
+      "\nN\nR215,0\nZT\n#{name_element}\n#{pid_dob_age_gender_element}\n#{barcode_element}\n#{barcode_human_element}\n#{collector_element}\n#{tests_element}\nP1"
     else
-      "\nN\nQ160,22\nq406\nR215,0\nZT\n#{name_element}\n#{pid_dob_age_gender_element}\n#{barcode_element}\n#{barcode_human_element}\n#{collector_element}\n#{tests_element}\n#{stat_element}\nP1"
+      "\nN\nR215,0\nZT\n#{name_element}\n#{pid_dob_age_gender_element}\n#{barcode_element}\n#{barcode_human_element}\n#{collector_element}\n#{tests_element}\n#{stat_element}\nP1"
     end
 
   end
