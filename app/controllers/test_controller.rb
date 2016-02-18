@@ -370,7 +370,7 @@ class TestController < ApplicationController
     send_data(s,
               :type=>"application/label; charset=utf-8",
               :stream=> false,
-              :filename=>"#{specimen.id}-#{rand(10000)}.lbs",
+              :filename=>"#{specimen.id}-#{rand(10000)}.lbl",
               :disposition => "inline"
     )
   end
