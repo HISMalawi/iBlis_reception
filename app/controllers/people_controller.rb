@@ -114,7 +114,7 @@ class PeopleController < ApplicationController
       :patient_number => (Patient.count + 1),
       :dob => calDOB(params),
       :dob_estimated => (params[:person]['birth_year'] == "Unknown") ? 1 : 0,
-      :external_patient_number => params[:person]['npid']
+      :external_patient_number => (params[:person]['npid'] == 'Unknown') ? '' : params[:person]['npid']
     )
 
     redirect_to "/test/new?patient_id=#{patient.id}&return_uri=#{request.referrer}"
@@ -183,7 +183,7 @@ P1'
     Patient.find(params[:patient_id]).update_attributes(
           :name => "#{params[:given_name]} #{params[:family_name]}",
           :address => params[:physical_address],
-          :external_patient_number => params[:npid],
+          :external_patient_number => (params[:npid] == 'Unknown') ? '' : params[:npid],
           :phone_number => params[:cell_phone_number],
           :gender => params[:gender],
           :dob => calDOB(params),
