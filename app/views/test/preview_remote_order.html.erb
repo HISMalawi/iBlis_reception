@@ -334,7 +334,7 @@
 </div>
 </div>
 
-<form id = 'data-form' action="/test/save_remote">
+<form id = 'data-form' action="/test/save_remote" method="POST">
   <input type="hidden" value="<%= params[:identifier]%>" name="identifier"/>
   <input type="hidden" value="<%= @data.to_json%>" name="data"/>
 </form>
@@ -351,7 +351,7 @@
 <% else %>
     <div class="footer">
       <button class="btn-home btn btl-lg btn-success" onmousedown="document.location='/'">|< Back Home</button>
-      <button class="btn-save btn btl-lg btn-success" onmousedown="document.location = '/tests/all?tracking_number=<%= params[:identifier]%>'"> Save Details</button>
+      <button class="btn-save btn btl-lg btn-success" onmousedown="document.getElementById('data-form').submit();"> Save Details</button>
 
     </div>
 <% end %>

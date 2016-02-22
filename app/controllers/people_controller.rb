@@ -1,4 +1,5 @@
 class PeopleController < ApplicationController
+
   def find
     settings = YAML.load_file("#{Rails.root}/config/application.yml")["#{Rails.env}"]
     @result = {}
@@ -12,7 +13,7 @@ class PeopleController < ApplicationController
     @patients = []
 
     if tracking_number
-      remote_url = "#{settings['central_repo']}/query_order/#{tracking_number}"
+      remote_url = "#{settings['central_repo']}/query_results/#{tracking_number}"
       remote_results = JSON.parse(RestClient.get(remote_url))
       @result = {'type' => 'remote_order', 'data' => remote_results} if remote_results
 
@@ -35,36 +36,6 @@ class PeopleController < ApplicationController
     if @result['type'] == 'local_order' and !@result['data'].blank?
       redirect_to "/tests/all/?tracking_number=" + tracking_number
     elsif @result['type'] == 'remote_order' and !@result['data'].blank?
-=begin
-      {"_id"=>"XKCH1625012",
-       "_rev"=>"1-153ce11d3484f0f5bc57c650ce4d8132",
-       "patient"=>{"national_patient_id"=>"",
-                   "first_name"=>"Hazard ",
-                   "middle_name"=>"",
-                   "last_name"=>" Patient",
-                   "date_of_birth"=>"Thu Jun 19 1986",
-                   "gender"=>"F", "phone_number"=>""},
-       "sample_type"=>"HVS",
-       "who_order_test"=>{"first_name"=>"",
-                          "last_name"=>"",
-                          "id_number"=>"",
-                          "phone_number"=>""},
-       "date_drawn"=>"Fri Feb 05 2016",
-       "date_dispatched"=>"",
-       "art_start_date"=>"",
-       "date_received"=>"Fri Feb 05 2016",
-       "sending_facility"=>"Kamuzu Central Hospital",
-       "receiving_facility"=>"Kamuzu Central Hospital",
-       "reason_for_test"=>"",
-       "test_types"=>["CSF Analysis", "Gram Stain", "HVS analysis"],
-       "status"=>"Drawn",
-       "district"=>"Lilongwe",
-       "priority"=>"Routine",
-       "order_location"=>"OPD 1",
-       "results"=>{},
-       "date_time"=>"Fri Feb 05 2016"
-      }
-=end
 
       @data = @result['data']
       render :layout => false, :template => "/test/preview_remote_order",

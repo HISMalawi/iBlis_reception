@@ -1,4 +1,5 @@
 class TestController < ApplicationController
+  skip_before_action :verify_authenticity_token
   def index
 
     accession_number_filter = ""
@@ -120,12 +121,12 @@ class TestController < ApplicationController
              :sample_type=> SpecimenType.find(params[:specimen_type]).name,
              :date_sample_drawn=> Date.today.strftime("%a %b %d %Y"),
              :tests=> params[:test_types].collect{|t| CGI.unescapeHTML(t)},
-             :sample_priority=> 'Routine',
+             :sample_priority=> params[:priority] || 'Routine',
              :target_lab=> settings['facility_name'],
              :tracking_number => "",
              :art_start_date => "",
              :date_dispatched => "",
-             :date_received => Date.today.strftime("%a %b %d %Y"),
+             :date_received => Time.now,
              :return_json => 'true'
     }
 
@@ -185,6 +186,9 @@ class TestController < ApplicationController
         test.save
       end
     end
+
+    Sender.send_data(patient, specimen)
+
     print_and_redirect("/test/print_accession_number?specimen_id=#{specimen.id}", "/tests/all?patient_id=#{visit.patient_id}&show_actions=true")
   end
 
@@ -204,25 +208,27 @@ class TestController < ApplicationController
   def save_remote
     data = JSON.parse(params[:data])
     identifier = params[:identifier]
+    patient = nil
+
+    specimen = Specimen.where(:tracking_number => data['_id'] ).last
+    patient = specimen.tests.last.visit.patient rescue nil if !specimen.blank?
 
     patient = Patient.where(
         :external_patient_number => data['patient']['national_patient_id']
-    ).last
+    ).last if data['patient']['national_patient_id'].present? and patient.blank?
 
     if patient.blank?
       patient = Patient.new
+      patient.external_patient_number = data['patient']['national_patient_id']
+      patient.name = (data['patient']['first_name'] + " " + data['patient']['middle_name'].to_s + " " + data['patient']['last_name']).squish
+      patient.dob = data['patient']['date_of_birth']
+      patient.gender = (data['patient']['gender'].match(/m/i) ? 0 : 1)
+      patient.phone_number = data['patient']['phone_number']
+      patient.patient_number = (Patient.count + 1) if patient.patient_number.blank?
+      patient.external_patient_number = data['patient']['national_patient_id']
     end
-
-    patient.external_patient_number = data['patient']['national_patient_id']
-    patient.name = (data['patient']['first_name'] + " " + data['patient']['middle_name'].to_s + " " + data['patient']['last_name']).squish
-    patient.dob = data['patient']['date_of_birth']
-    patient.gender = (data['patient']['gender'].match(/m/i) ? 0 : 1)
-    patient.phone_number = data['patient']['phone_number']
-    patient.patient_number = (Patient.count + 1) if patient.patient_number.blank?
-    patient.external_patient_number = data['patient']['national_patient_id']
     patient.save!
 
-    specimen = Specimen.where(:tracking_number => data['_id'] ).last
     if specimen.blank?
       specimen = Specimen.new
       specimen.specimen_type_id = SpecimenType.where(:name => data['sample_type']).last.id
@@ -234,14 +240,24 @@ class TestController < ApplicationController
       specimen.drawn_by_id = data['who_order_test']['id_number']
     end
 
+    specimen.specimen_status_id = SpecimenStatus.find_by_name('specimen-accepted').id
+    specimen.accepted_by = User.current.id if specimen.accepted_by.blank? || specimen.accepted_by.to_s == '0'
     specimen.priority = data['priority']
-    specimen.time_accepted = data['date_received']
+    specimen.time_accepted = data['date_received'] || Time.now if specimen.time_accepted.blank?
     specimen.save!
+
+    panel_type = data['test_types'].collect{|t| PanelType.find_by_name(t)}.compact.last rescue nil
+
+    test_panel = TestPanel.new
+    panel = []
+    if !panel_type.blank?
+      panel = Panel.where(:panel_type_id => panel_type.id).map(&:test_type_id)
+      test_panel.panel_type_id = panel_type.id
+    end
 
     (data['test_types'] || []).each do |name|
       name = CGI.unescapeHTML(name)
       type = TestType.find_by_name(name).id rescue next
-
       test = specimen.tests.where(:test_type_id => type).last
       if test.blank?
         test = Test.new
@@ -250,6 +266,11 @@ class TestController < ApplicationController
         test.test_status_id = 2
         test.created_by = User.current.id
         test.requested_by = specimen.drawn_by_name
+
+        if !panel_type.blank? and panel.include?(test.test_type_id)
+          test_panel.save!
+          test.panel_id = test_panel.id
+        end
       end
 
       visit = test.visit
@@ -261,6 +282,21 @@ class TestController < ApplicationController
 
       test.visit_id = visit.id
       test.save
+
+      #Save results
+      tms = data["results"]["#{name}"].keys.last
+      (data["results"]["#{name}"][tms]['results'] || []).each do  |measure_name, rst|
+        measure = Measure.find_by_name(measure_name)
+        result = TestResult.where(:test_id => test.id, :measure_id => measure.id).first_or_create
+        result.result = rst
+        result.save
+        test.test_status_id = TestStatus.find_by_name('completed').id
+        test.time_started = data["results"]["#{name}"][tms]['datetime_started']
+        test.time_completed = data["results"]["#{name}"][tms]['datetime_completed']
+        test.tested_by = User.find(data["results"]["#{name}"][tms]['who_updated']['ID_number']).id rescue User.current.id
+        test.save
+      end
+
     end
 
     redirect_to "/tests/all?tracking_number=#{specimen.tracking_number}"
