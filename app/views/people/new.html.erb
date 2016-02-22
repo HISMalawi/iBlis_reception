@@ -201,16 +201,6 @@
     :allowFreeText => true ,
     :tt_onLoad => ""}%>
 
-  <%= text_field_tag "person[cell_phone_number]",  params[:cell_phone_number], 
-      {
-        :field_type => 'number',
-        :helpText => 'Cell Phone Number', 
-        :validationRule => "^0\\d{7}$|Unknown|Not Available|N\/A|^0\\d{9}$",
-        :validationMessage => "Not a valid phone number",
-        :tt_pageStyleClass => "nota",
-        :id => 'cellphone'
-      } %>
-
     <%
        identifier = ""
        if !params[:identifier].blank? and (params[:identifier].length == 6 or params[:identifier].length == 13)

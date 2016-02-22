@@ -185,7 +185,7 @@ class TestController < ApplicationController
         test.save
       end
     end
-    print_and_redirect("/test/print_accession_number?specimen_id=#{specimen.id}", "/tests/all?patient_id=#{visit.patient_id}")
+    print_and_redirect("/test/print_accession_number?specimen_id=#{specimen.id}", "/tests/all?patient_id=#{visit.patient_id}&show_actions=true")
   end
 
   def accept
@@ -356,7 +356,7 @@ class TestController < ApplicationController
     last_name = name.strip.scan(/\w+$/).last.strip rescue ""
     middle_initial = name.strip.scan(/\s\w+\s/).first.strip[0 .. 2] rescue ""
     dob = patient.dob.to_date.strftime("%d-%b-%Y")
-    age = age(dob.to_date).to_s
+    age = patient.age
     gender = patient.gender == 0 ? "M" : "F"
     col_datetime = date
     col_by = User.find(tests.first.created_by).username

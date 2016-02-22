@@ -113,6 +113,7 @@ class PeopleController < ApplicationController
       :gender => params[:gender],
       :patient_number => (Patient.count + 1),
       :dob => calDOB(params),
+      :dob_estimated => (params[:person]['birth_year'] == "Unknown") ? 1 : 0,
       :external_patient_number => params[:person]['npid']
     )
 
@@ -184,7 +185,8 @@ P1'
           :address => params[:physical_address],
           :phone_number => params[:cell_phone_number],
           :gender => params[:gender],
-          :dob => calDOB(params)
+          :dob => calDOB(params),
+          :dob_estimated => (params[:person]['birth_year'] == "Unknown") ? 1 : 0
     )
 
     redirect_to params[:return_uri]
@@ -198,7 +200,7 @@ P1'
 
   def calDOB(params)
     if params[:person]['birth_year'] == "Unknown"
-      birthdate = Date.new(Date.today.year - params[:person]["age_estimate"].to_i, 7, 1)
+      birthdate = Date.new(Date.today.year - params[:person]["age_estimate"].to_i, 7, 15)
     else
       year = params[:person]["birth_year"].to_i
       month = params[:person]["birth_month"]

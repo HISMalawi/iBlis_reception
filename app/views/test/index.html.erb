@@ -161,8 +161,8 @@ body {
 </table>
 <div class="tests-data-div">
 <table class="table" style="width: 100%">
-        <%(@tests || []).each do |test|%>
-        <tr class="row hidable <%= cycle('odd', 'even')%>" onmousedown="javascript:showModal('<%=test[:specimen_id]%>',
+        <%(@tests || []).each_with_index do |test, i|%>
+        <tr id="row_<%=i%>" class="row hidable <%= cycle('odd', 'even')%>" onmousedown="javascript:showModal('<%=test[:specimen_id]%>',
                 '<%=test[:specimen_status]%>',
                 '<%=test[:test_status]%>',
                 '<%=test[:specimen_name]%>',
@@ -385,6 +385,10 @@ body {
 </style>
 
 <script>
+
+    <% if params[:show_actions] and params[:show_actions].to_s == 'true' %>
+        jQuery('#row_0').mousedown();
+    <% end %>
 
     function showModal(id, specimen_status, test_status, sample_type, accession_number, patient_name, tests_ordered, test_id, tracking_number){
 
