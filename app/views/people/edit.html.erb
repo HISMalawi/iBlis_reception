@@ -184,4 +184,14 @@
     :allowFreeText => true ,
     :tt_onLoad => ""}%>
 
+    <%= text_field_tag "npid", @patient.external_patient_number,
+                       {
+                               :field_type => 'alpha',
+                               :optional => true,
+                               :helpText => "External Patient Number (Optional)",
+                               :tt_requireNextClick => true,
+                               :tt_pageStyleClass => "azButton",
+                               :allowFreeText => true ,
+                               :tt_onLoad => ""}%>
+
 <% end %>

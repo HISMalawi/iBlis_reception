@@ -183,6 +183,7 @@ P1'
     Patient.find(params[:patient_id]).update_attributes(
           :name => "#{params[:given_name]} #{params[:family_name]}",
           :address => params[:physical_address],
+          :external_patient_number => params[:npid],
           :phone_number => params[:cell_phone_number],
           :gender => params[:gender],
           :dob => calDOB(params),
