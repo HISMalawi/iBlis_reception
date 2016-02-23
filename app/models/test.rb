@@ -10,4 +10,10 @@ class Test < ActiveRecord::Base
   def name
     self.test_type.name rescue nil
   end
+  def self.supported?(test_types = [])
+    test_types.each do |tname|
+      return false if (TestType.find_by_name(tname).blank? && PanelType.find_by_name(tname).blank?)
+    end
+    return true
+  end
 end

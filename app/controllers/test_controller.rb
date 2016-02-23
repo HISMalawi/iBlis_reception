@@ -100,6 +100,7 @@ class TestController < ApplicationController
     last_name = patient.name.strip.scan(/\s\w+$/).last
     middle_name = patient.name.strip.scan(/\s\w+\s/).last
 
+    #
     #Specimen Details
 
     json = { :return_path => "http://#{request.host}:#{request.port}",

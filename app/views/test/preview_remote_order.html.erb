@@ -88,7 +88,11 @@
     <table class="table" style="margin:0px;padding:0px;border: none;">
       <tr class="row" >
         <td class='pull-left' style="width: 80%;padding: 0px;margin: 0px;border: none;padding-left: 20px;">
-          <h3><strong>Test Details</strong></h3>
+          <% if !@is_supported_test %>
+            <h3 ><strong>Test Details (<span style="width: 100%;color: red;"> Test Not supported at Site</span>)</strong></h3>
+          <% else %>
+              <h3 ><strong>Test Details </strong></h3>
+        <% end %>
         </td>
         <td style="padding-left: 0px;border: none;">
 
@@ -177,6 +181,19 @@
           &nbsp;
         </td>
       </tr>
+
+      <tr class="view">
+        <td>
+          <p><strong>Ordered By</strong></p>
+        </td>
+        <td>
+          <p ><%= @data['who_order_test']['first_name']%> <%= @data['who_order_test']['last_name']%>&nbsp;</p>
+        </td>
+        <td style="width: 5%;">
+          &nbsp;
+        </td>
+      </tr>
+
 <% if false %>
       <tr >
         <td colspan="3">
@@ -287,48 +304,6 @@
         </div>
       </div>
 
-      <div class="panel panel-info"> <!-- Orderer -->
-        <div class="panel-heading">
-          <h3 class="panel-title"><b>Ordered By</b></h3>
-        </div>
-        <div class="panel-body">
-          <div class="container-fluid">
-            <div class="row">
-              <div class="col-md-4">
-                <p><strong>First Name</strong></p>
-              </div>
-              <div class="col-md-8">
-                <%= @data['who_order_test']['first_name']%>
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-md-4">
-                <p><strong>Last Name Name</strong></p>
-              </div>
-              <div class="col-md-8">
-                <%= @data['who_order_test']['last_name']%>
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-md-4">
-                <p><strong>ID. Number</strong></p>
-              </div>
-              <div class="col-md-8">
-                <%= @data['who_order_test']['id_number']%>
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-md-4">
-                <p><strong>Phone Number</strong></p>
-              </div>
-              <div class="col-md-8">
-                <%= @data['who_order_test']['phone_number']%>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
     </div>
   </div>
 </div>
@@ -346,13 +321,16 @@
 <% elsif request.referrer.match(/all/)%>
     <div class="footer">
       <button class="btn-home btn btl-lg btn-success" onmousedown="document.location='/tests/all'">|< Back</button>
-      <button class="btn-save btn btl-lg btn-success" onmousedown="document.location='/'"> Save Details</button>
+      <% if @is_supported_test %>
+        <button class="btn-save btn btl-lg btn-success" onmousedown="document.location='/'"> Save Details</button>
+      <% end %>
     </div>
 <% else %>
     <div class="footer">
       <button class="btn-home btn btl-lg btn-success" onmousedown="document.location='/'">|< Back Home</button>
-      <button class="btn-save btn btl-lg btn-success" onmousedown="document.getElementById('data-form').submit();"> Save Details</button>
-
+      <% if @is_supported_test %>
+        <button class="btn-save btn btl-lg btn-success" onmousedown="document.getElementById('data-form').submit();"> Save Details</button>
+      <% end %>
     </div>
 <% end %>
 

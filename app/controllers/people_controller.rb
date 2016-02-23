@@ -38,6 +38,7 @@ class PeopleController < ApplicationController
     elsif @result['type'] == 'remote_order' and !@result['data'].blank?
 
       @data = @result['data']
+      @is_supported_test = Test.supported?(@data['results'].keys)
       render :layout => false, :template => "/test/preview_remote_order",
              :tracking_number => tracking_number and return
     elsif @result['type'] == 'people' and @result['data'].length == 1 and !local_people.blank?
