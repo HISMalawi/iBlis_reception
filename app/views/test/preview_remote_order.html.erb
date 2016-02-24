@@ -322,14 +322,14 @@
     <div class="footer">
       <button class="btn-home btn btl-lg btn-success" onmousedown="document.location='/tests/all'">|< Back</button>
       <% if @is_supported_test %>
-        <button class="btn-save btn btl-lg btn-success" onmousedown="document.location='/'"> Save Details</button>
+        <button class="btn-save btn btl-lg btn-success" onmousedown="document.location='/'"> Proceed </button>
       <% end %>
     </div>
 <% else %>
     <div class="footer">
       <button class="btn-home btn btl-lg btn-success" onmousedown="document.location='/'">|< Back Home</button>
       <% if @is_supported_test %>
-        <button class="btn-save btn btl-lg btn-success" onmousedown="document.getElementById('data-form').submit();"> Save Details</button>
+        <button class="btn-save btn btl-lg btn-success" onmousedown="document.getElementById('data-form').submit();"> Proceed </button>
       <% end %>
     </div>
 <% end %>
