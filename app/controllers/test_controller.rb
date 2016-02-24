@@ -132,9 +132,7 @@ class TestController < ApplicationController
     }
 
     url = "#{settings['central_repo']}/create_hl7_order"
-    response = JSON.parse(RestClient.post(url, json))
-    paramz = response['params']
-
+    paramz = JSON.parse(RestClient.post(url, json))
     tracking_number = paramz['tracking_number']
     acc_num = new_accession_number
     visit = Visit.new
