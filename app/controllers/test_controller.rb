@@ -398,9 +398,9 @@ class TestController < ApplicationController
     formatted_acc_num = format_ac(specimen.accession_number)
 
     auto = Auto12Epl.new
-    s =  auto.generate_epl(last_name, first_name, middle_initial, npid, dob, age,
-                           gender, col_datetime, col_by, tname,
-                           nil, formatted_acc_num, specimen.tracking_number)
+    s =  auto.generate_epl(last_name.to_s, first_name.to_s, middle_initial.to_s, npid.to_s, dob, age.to_s,
+                           gender.to_s, col_datetime, col_by.to_s, tname.to_s,
+                           nil, formatted_acc_num.to_s, specimen.tracking_number.to_s)
 
     send_data(s,
               :type=>"application/label; charset=utf-8",
