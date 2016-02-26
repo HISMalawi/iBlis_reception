@@ -88,7 +88,7 @@ class TestController < ApplicationController
     tests = tests - paneled_tests
     stype = SpecimenType.find(specimen_type_id).name
     if (stype != 'CSF')
-      tests = tests - 'CSF Analysis'
+      tests = tests - ['CSF Analysis']
     end
     tests = tests.reject{|w| !w.match(/#{params[:search_string]}/i)}
     tests.sort!
