@@ -62,7 +62,7 @@ class TestController < ApplicationController
 
   def new
     @patient = Patient.find(params[:patient_id])
-    @specimen_types = [[]] + SpecimenType.all().collect{|type| [type['name'], type.id]}
+    @specimen_types = [[]] + SpecimenType.all().collect{|type| [type['name'], type.id]} - ['Other']
     @visit_types = [[]] + VisitType.all().collect{|visit| [visit['name'], visit.id]}
   end
 
