@@ -67,29 +67,42 @@ class TestController < ApplicationController
   end
 
   def types
+
     specimen_type_id = (params[:filter_value])
+
     tests = []
+
     testtypes = TestType.find_by_sql("SELECT * FROM test_types
                   WHERE orderable_test = 1 AND id IN (SELECT test_type_id FROM testtype_specimentypes WHERE specimen_type_id = #{specimen_type_id})")
+
+    stype = SpecimenType.find(specimen_type_id).name
+
+    to_remove = []
+
+    to_remove = ['CSF Analysis'] if stype != 'CSF'
+
+    to_remove  += ['Sterile Fluid Analysis']  if !(['Ascitic Fluid', 'Pleural Fluid', 'Pericardial Fluid', 'Peritoneal Fluid'].include?(stype))
+
+    to_remove += ['Urine Analysis'] if stype != 'Urine'
+
     paneled_tests = []
+
     testtypes.each do |type|
       tname = type.name
       tests << tname
       panel = Panel.where(:test_type_id => type.id).last rescue nil
+
       unless panel.blank?
         pname = panel.panel_type.name
         if !tests.include?(pname)
           tests << pname
         end
-        paneled_tests << tname
+        paneled_tests << tname if !to_remove.include?(panel.panel_type.name)
       end
     end
 
-    tests = tests - paneled_tests
-    stype = SpecimenType.find(specimen_type_id).name
-    if (stype != 'CSF')
-      tests = tests - ['CSF Analysis']
-    end
+    tests = tests - paneled_tests - to_remove
+
     tests = tests.reject{|w| !w.match(/#{params[:search_string]}/i)}
     tests.sort!
     render :text => "<li>" + tests.uniq.map{|n| n } .join("</li><li>") + "</li>"
