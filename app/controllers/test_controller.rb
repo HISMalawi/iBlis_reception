@@ -79,6 +79,7 @@ class TestController < ApplicationController
     stype = SpecimenType.find(specimen_type_id).name
 
     to_remove = []
+    panelS = []
 
     to_remove = ['CSF Analysis'] if stype != 'CSF'
 
@@ -95,17 +96,19 @@ class TestController < ApplicationController
 
       unless panel.blank?
         pname = panel.panel_type.name
+        panelS << pname
         if !tests.include?(pname)
           tests << pname
         end
-        paneled_tests << tname if !to_remove.include?(panel.panel_type.name)
+        paneled_tests << tname if to_remove.include?(panel.panel_type.name)
       end
     end
 
-    tests = tests - paneled_tests - to_remove
-
     tests = tests.reject{|w| !w.match(/#{params[:search_string]}/i)}
+    panelS = panelS.reject{|w| !w.match(/#{params[:search_string]}/i)}
     tests.sort!
+    tests = (panelS + tests).uniq - paneled_tests - to_remove
+
     render :text => "<li>" + tests.uniq.map{|n| n } .join("</li><li>") + "</li>"
   end
 
