@@ -166,7 +166,7 @@ class TestController < ApplicationController
       specimen = Specimen.new
       specimen.specimen_type_id = params[:specimen_type]
       specimen.accepted_by = User.current.id
-      specimen.priority = params[:priority].blank? ? 'Routine' : 'Stat'
+      specimen.priority = params[:priority].blank? ? 'Routine' : params[:priority]
       specimen.accession_number = acc_num
       specimen.tracking_number = tracking_number
       specimen.save
@@ -400,9 +400,9 @@ class TestController < ApplicationController
     tests.each do |t|
       next if !t.panel_id.blank?  and panels.include?(t.panel_id)
       if t.panel_id.blank?
-        test_names << t.name
+        test_names << t.short_name || t.name
       else
-        test_names << TestPanel.find(t.panel_id).panel_type.name
+        test_names << TestPanel.find(t.panel_id).panel_type.short_name || TestPanel.find(t.panel_id).panel_type.name
       end
 
     end
