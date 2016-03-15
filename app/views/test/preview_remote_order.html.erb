@@ -119,7 +119,7 @@
           <p><strong>Test Types</strong></p>
         </td>
         <td>
-          <p ><%= @data['test_types'].join(', ')%></p>
+          <p ><%= Panel.disambiguate(@data['test_types']).join(', ')%></p>
         </td>
         <td style="width: 5%;">
           &nbsp;

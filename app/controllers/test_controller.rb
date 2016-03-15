@@ -120,13 +120,15 @@ class TestController < ApplicationController
     first_name = patient.name.strip.scan(/^\w+\s/).first
     last_name = patient.name.strip.scan(/\s\w+$/).last
     middle_name = patient.name.strip.scan(/\s\w+\s/).last
-
-    #
-    #Specimen Details
+		
+    #Orderer
+		clinician = CGI.unescapeHTML(params[:clinician])
+		c_first_name = clinician.strip.scan(/^\w+\s/).first
+    c_last_name = clinician.strip.scan(/\s\w+$/).last
 
     json = { :return_path => "http://#{request.host}:#{request.port}",
              :district => settings['district'],
-             :health_facility_name=> settings['facility_name'],
+             :health_facility_name => settings['facility_name'],
              :first_name=> first_name,
              :last_name=> last_name,
              :middle_name=> middle_name,
@@ -135,8 +137,8 @@ class TestController < ApplicationController
              :national_patient_id=> patient.external_patient_number,
              :phone_number=> patient.phone_number,
              :reason_for_test=> '',
-             :sample_collector_last_name=> '',
-             :sample_collector_first_name=> '',
+             :sample_collector_last_name=> c_last_name,
+             :sample_collector_first_name=> c_first_name,
              :sample_collector_phone_number=> '',
              :sample_collector_id=> '',
              :sample_order_location=> params[:ward],
@@ -192,7 +194,7 @@ class TestController < ApplicationController
           test.test_status_id = 2
           test.created_by = User.current.id
           test.panel_id = test_panel.id
-          test.requested_by = CGI.unescapeHTML(params[:clinician])
+          test.requested_by = clinician
           test.save
         end
       else
@@ -202,7 +204,7 @@ class TestController < ApplicationController
         test.specimen_id = specimen.id
         test.test_status_id = 2
         test.created_by = User.current.id
-        test.requested_by = CGI.unescapeHTML(params[:clinician])
+        test.requested_by = clinician
         test.save
       end
     end
