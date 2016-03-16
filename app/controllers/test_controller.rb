@@ -247,7 +247,6 @@ class TestController < ApplicationController
       patient.gender = (data['patient']['gender'].match(/m/i) ? 0 : 1)
       patient.phone_number = data['patient']['phone_number']
       patient.patient_number = (Patient.count + 1) if patient.patient_number.blank?
-      patient.external_patient_number = data['patient']['national_patient_id']
     end
     patient.save!
 
@@ -257,7 +256,6 @@ class TestController < ApplicationController
       specimen.accession_number = new_accession_number
       specimen.tracking_number = data['_id']
       specimen.drawn_by_name = (data['who_order_test']['first_name'].to_s + ' ' +
-          data['who_order_test']['middle_name'].to_s + ' ' +
           data['who_order_test']['last_name'].to_s).squish
       specimen.drawn_by_id = data['who_order_test']['id_number']
     end
@@ -298,7 +296,7 @@ class TestController < ApplicationController
       visit = test.visit
       visit = Visit.new if visit.blank?
       visit.patient_id = patient.id
-      visit.visit_type = VisitType.last
+      visit.visit_type = VisitType.find_by_name('Referral').id if visit.visit_type.blank?
       visit.ward_or_location = data['order_location']
       visit.save!
 
@@ -312,10 +310,11 @@ class TestController < ApplicationController
         result = TestResult.where(:test_id => test.id, :measure_id => measure.id).first_or_create
         result.result = rst
         result.save
+        test.interpretation = data["remarks"]
         test.test_status_id = TestStatus.find_by_name('completed').id
         test.time_started = data["results"]["#{name}"][tms]['datetime_started']
         test.time_completed = data["results"]["#{name}"][tms]['datetime_completed']
-        test.tested_by = User.find(data["results"]["#{name}"][tms]['who_updated']['ID_number']).id rescue User.current.id
+        test.tested_by = User.first.id if test.tested_by.blank?
         test.save
       end
 
