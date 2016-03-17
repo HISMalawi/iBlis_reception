@@ -304,7 +304,7 @@ class TestController < ApplicationController
       test.save
 
       #Save results
-      tms = data["results"]["#{name}"].keys.last
+      tms = data["results"]["#{name}"].keys.last rescue nil
       (data["results"]["#{name}"][tms]['results'] || []).each do  |measure_name, rst|
         measure = Measure.find_by_name(measure_name)
         result = TestResult.where(:test_id => test.id, :measure_id => measure.id).first_or_create
@@ -316,7 +316,7 @@ class TestController < ApplicationController
         test.time_completed = data["results"]["#{name}"][tms]['datetime_completed']
         test.tested_by = User.first.id if test.tested_by.blank?
         test.save
-      end
+      end rescue nil
 
     end
 
