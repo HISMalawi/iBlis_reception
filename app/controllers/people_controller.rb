@@ -119,7 +119,7 @@ P1'
     visit_id = (params[:filter_value])
     wards = Ward.find_by_sql("SELECT * FROM wards WHERE id IN (SELECT ward_id FROM visittype_wards WHERE visit_type_id = #{visit_id})").map(&:name).uniq
     if wards.include?("Facilities")
-      wards += Ward.find_by_sql("SELECT name from facilities").map(&:name)
+      wards += Ward.find_by_sql("SELECT name from facilities UNION SELECT 'Other' AS name ").map(&:name)
     end
 
     wards = wards.reject{|w| !w.match(/#{params[:search_string]}/i) || w.match(/^facilities$/i)}
