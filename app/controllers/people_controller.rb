@@ -5,7 +5,7 @@ class PeopleController < ApplicationController
     @result = {}
     npid = ""
     tracking_number = params[:identifier]
-    npid = params[:identifier]
+    npid = params[:identifier].gsub(/\-/, '')
 
     openmrs_people = []
     local_people = []
