@@ -118,7 +118,7 @@ class Auto12Epl
       l_margin = L_MARGIN_W_STAT
       l_margin_barcode = L_MARGIN_BARCODE_W_STAT
     end
-    barcode_human_text = "#{acc_num} * #{schema_track}"
+    barcode_human_text = "#{acc_num} * #{schema_track.gsub(/\-/i, '')}"
     collector_element_text = "Col: #{col_date_time} #{col_name}"
     tests_element_text = tests
 

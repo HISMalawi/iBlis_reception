@@ -134,34 +134,11 @@
          <%= hidden_field 'identifier', params[:identifier]%>
  <% end %>
 
- <%= text_field_tag "person[names][given_name]", params[:given_name],
-    {:id => 'given_name',
-     :field_type => 'alpha',
-     :helpText => 'First name',
-     :ajaxURL => '/people/given_names?search_string=',
-     :allowFreeText => true,
-     :tt_onLoad => 'seen(tstCurrentPage);' } %>
+    <%= hidden_field_tag "person[names][given_name]", params[:given_name], :id => 'given_name' %>
+    <%= hidden_field_tag "person[names][family_name]", params[:family_name], :id => 'family_name' %>
 
-  <%= text_field_tag "person[names][family_name]", params[:family_name],
-      {:id => 'family_name', 
-       :field_type => 'alpha', 
-       :helpText => 'Last name',
-       :ajaxURL => '/people/family_names?search_string=',
-       :allowFreeText => true, 
-       :tt_onLoad => 'seen(tstCurrentPage);' }%>
-
-  <% gender = params[:gender] == '0' ? 'Male' : 'Female' %>
-  <%#= select "person[gender]", {"" => "", "Male" => "M", "Female" => "F"}, {:selected => gender},
-      {:id => 'gender', :helpText => 'Gender', 
-       :condition => '$("gender").value == "" || skipped[tstCurrentPage] == 1', 
-       :tt_onLoad => 'seen(tstCurrentPage);' } %>
-
-  <%= select_tag(:gender, options_for_select([["", ""], ["Male", "0"], ["Female", "1"]], [gender, params[:gender]]),
-      {:helpText => "Gender",
-       :id => 'gender',
-      :tt_onLoad => 'seen(tstCurrentPage); preselectGender()'
-      })%>
-
+    <% gender = params[:gender] == '0' ? 'Male' : 'Female' %>
+    <%= hidden_field_tag "gender", gender,  :id => 'gender' %>
 
   <%= text_field_tag "person[birth_year]", nil, {:helpText => 'Year of Birth', 
       :field_type => 'number', 

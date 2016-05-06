@@ -27,7 +27,7 @@ class TestController < ApplicationController
         end
       end
     end
-    
+
     @tests = []
     panels = []
     (tests || []).each do |test|
@@ -120,7 +120,7 @@ class TestController < ApplicationController
     first_name = patient.name.strip.scan(/^\w+\s/).first
     last_name = patient.name.strip.scan(/\s\w+$/).last
     middle_name = patient.name.strip.scan(/\s\w+\s/).last
-		
+
     #Orderer
 		clinician = CGI.unescapeHTML(params[:clinician])
 		c_first_name = clinician.strip.scan(/^\w+\s/).first
@@ -386,6 +386,14 @@ class TestController < ApplicationController
     num = num.insert(-9, '-')
     num
   end
+
+  def numerical_ac(num)
+    settings = YAML.load_file("#{Rails.root}/config/application.yml")[Rails.env]
+    code = settings['facility_code']
+    num = num.sub(/^#{code}/, '')
+    num
+  end
+
   def print_accession_number
     require 'auto12epl'
     specimen = Specimen.find(params[:specimen_id])
@@ -419,11 +427,12 @@ class TestController < ApplicationController
     col_by = User.find(tests.first.created_by).username
     formatted_acc_num = format_ac(specimen.accession_number)
     stat_el = specimen.priority.downcase.to_s == "stat" ? "STAT" : nil
+    numerical_acc_num = numerical_ac(specimen.accession_number)
 
     auto = Auto12Epl.new
     s =  auto.generate_epl(last_name.to_s, first_name.to_s, middle_initial.to_s, npid.to_s, dob, age.to_s,
                            gender.to_s, col_datetime, col_by.to_s, tname.to_s,
-                           stat_el, formatted_acc_num.to_s, specimen.tracking_number.to_s)
+                           stat_el, formatted_acc_num.to_s, numerical_acc_num)
 
     send_data(s,
               :type=>"application/label; charset=utf-8",
