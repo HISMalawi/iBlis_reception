@@ -3,9 +3,15 @@ class TestController < ApplicationController
   def index
 
     accession_number_filter = ""
+    settings = YAML.load_file("#{Rails.root}/config/application.yml")[Rails.env]
 
-    unless params[:tracking_number].blank?
+    if !params[:tracking_number].blank? && params[:tracking_number].match(/^X/i)
       accession_number_filter = " AND tests.specimen_id IN (SELECT id FROM specimens WHERE tracking_number = '#{params[:tracking_number]}') "
+    end
+
+    if !params[:tracking_number].blank? && params[:tracking_number].match(/^\d+$/)
+      acc_num = settings["facility_code"] + params[:tracking_number]
+      accession_number_filter = " AND tests.specimen_id IN (SELECT id FROM specimens WHERE accession_number = '#{acc_num}') "
     end
 
     if params[:status] == 'all'

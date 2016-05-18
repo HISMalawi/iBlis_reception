@@ -4,7 +4,7 @@ class PeopleController < ApplicationController
     settings = YAML.load_file("#{Rails.root}/config/application.yml")["#{Rails.env}"]
     @result = {}
     npid = ""
-    tracking_number = params[:identifier]
+    tracking_number = params[:identifier] || ""
     npid = params[:identifier].gsub(/\-/, '') rescue nil
 
     openmrs_people = []
@@ -12,7 +12,7 @@ class PeopleController < ApplicationController
     remote_results = []
     @patients = []
 
-    if tracking_number
+    if tracking_number && tracking_number.match(/X/i)
       remote_url = "#{settings['central_repo']}/query_results/#{tracking_number}"
       remote_results = JSON.parse(RestClient.get(remote_url))
       @result = {'type' => 'remote_order', 'data' => remote_results} if remote_results
@@ -22,6 +22,11 @@ class PeopleController < ApplicationController
                    'data' => Specimen.where(:tracking_number => tracking_number).last
         }
       end
+    elsif tracking_number.match(/^\d+$/)
+      acc_num = settings['facility_code'] + tracking_number
+      @result = {'type' => 'local_order',
+                 'data' => Specimen.where(:accession_number => acc_num).last
+      }
     end
 
     if @result['data'].blank? and params[:identifier]
@@ -60,7 +65,9 @@ class PeopleController < ApplicationController
   def search(field_name, search_string)
     i = 0 if field_name == 'given_name'
     i = 1 if field_name == 'family_name'
-    names = Patient.where("name LIKE (?)", "%#{search_string}").limit(20).map {|pat| pat.name.split(' ')[i] }
+
+    search_str = (i == 1) ? " '%___ #{search_string}%' " : " '#{search_string}%' "
+    names = Patient.where("name LIKE #{search_str} ").limit(20).map {|pat| pat.name.split(' ')[i] }
     render :text => "<li>" + names.uniq.map{|n| n } .join("</li><li>") + "</li>"
   end
 
@@ -82,7 +89,7 @@ class PeopleController < ApplicationController
       :created_by => User.current.id,
       :address => params[:person]['addresses']['physical_address'],
       :phone_number => params[:cell_phone_number],
-      :gender => params[:gender],
+      :gender => params[:gender].match(/F/i) ? 1 : 0,
       :patient_number => (Patient.count + 1),
       :dob => calDOB(params),
       :dob_estimated => (params[:person]['birth_year'] == "Unknown") ? 1 : 0,

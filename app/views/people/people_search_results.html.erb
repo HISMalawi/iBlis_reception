@@ -18,6 +18,8 @@
         padding: 10px;
         color: rgba(0,0,0,0.85);
         font-weight: bold;
+        width: 14.27%;
+        padding-left: 10px;
     }
     .main-container {
       width: 100%;
@@ -122,12 +124,16 @@
     }
     .data{
         border: 1px solid lightgray;
+        padding: 13px;
         padding-left: 20px;
+        width: 14.3%;
+        font-size: 1.3em;
       }
-    .patients-div {
+       .patients-div {
         display: flex;
         border: 1px solid gray;
         overflow: auto;
+        height: 79%;
         width: 100%;
     }
     .patient-row{
@@ -202,13 +208,13 @@
         <h3>Patients <%= !params[:identifier].blank? ? ('with identifier ' + params[:identifier]) : ""%></h3>
       </div>
 
-      <div class="patients-div">
+      <div class="patients-header">
         <table class="list-patients">
           <thead>
             <tr class="primary-row">
-              <td class="primary-row">Patient No.</td>
-              <td class="primary-row">External Patient No.</td>
-              <td class="primary-row">Patient Name</td>
+              <td class="primary-row" style="width: 10%;">Patient No.</td>
+              <td class="primary-row">Ext. patient #</td>
+              <td style="width:19%;" class="primary-row">Patient Name</td>
               <td class="primary-row">Sex</td>
               <td class="primary-row">Date of Birth</td>
               <td class="primary-row">Physical Address</td>
@@ -216,12 +222,17 @@
 
             </tr>
           </thead>
+        </table>
+      </div>
+
+      <div class="patients-div">
+        <table class="list-patients">
           <tbody>
           <%(@patients || []).each do |patient|%>
           <tr class="patient-row <%= cycle('even', 'odd')%>" onmousedown="route('/people/view?patient_id=' + <%=patient['id'] || '0'%>, this)">
-            <td class="data"><%= (patient['patient_number'] || '?')%></td>
+            <td style="width:10%;" class="data"><%= (patient['patient_number'] || '?')%></td>
             <td class="data"><%=patient['external_patient_number']%></td>
-            <td class="data"><%=patient['name'].squish%></td>
+            <td style="width:18.6%;"  class="data"><%=patient['name'].squish%></td>
             <td class="data"><%=patient['gender'] == 0  ? 'Male' : 'Female'%></td>
             <td class="data"><%=patient['dob'].to_date.strftime('%d-%m-%Y')%></td>
             <td class="data"><%=patient['address']%></td>
