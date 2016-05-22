@@ -49,7 +49,7 @@ body {
 /* ........... buttons .............. */
 #apps .button-div { 
   background-color: #87cefa;
-  border-radius: 25%;
+  border-radius: 10%;
   color: black;
   cursor: pointer;
   font-family: Arial;
