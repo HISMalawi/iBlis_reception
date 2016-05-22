@@ -14,7 +14,7 @@ body {
   height:100%;
   border-style: solid;
   border-width: 1px;
-  border-color: blue;
+  border-color: gray;
   box-sizing: border-box;
   border-top-left-radius: 3px;
   border-top-right-radius: 3px;
@@ -27,7 +27,7 @@ body {
   height:100%;
   border-style: solid;
   border-width: 1px;
-  border-color: blue;
+  border-color: gray;
   box-sizing: border-box;
   border-top-left-radius: 3px;
   border-top-right-radius: 3px;
@@ -48,17 +48,18 @@ body {
 
 /* ........... buttons .............. */
 #apps .button-div { 
-  background-color: grey;
-  border-radius: 5px;
-  color: #ffffff;
+  background-color: #87cefa;
+  border-radius: 25%;
+  color: black;
   cursor: pointer;
   font-family: Arial;
-  font-size: 100%;
+  font-size: 1.2em;
   margin-top: 5%;
   text-align: center;
   text-shadow: 0 1px 32px #2f6627;
-  width: 100%;
+  width: 93%;
   padding: 1%;
+  border: outset 8px #f8f8ff;
 }
 
 #app .button-div:hover {

@@ -81,7 +81,6 @@ class TestController < ApplicationController
 
     testtypes = TestType.find_by_sql("SELECT * FROM test_types
                   WHERE orderable_test = 1 AND id IN (SELECT test_type_id FROM testtype_specimentypes WHERE specimen_type_id = #{specimen_type_id})")
-
     stype = SpecimenType.find(specimen_type_id).name
 
     to_remove = []
@@ -98,15 +97,16 @@ class TestController < ApplicationController
     testtypes.each do |type|
       tname = type.name
       tests << tname
-      panel = Panel.where(:test_type_id => type.id).last rescue nil
-
+      panel = Panel.where(:test_type_id => type.id) rescue nil
       unless panel.blank?
-        pname = panel.panel_type.name
-        panelS << pname
-        if !tests.include?(pname)
-          tests << pname
+        panel.each do |p|
+          pname = p.panel_type.name
+          panelS << pname
+          if !tests.include?(pname)
+            tests << pname
+          end
+          paneled_tests << tname if to_remove.include?(p.panel_type.name)
         end
-        paneled_tests << tname if to_remove.include?(panel.panel_type.name)
       end
     end
 
