@@ -78,8 +78,8 @@ class PeopleController < ApplicationController
 
   def people_search_results
     given_name = params[:name]['given_name'] ; family_name = params[:name]['family_name']
-    @patients = Patient.where("name LIKE '#{given_name}%' AND name LIKE '%#{family_name}'  AND gender = ?",
-      params[:gender]).limit(20)
+    @patients = Patient.where("name LIKE (?) AND name LIKE (?) AND gender = ?", 
+     "#{given_name}%" ,"%#{family_name}", params[:gender]).limit(20)
 
     render :layout => false
   end

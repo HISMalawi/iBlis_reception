@@ -148,7 +148,7 @@
       })%>
 
 
-  <%= text_field_tag "person[birth_year]", @patient.dob.to_date.year, {:helpText => 'Year of Birth',
+  <%= text_field_tag "person[birth_year]", (@patient.dob.to_date.year rescue nil), {:helpText => 'Year of Birth',
       :field_type => 'number', 
       :absoluteMin => "1890", 
       :min => "1940", 

@@ -148,7 +148,7 @@
                 <p ><strong>Date of Birth</strong></p>
               </td>
               <td>
-                <p ><%= @patient.dob.to_date.strftime("%d-%m-%Y") %>&nbsp;</p>
+                <p ><%= @patient.dob.to_date.strftime("%d-%m-%Y") rescue 'N/A' %>&nbsp;</p>
               </td>
               <td style="width: 50%;">
                 &nbsp;

@@ -61,7 +61,7 @@ class TestController < ApplicationController
         :test_id => test.id,
         :specimen_status => test.specimen.status.name,
         :test_status => test.status.name,
-        :patient_name => "#{test.visit.patient.name} (#{test.visit.patient.gender == 0 ? 'M' : 'F'},#{test.visit.patient.age})"}
+        :patient_name => "#{test.visit.patient.name} (#{test.visit.patient.gender == 0 ? 'M' : 'F'},#{(test.visit.patient.age rescue 'N/A')})"}
     end
 
   end
@@ -105,7 +105,7 @@ class TestController < ApplicationController
           if !tests.include?(pname)
             tests << pname
           end
-          paneled_tests << tname if to_remove.include?(p.panel_type.name)
+          paneled_tests << tname if (to_remove.include?(p.panel_type.name) rescue false)
         end
       end
     end
@@ -360,7 +360,7 @@ class TestController < ApplicationController
 
     panels = Test.find_by_sql("SELECT * FROM tests WHERE panel_id IS NOT NULL and specimen_id = #{@specimen.id}").map(&:panel_id).uniq rescue []
     panels.each do |p|
-      already_ordered << Panel.find(p).panel_type.name
+      already_ordered << Panel.find(p).panel_type.name rescue (next)
     end
 
     testtypes = TestType.find_by_sql("SELECT * FROM test_types
