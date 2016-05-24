@@ -157,7 +157,7 @@
       :tt_onLoad => 'seen(tstCurrentPage);',
       :validationJS => "setDOB();" }  %>
 
-  <%= select_tag "person[birth_month]", month_name_options(["", @patient.dob.to_date.month]), {:helpText => 'Month of Birth',
+  <%= select_tag "person[birth_month]", month_name_options(["", (@patient.dob.to_date.month rescue nil)]), {:helpText => 'Month of Birth',
       :condition => '$("person_birth_year").value.toLowerCase() != "unknown"',
       :validationJS => "validateDOB();",
       :validationMessage => 'Please enter a valid date', 
@@ -169,7 +169,7 @@
       :tt_onLoad => "$('nextButton').style.display = 'block';", 
       :tt_pageStyleClass => "Numeric NumbersOnly"} %> 
 
-  <%= text_field_tag "person[birth_day]",  @patient.dob.to_date.day, :field_type => 'number', :helpText => 'Birth Day',
+  <%= text_field_tag "person[birth_day]",  (@patient.dob.to_date.day rescue nil), :field_type => 'number', :helpText => 'Birth Day',
       :condition => '($("person_birth_year").value != "Unknown") && ($("person_birth_month").value != "Unknown")', 
       :tt_onLoad => "getDayOfMonthPicker($('person_birth_year').value, $('person_birth_month').value);$('nextButton').style.display = 'block';" ,
       :validationJS => "validateDOB()",:validationMessage => 'Please enter a valid date'%>
