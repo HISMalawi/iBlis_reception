@@ -23,22 +23,10 @@ every '* * * * * sleep 00;' do
   rake "dashboard:fetch_stats"
 end
 
-every '* * * * * sleep 10;' do
-  rake "dashboard:fetch_stats"
-end
-
 every '* * * * * sleep 20;' do
   rake "dashboard:fetch_stats"
 end
 
-every '* * * * * sleep 30;' do
-  rake "dashboard:fetch_stats"
-end
-
 every '* * * * * sleep 40;' do
-  rake "dashboard:fetch_stats"
-end
-
-every '* * * * * sleep 50;' do
   rake "dashboard:fetch_stats"
 end
