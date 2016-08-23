@@ -5,12 +5,9 @@ namespace :dashboard do
       require 'json'
       file_name = "/tmp/orders"
 
-      if File.exist?("#{file_name}.tmp")
-        `rm #{file_name}.tmp`
-      end
-      if File.exist?("#{file_name}_aggregates.tmp")
-        `rm #{file_name}_aggregates.tmp`
-      end
+      Kernel.system("rm #{file_name}.tmp") rescue nil
+
+      Kernel.system("rm #{file_name}_aggregates.tmp") rescue nil
 
       Test.find_by_sql(
           "
