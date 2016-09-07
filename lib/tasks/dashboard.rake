@@ -41,9 +41,9 @@ namespace :dashboard do
                   s.priority AS priority,
                   COALESCE((SELECT lifespan FROM specimen_lifespan WHERE specimen_type_id = s.specimen_type_id AND test_type_id = t.test_type_id), '') AS lifespan
 
-            FROM tests t
+            FROM specimens s
 
-              INNER JOIN specimens s ON t.specimen_id = s.id
+              INNER JOIN tests t ON t.specimen_id = s.id
               INNER JOIN visits v ON t.visit_id = v.id
               INNER JOIN patients p ON p.id = v.patient_id
             WHERE
