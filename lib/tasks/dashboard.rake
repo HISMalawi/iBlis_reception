@@ -91,12 +91,36 @@ namespace :dashboard do
                         WHERE id = t.test_status_id) AS test_status,
                   (SELECT name FROM test_categories WHERE id = (SELECT test_category_id FROM test_types WHERE id = t.test_type_id)) AS department,
                   (SELECT ward_or_location FROM visits WHERE id = t.visit_id) AS ward,
+
                   COUNT(*) count
 
-                FROM specimens s
+              FROM specimens s
                   INNER JOIN tests t ON s.id = t.specimen_id
-                  WHERE COALESCE(s.time_rejected, t.time_verified, t.time_completed, t.time_started, t.time_created) >  NOW() - INTERVAL 1 WEEK
-                GROUP BY s.specimen_status_id, t.test_status_id, department, ward
+              WHERE
+                COALESCE(s.time_rejected, t.time_verified, t.time_completed, t.time_started, t.time_created) >  NOW() - INTERVAL 1 WEEK
+                AND
+                (
+                  t.test_status_id IN (SELECT id FROM test_statuses
+                            WHERE name in ('not-received', 'pending', 'started', 'completed')
+                          )
+                  OR
+                  (t.test_status_id IN (SELECT id FROM test_statuses
+                            WHERE name in ('verified', 'voided', 'not-done')
+                          ) AND TIMESTAMPDIFF(HOUR, t.time_verified, NOW()) < 6
+                  )
+                )
+                AND
+                (
+                  s.specimen_status_id IN (SELECT id FROM specimen_statuses
+                              WHERE name IN ('specimen-accepted', 'specimen-not-collected')
+                            )
+                  OR
+                  (s.specimen_status_id IN (SELECT id FROM specimen_statuses
+                              WHERE name IN ('specimen-rejected')
+                            ) AND TIMESTAMPDIFF(HOUR, s.time_rejected, NOW()) <= 6
+                  )
+                )
+              GROUP BY s.specimen_status_id, t.test_status_id, department, ward
 
                 INTO OUTFILE '#{file_name}_aggregates.tmp'
                 FIELDS TERMINATED BY ','
