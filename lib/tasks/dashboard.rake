@@ -8,6 +8,7 @@ namespace :dashboard do
       if File.exist?("#{file_name}.tmp")
         `rm #{file_name}.tmp`
       end
+
       if File.exist?("#{file_name}_aggregates.tmp")
         `rm #{file_name}_aggregates.tmp`
       end
@@ -46,7 +47,7 @@ namespace :dashboard do
               INNER JOIN visits v ON t.visit_id = v.id
               INNER JOIN patients p ON p.id = v.patient_id
             WHERE
-                t.time_created >  NOW() - INTERVAL 1 WEEK
+                COALESCE(s.time_rejected, t.time_verified, t.time_completed, t.time_started, t.time_created) >  NOW() - INTERVAL 1 WEEK
                 AND
                 (
                   t.test_status_id IN (SELECT id FROM test_statuses
@@ -94,7 +95,7 @@ namespace :dashboard do
 
                 FROM specimens s
                   INNER JOIN tests t ON s.id = t.specimen_id
-                  WHERE t.time_created >  NOW() - INTERVAL 1 WEEK
+                  WHERE COALESCE(s.time_rejected, t.time_verified, t.time_completed, t.time_started, t.time_created) >  NOW() - INTERVAL 1 WEEK
                 GROUP BY s.specimen_status_id, t.test_status_id, department, ward
 
                 INTO OUTFILE '#{file_name}_aggregates.tmp'
