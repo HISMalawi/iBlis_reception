@@ -1,5 +1,15 @@
 class Patient < ActiveRecord::Base
 
+  before_save EncryptionWrapper.new("name"),
+              EncryptionWrapper.new("email"),
+              EncryptionWrapper.new("phone_number"),
+              EncryptionWrapper.new("address")
+
+  after_find EncryptionWrapper.new("name"),
+             EncryptionWrapper.new("email"),
+             EncryptionWrapper.new("phone_number"),
+             EncryptionWrapper.new("address")
+
   def age
     birthdate = self.dob.to_date ; today = Date.today
 

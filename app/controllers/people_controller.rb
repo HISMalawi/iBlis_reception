@@ -55,19 +55,19 @@ class PeopleController < ApplicationController
   end
 
   def family_names
-    search("family_name", params[:search_string])
+    search("last_name_code", params[:search_string])
   end
   
   def given_names
-    search("given_name", params[:search_string])
+    search("first_name_code", params[:search_string])
   end
   
   def search(field_name, search_string)
-    i = 0 if field_name == 'given_name'
-    i = 1 if field_name == 'family_name'
+    search_string = "" if search_string.nil?
+    i = 0 if field_name == 'first_name_code'
+    i = 1 if field_name == 'last_name_code'
 
-    search_str = (i == 1) ? " '%___ #{search_string}%' " : " '#{search_string}%' "
-    names = Patient.where("name LIKE #{search_str} ").limit(20).map {|pat| pat.name.split(' ')[i] }
+    names = Patient.where("#{field_name} LIKE '#{search_string.soundex}%' ").limit(20).map {|pat| pat.name.split(/\s+/)[i] }
     render :text => "<li>" + names.uniq.map{|n| n } .join("</li><li>") + "</li>"
   end
 
@@ -77,9 +77,11 @@ class PeopleController < ApplicationController
   end
 
   def people_search_results
-    given_name = params[:name]['given_name'] ; family_name = params[:name]['family_name']
-    @patients = Patient.where("name LIKE (?) AND name LIKE (?) AND gender = ?", 
-     "#{given_name}%" ,"%#{family_name}", params[:gender]).limit(20)
+
+    given_name = params[:name]['given_name'].soundex  rescue nil
+    family_name = params[:name]['family_name'].soundex rescue nil
+    @patients = Patient.where("first_name_code = ? AND last_name_code = ? AND gender = ?",
+     "#{given_name}" ,"#{family_name}", params[:gender]).limit(20)
 
     render :layout => false
   end
