@@ -1,10 +1,24 @@
 require 'openssl'
 require 'base64'
-
+#Kenneth Kapundi
 class EncryptionWrapper
 
-  def initialize(attribute)
-    @attribute = attribute
+  def initialize(attribute, run_level=0)
+		#---------run_level------------		
+		#0 default fo object attributes
+		#1 to encrypt attribute str
+		#2 to decrypt attribute str and return hash
+
+		if run_level == 2
+			@attribute = decrypt(attribute)
+		elsif run_level == 1
+			@attribute = encrypt(attribute)
+		elsif run_level == 0
+	    @attribute = attribute
+		else
+			#make it fail
+			@attribute = nil
+		end
   end
 
   PASSWORD = File.read("config/key").strip
@@ -36,6 +50,14 @@ class EncryptionWrapper
       record.send("#{@attribute}=", decrypt(record.send("#{@attribute}"))) unless record.send("#{@attribute}").blank?
     end
   end
+	
+	def self.cryptize(str)
+		self.new(str, 1).as_json['attribute']
+	end
+
+	def self.humanize(str)
+		self.new(str, 2).as_json['attribute']
+	end
 
   private
   def encrypt(str)

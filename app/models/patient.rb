@@ -1,4 +1,4 @@
-class Patient < ActiveRecord::Base
+class Patient < BlisConnection
 
   before_save EncryptionWrapper.new("name"),
               EncryptionWrapper.new("email"),

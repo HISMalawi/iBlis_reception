@@ -1,7 +1,7 @@
 require 'digest/sha1'
 require 'digest/sha2'
 
-class User < ActiveRecord::Base
+class User < BlisConnection
   #default_scope { where(retired: 0) }
 
   cattr_accessor :current

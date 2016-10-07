@@ -1,4 +1,4 @@
-class TestCategory < ActiveRecord::Base
+class TestCategory < BlisConnection
   self.table_name = "test_categories"
 
 end

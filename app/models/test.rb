@@ -1,4 +1,4 @@
-class Test < ActiveRecord::Base
+class Test < BlisConnection
   self.table_name = "tests"
   
   belongs_to :test_type, class_name: 'TestType', foreign_key: "test_type_id"

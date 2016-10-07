@@ -81,8 +81,14 @@ class PeopleController < ApplicationController
     given_name = params[:name]['given_name'].soundex  rescue nil
     family_name = params[:name]['family_name'].soundex rescue nil
     @patients = Patient.where("first_name_code = ? AND last_name_code = ? AND gender = ?",
-     "#{given_name}" ,"#{family_name}", params[:gender]).limit(20)
+     "#{given_name}" ,"#{family_name}", params[:gender]).limit(50)
+    @exact_patients = []
 
+    @patients.each do |p|
+      @exact_patients << p if p.name.downcase == ((params[:name]['given_name'] + " " + params[:name]['family_name']).downcase rescue nil)
+    end
+
+    @patients = (@exact_patients + @patients).uniq
     render :layout => false
   end
 

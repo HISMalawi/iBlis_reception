@@ -1,4 +1,4 @@
-class SpecimenStatus < ActiveRecord::Base
+class SpecimenStatus < BlisConnection
   self.table_name = "specimen_statuses"
 
 end
