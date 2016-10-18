@@ -36,8 +36,10 @@ class Sender
     end
 
     settings = YAML.load_file("#{Rails.root}/config/application.yml")[Rails.env]
-    remote_post_url = "#{settings['central_repo']}/update_order/"
-    order = JSON.parse(RestClient.post(remote_post_url, order))
+    remote_post_url = "#{settings['central_repo']}/pass_json/"
+
+    order = RestClient.post(remote_post_url, order.to_json, "content_type" => "application/json")
+
     order
   end
 
