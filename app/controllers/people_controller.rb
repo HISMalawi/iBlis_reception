@@ -13,7 +13,7 @@ class PeopleController < ApplicationController
     @patients = []
 
     if tracking_number && tracking_number.match(/X/i)
-      remote_url = "#{settings['central_repo']}/query_results/#{tracking_number}"
+      remote_url = "#{settings['national-repo-node']}/query_results/#{tracking_number}"
       remote_results = JSON.parse(RestClient.get(remote_url))
       @result = {'type' => 'remote_order', 'data' => remote_results} if remote_results
 

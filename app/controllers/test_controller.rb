@@ -160,10 +160,9 @@ class TestController < ApplicationController
              :return_json => 'true'
     }
 
-    url = "#{settings['central_repo']}/create_hl7_order"
+    url = "#{settings['national-repo-node']}/create_hl7_order"
 
     paramz = JSON.parse(RestClient.post(url, json))
-
 
     tracking_number = paramz['tracking_number']
 
