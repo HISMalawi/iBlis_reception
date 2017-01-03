@@ -144,7 +144,7 @@ P1'
   def view
     if params[:patient_id].blank? || params[:patient_id].to_i == 0
       @patient = Patient.where(:external_patient_number => params[:external_patient_number],
-                               :name => params[:name],
+                               :name => EncryptionWrapper.cryptize(params[:name]),
                                :gender => ({'Male' => 0, 'Female' => 1}[params[:gender]]) || params[:gender]
       ).last
 
@@ -155,7 +155,8 @@ P1'
       @patient.dob = params[:dob].to_date
       @patient.gender = ({'Male' => 0, 'Female' => 1}[params[:gender]]) || params[:gender]
       @patient.address = params[:address]
-      @patient.save!
+      @patient.save
+      @patient = Patient.find(@patient.id)
     else
       @patient = Patient.find(params[:patient_id])
     end
