@@ -128,9 +128,10 @@ class TestController < ApplicationController
     middle_name = patient.name.strip.scan(/\s\w+\s/).last
 
     #Orderer
-		clinician = CGI.unescapeHTML(params[:clinician])
-		c_first_name = clinician.strip.scan(/^\w+\s/).first
-    c_last_name = clinician.strip.scan(/\s\w+$/).last
+		clinician = CGI.unescapeHTML(params[:clinician].strip).split(/\s+/)
+    c_last_name = clinician.last
+    c_first_name = (clinician - [c_last_name]).join(" ")
+    clinician = CGI.unescapeHTML(params[:clinician].strip)
 
     json = { :return_path => "http://#{request.host}:#{request.port}",
              :district => settings['district'],
@@ -246,12 +247,12 @@ class TestController < ApplicationController
     patient = specimen.tests.last.visit.patient rescue nil if !specimen.blank?
 
     patient = Patient.where(
-        :external_patient_number => data['patient']['national_patient_id'].gsub("$", "")
+        :external_patient_number => data['patient']['national_patient_id']
     ).last if data['patient']['national_patient_id'].present? and patient.blank?
 
     if patient.blank?
       patient = Patient.new
-      patient.external_patient_number = data['patient']['national_patient_id'].gsub("$", "")
+      patient.external_patient_number = data['patient']['national_patient_id']
       patient.name = (data['patient']['first_name'] + " " + data['patient']['middle_name'].to_s + " " + data['patient']['last_name']).squish
       patient.dob = data['patient']['date_of_birth']
       patient.gender = (data['patient']['gender'].match(/m/i) ? 0 : 1)
