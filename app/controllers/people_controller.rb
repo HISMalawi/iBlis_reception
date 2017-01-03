@@ -101,7 +101,7 @@ class PeopleController < ApplicationController
       :patient_number => (Patient.count + 1),
       :dob => calDOB(params),
       :dob_estimated => (params[:person]['birth_year'] == "Unknown") ? 1 : 0,
-      :external_patient_number => (params[:person]['npid'] == 'Unknown') ? '' : params[:person]['npid']
+      :external_patient_number => (params[:person]['npid'] == 'Unknown') ? '' : params[:person]['npid'].gsub("$", "")
     )
 
     redirect_to "/test/new?patient_id=#{patient.id}&return_uri=#{request.referrer}"

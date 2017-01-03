@@ -246,12 +246,12 @@ class TestController < ApplicationController
     patient = specimen.tests.last.visit.patient rescue nil if !specimen.blank?
 
     patient = Patient.where(
-        :external_patient_number => data['patient']['national_patient_id']
+        :external_patient_number => data['patient']['national_patient_id'].gsub("$", "")
     ).last if data['patient']['national_patient_id'].present? and patient.blank?
 
     if patient.blank?
       patient = Patient.new
-      patient.external_patient_number = data['patient']['national_patient_id']
+      patient.external_patient_number = data['patient']['national_patient_id'].gsub("$", "")
       patient.name = (data['patient']['first_name'] + " " + data['patient']['middle_name'].to_s + " " + data['patient']['last_name']).squish
       patient.dob = data['patient']['date_of_birth']
       patient.gender = (data['patient']['gender'].match(/m/i) ? 0 : 1)
