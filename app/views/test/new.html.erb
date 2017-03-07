@@ -11,6 +11,10 @@
         padding-left: 5px;
         padding-right: 5px;
     }
+
+		.capitalize .touchscreenTextInput{
+			text-transform: capitalize;
+		}
 </style>
 
 
@@ -64,6 +68,7 @@
         :field_type => 'alpha',
         :ajaxURL => '/test/clinicians_suggest?search_string=',
         :allowFreeText => true,
+				:tt_pageStyleClass => "capitalize",
         :tt_onLoad => "$('nextButton').style.display = 'inline';"
         }%>
 
