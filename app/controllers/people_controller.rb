@@ -93,7 +93,14 @@ class PeopleController < ApplicationController
   end
 
   def create
-    patient = Patient.create(:name => "#{params[:person]['names']['given_name']} #{params[:person]['names']['family_name']}",
+
+    first_name = params[:person]['names']['given_name']
+    last_name = params[:person]['names']['family_name']
+
+    patient = Patient.create(
+      :name => "#{first_name} #{last_name}",
+      :first_name_code => first_name.soundex,
+      :last_name_code => last_name.soundex,
       :created_by => User.current.id,
       :address => params[:person]['addresses']['physical_address'],
       :phone_number => params[:cell_phone_number],
@@ -148,10 +155,16 @@ P1'
                                :gender => ({'Male' => 0, 'Female' => 1}[params[:gender]]) || params[:gender]
       ).last
 
+      split_name = params[:name].split(/\s+/)[0] rescue []
+      first_name_code = split_name.first.soundex rescue nil
+      last_name_code = (split_name.length > 1 ? split_name.last.soundex : nil) rescue nil
+
       @patient = Patient.new if @patient.blank?
       @patient.patient_number = Patient.count + 1 if @patient.patient_number.blank?
       @patient.external_patient_number = params[:external_patient_number]
       @patient.name = params[:name]
+      @patient.first_name_code = first_name_code
+      @patient.last_name_code = last_name_code
       @patient.dob = params[:dob].to_date
       @patient.gender = ({'Male' => 0, 'Female' => 1}[params[:gender]]) || params[:gender]
       @patient.address = params[:address]
@@ -168,8 +181,14 @@ P1'
   end
 
   def update
+
+    first_name = params[:given_name] || ""
+    last_name = params[:family_name] || ""
+
     Patient.find(params[:patient_id]).update_attributes(
-          :name => "#{params[:given_name]} #{params[:family_name]}",
+          :name => "#{first_name} #{last_name}",
+          :first_name_code => first_name.soundex,
+          :last_name_code => last_name.soundex,
           :address => params[:physical_address],
           :external_patient_number => (params[:npid] == 'Unknown') ? '' : params[:npid],
           :phone_number => params[:cell_phone_number],

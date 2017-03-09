@@ -1,5 +1,5 @@
 class Patient < BlisConnection
-
+=begin
   before_save EncryptionWrapper.new("name"),
               EncryptionWrapper.new("email"),
               EncryptionWrapper.new("phone_number"),
@@ -9,6 +9,7 @@ class Patient < BlisConnection
              EncryptionWrapper.new("email"),
              EncryptionWrapper.new("phone_number"),
              EncryptionWrapper.new("address")
+=end
 
   def age
     birthdate = self.dob.to_date ; today = Date.today
