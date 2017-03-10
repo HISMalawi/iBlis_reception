@@ -235,7 +235,7 @@
             <td class="data"><%=patient['external_patient_number']%></td>
             <td style="width:18.6%;"  class="data"><%=patient['name'].squish%></td>
             <td class="data"><%=patient['gender'] == 0  ? 'Male' : 'Female'%></td>
-            <td class="data"><%=patient['dob'].to_date.strftime('%d-%b-%Y')%></td>
+            <td class="data"><%=(patient['dob'].to_date.strftime('%d-%b-%Y') rescue nil) %></td>
             <td class="data"><%=patient['address']%></td>
             <td class="source <%= patient['patient_number'].to_i == 0 ? 'red' : 'normal'%>"><span><%=patient['patient_number'].to_i == 0 ? 'Remote' : 'Local'%></span></td>
 
