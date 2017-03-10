@@ -7,8 +7,8 @@ def start
 
     first_name = name.first
 
-    next if first_name.strip.blank?
-    
+    next if (first_name.strip rescue "").blank?
+
     last_name = name.length > 1 ? name.last : ""
 
     p.first_name_code = first_name.soundex rescue nil
