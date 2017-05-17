@@ -1,3 +1,3 @@
-class RejectionReason < ActiveRecord::Base
+class RejectionReason < BlisConnection
 	self.table_name = "rejection_reasons"
 end

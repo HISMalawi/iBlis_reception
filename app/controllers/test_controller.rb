@@ -128,9 +128,10 @@ class TestController < ApplicationController
     middle_name = patient.name.strip.scan(/\s\w+\s/).last
 
     #Orderer
-		clinician = CGI.unescapeHTML(params[:clinician])
-		c_first_name = clinician.strip.scan(/^\w+\s/).first
-    c_last_name = clinician.strip.scan(/\s\w+$/).last
+		clinician = CGI.unescapeHTML(params[:clinician].strip).split(/\s+/)
+    c_last_name = clinician.last
+    c_first_name = (clinician - [c_last_name]).join(" ")
+    clinician = CGI.unescapeHTML(params[:clinician].strip)
 
     json = { :return_path => "http://#{request.host}:#{request.port}",
              :district => settings['district'],
@@ -160,9 +161,13 @@ class TestController < ApplicationController
              :return_json => 'true'
     }
 
-    url = "#{settings['central_repo']}/create_hl7_order"
+    url = "#{settings['national-repo-node']}/create_hl7_order"
+
     paramz = JSON.parse(RestClient.post(url, json))
+
     tracking_number = paramz['tracking_number']
+
+
     acc_num = new_accession_number
     visit = Visit.new
     visit.patient_id = params[:patient_id]

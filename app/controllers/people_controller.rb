@@ -13,7 +13,7 @@ class PeopleController < ApplicationController
     @patients = []
 
     if tracking_number && tracking_number.match(/X/i)
-      remote_url = "#{settings['central_repo']}/query_results/#{tracking_number}"
+      remote_url = "#{settings['national-repo-node']}/query_results/#{tracking_number}"
       remote_results = JSON.parse(RestClient.get(remote_url))
       @result = {'type' => 'remote_order', 'data' => remote_results} if remote_results
 
@@ -55,19 +55,19 @@ class PeopleController < ApplicationController
   end
 
   def family_names
-    search("family_name", params[:search_string])
+    search("last_name_code", params[:search_string])
   end
   
   def given_names
-    search("given_name", params[:search_string])
+    search("first_name_code", params[:search_string])
   end
   
   def search(field_name, search_string)
-    i = 0 if field_name == 'given_name'
-    i = 1 if field_name == 'family_name'
+    search_string = "" if search_string.nil?
+    i = 0 if field_name == 'first_name_code'
+    i = 1 if field_name == 'last_name_code'
 
-    search_str = (i == 1) ? " '%___ #{search_string}%' " : " '#{search_string}%' "
-    names = Patient.where("name LIKE #{search_str} ").limit(20).map {|pat| pat.name.split(' ')[i] }
+    names = Patient.where("#{field_name} LIKE '#{search_string.soundex}%' ").limit(20).map {|pat| pat.name.split(/\s+/)[i] }
     render :text => "<li>" + names.uniq.map{|n| n } .join("</li><li>") + "</li>"
   end
 
@@ -77,15 +77,30 @@ class PeopleController < ApplicationController
   end
 
   def people_search_results
-    given_name = params[:name]['given_name'] ; family_name = params[:name]['family_name']
-    @patients = Patient.where("name LIKE (?) AND name LIKE (?) AND gender = ?", 
-     "#{given_name}%" ,"%#{family_name}", params[:gender]).limit(20)
 
+    given_name = params[:name]['given_name'].soundex  rescue nil
+    family_name = params[:name]['family_name'].soundex rescue nil
+    @patients = Patient.where("first_name_code = ? AND last_name_code = ? AND gender = ?",
+     "#{given_name}" ,"#{family_name}", params[:gender]).limit(50)
+    @exact_patients = []
+
+    @patients.each do |p|
+      @exact_patients << p if p.name.downcase == ((params[:name]['given_name'] + " " + params[:name]['family_name']).downcase rescue nil)
+    end
+
+    @patients = (@exact_patients + @patients).uniq
     render :layout => false
   end
 
   def create
-    patient = Patient.create(:name => "#{params[:person]['names']['given_name']} #{params[:person]['names']['family_name']}",
+
+    first_name = params[:person]['names']['given_name']
+    last_name = params[:person]['names']['family_name']
+
+    patient = Patient.create(
+      :name => "#{first_name} #{last_name}",
+      :first_name_code => first_name.soundex,
+      :last_name_code => last_name.soundex,
       :created_by => User.current.id,
       :address => params[:person]['addresses']['physical_address'],
       :phone_number => params[:cell_phone_number],
@@ -93,7 +108,7 @@ class PeopleController < ApplicationController
       :patient_number => (Patient.count + 1),
       :dob => calDOB(params),
       :dob_estimated => (params[:person]['birth_year'] == "Unknown") ? 1 : 0,
-      :external_patient_number => (params[:person]['npid'] == 'Unknown') ? '' : params[:person]['npid']
+      :external_patient_number => (params[:person]['npid'] == 'Unknown') ? '' : params[:person]['npid'].gsub("$", "")
     )
 
     redirect_to "/test/new?patient_id=#{patient.id}&return_uri=#{request.referrer}"
@@ -136,18 +151,25 @@ P1'
   def view
     if params[:patient_id].blank? || params[:patient_id].to_i == 0
       @patient = Patient.where(:external_patient_number => params[:external_patient_number],
-                               :name => params[:name],
+                               :name => EncryptionWrapper.cryptize(params[:name]),
                                :gender => ({'Male' => 0, 'Female' => 1}[params[:gender]]) || params[:gender]
       ).last
+
+      split_name = params[:name].split(/\s+/)[0] rescue []
+      first_name_code = split_name.first.soundex rescue nil
+      last_name_code = (split_name.length > 1 ? split_name.last.soundex : nil) rescue nil
 
       @patient = Patient.new if @patient.blank?
       @patient.patient_number = Patient.count + 1 if @patient.patient_number.blank?
       @patient.external_patient_number = params[:external_patient_number]
       @patient.name = params[:name]
+      @patient.first_name_code = first_name_code
+      @patient.last_name_code = last_name_code
       @patient.dob = params[:dob].to_date
       @patient.gender = ({'Male' => 0, 'Female' => 1}[params[:gender]]) || params[:gender]
       @patient.address = params[:address]
-      @patient.save!
+      @patient.save
+      @patient = Patient.find(@patient.id)
     else
       @patient = Patient.find(params[:patient_id])
     end
@@ -159,8 +181,14 @@ P1'
   end
 
   def update
+
+    first_name = params[:given_name] || ""
+    last_name = params[:family_name] || ""
+
     Patient.find(params[:patient_id]).update_attributes(
-          :name => "#{params[:given_name]} #{params[:family_name]}",
+          :name => "#{first_name} #{last_name}",
+          :first_name_code => first_name.soundex,
+          :last_name_code => last_name.soundex,
           :address => params[:physical_address],
           :external_patient_number => (params[:npid] == 'Unknown') ? '' : params[:npid],
           :phone_number => params[:cell_phone_number],

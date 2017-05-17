@@ -1,4 +1,4 @@
-class VisitTypeWard < ActiveRecord::Base
+class VisitTypeWard < BlisConnection
   self.table_name = "visittype_wards"
 
   belongs_to :ward, class_name: 'Ward', foreign_key: 'ward_id'

@@ -1,4 +1,4 @@
-class Measure < ActiveRecord::Base
+class Measure < BlisConnection
   self.table_name = "measures"
 
 end

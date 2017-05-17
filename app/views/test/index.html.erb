@@ -134,7 +134,7 @@ body {
 </div>
 
 
-<table class="tests-div">
+<table class="tests-div" style="border-top: 2px solid darkred;">
   <tr class="row header-row">
     <th class="primary-row" style="width: 14%;">
       <label><b>Date Ordered</b></label>
@@ -159,7 +159,7 @@ body {
     </th>
   </tr>
 </table>
-<div class="tests-data-div">
+<div class="tests-data-div" >
 <table class="table" style="width: 100%">
         <%(@tests || []).each_with_index do |test, i|%>
         <tr id="row_<%=i%>" class="row hidable <%= cycle('odd', 'even')%>" onmousedown="javascript:showModal('<%=test[:specimen_id]%>',

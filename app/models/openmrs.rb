@@ -2,7 +2,12 @@ class Openmrs < ActiveRecord::Base
 
   self.abstract_class = true
 
-  establish_connection(:openmrs)
+  #establish_connection(:openmrs)
+
+  establish_connection(
+      Rails.configuration.database_configuration["openmrs"].inject({}){|h, v|
+        h[v.first] = (v.last.to_s.length > 40 ? EncryptionWrapper.humanize(v.last) : v.last); h
+      })
 
   def self.search_by_npid(npid)
     results = connection.select_all(

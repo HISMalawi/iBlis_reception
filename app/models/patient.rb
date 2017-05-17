@@ -1,4 +1,15 @@
-class Patient < ActiveRecord::Base
+class Patient < BlisConnection
+=begin
+  before_save EncryptionWrapper.new("name"),
+              EncryptionWrapper.new("email"),
+              EncryptionWrapper.new("phone_number"),
+              EncryptionWrapper.new("address")
+
+  after_find EncryptionWrapper.new("name"),
+             EncryptionWrapper.new("email"),
+             EncryptionWrapper.new("phone_number"),
+             EncryptionWrapper.new("address")
+=end
 
   def age
     birthdate = self.dob.to_date ; today = Date.today
