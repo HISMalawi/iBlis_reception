@@ -15,21 +15,26 @@ class TestController < ApplicationController
     end
 
     if params[:status] == 'all'
+
       if params[:patient_id].blank? #pull tests for all patients
+        
         if params[:test_status_id] and params[:test_status_id].to_i != 0
+
           tests = Test.find_by_sql("SELECT * FROm tests WHERE test_status_id = #{params[:test_status_id]} #{accession_number_filter}
                                     ORDER BY time_created DESC LIMIT 100")
-        else
+        else      
+
           tests = Test.find_by_sql("SELECT * FROM tests WHERE true #{accession_number_filter} ORDER BY time_created DESC LIMIT 100")
+          
         end
       else #pull tests for one patient
         if params[:test_status_id] and params[:test_status_id].to_i != 0
-          tests = Test.find_by_sql("SELECT * FROM tests where test_status_id = #{params[:test_status_id]}
+           tests = Test.find_by_sql("SELECT * FROM tests where test_status_id = #{params[:test_status_id]}
                               AND visit_id IN  (SELECT id FROM visits WHERE patient_id = #{params[:patient_id]}) #{accession_number_filter}
-                              ORDER BY time_created DESC LIMIT 100")
+                              ORDER BY time_created DESC LIMIT 10000000")
         else
           tests = Test.find_by_sql("SELECT * FROM tests where visit_id IN  (SELECT id FROM visits WHERE patient_id = #{params[:patient_id]}) #{accession_number_filter}
-                              ORDER BY time_created DESC LIMIT 100")
+                              ORDER BY time_created DESC LIMIT 10000000")
         end
       end
     end
@@ -44,7 +49,7 @@ class TestController < ApplicationController
         test_name = TestPanel.find(test.panel_id).panel_type.name
         panels << test.panel_id
       end
-
+  
       @tests << {
         :tracking_number => test.specimen.tracking_number,
         :location => test.visit.ward_or_location,
@@ -128,10 +133,9 @@ class TestController < ApplicationController
     middle_name = patient.name.strip.scan(/\s\w+\s/).last
 
     #Orderer
-		clinician = CGI.unescapeHTML(params[:clinician].strip).split(/\s+/)
-    c_last_name = clinician.last
-    c_first_name = (clinician - [c_last_name]).join(" ")
-    clinician = CGI.unescapeHTML(params[:clinician].strip)
+		clinician = CGI.unescapeHTML(params[:clinician])
+		c_first_name = clinician.strip.scan(/^\w+\s/).first
+    c_last_name = clinician.strip.scan(/\s\w+$/).last
 
     json = { :return_path => "http://#{request.host}:#{request.port}",
              :district => settings['district'],
@@ -203,6 +207,8 @@ class TestController < ApplicationController
           test.test_type_id = m_test.test_type_id
           test.specimen_id = specimen.id
           test.test_status_id = 2
+          test.not_done_reasons = 0
+          test.person_talked_to_for_not_done = 0
           test.created_by = User.current.id
           test.panel_id = test_panel.id
           test.requested_by = clinician
@@ -214,6 +220,8 @@ class TestController < ApplicationController
         test.test_type_id = type.id
         test.specimen_id = specimen.id
         test.test_status_id = 2
+        test.not_done_reasons = 0
+        test.person_talked_to_for_not_done = 0
         test.created_by = User.current.id
         test.requested_by = clinician
         test.save
