@@ -1,3 +1,5 @@
+require 'will_paginate/array' 
+
 class TestController < ApplicationController
   skip_before_action :verify_authenticity_token
   def index
@@ -5,43 +7,63 @@ class TestController < ApplicationController
     accession_number_filter = ""
     settings = YAML.load_file("#{Rails.root}/config/application.yml")[Rails.env]
 
-    if !params[:tracking_number].blank? && params[:tracking_number].match(/^X/i)
-      accession_number_filter = " AND tests.specimen_id IN (SELECT id FROM specimens WHERE tracking_number = '#{params[:tracking_number]}') "
-    end
+    if !params[:general_search_text].blank?
 
-    if !params[:tracking_number].blank? && params[:tracking_number].match(/^\d+$/)
-      acc_num = settings["facility_code"] + params[:tracking_number]
-      accession_number_filter = " AND tests.specimen_id IN (SELECT id FROM specimens WHERE accession_number = '#{acc_num}') "
-    end
-
-    if params[:status] == 'all'
-
-      if params[:patient_id].blank? #pull tests for all patients
-        
-        if params[:test_status_id] and params[:test_status_id].to_i != 0
-
-          tests = Test.find_by_sql("SELECT * FROm tests WHERE test_status_id = #{params[:test_status_id]} #{accession_number_filter}
-                                    ORDER BY time_created DESC LIMIT 100")
-        else      
-
-          tests = Test.find_by_sql("SELECT * FROM tests WHERE true #{accession_number_filter} ORDER BY time_created DESC LIMIT 100")
-          
-        end
-      else #pull tests for one patient
-        if params[:test_status_id] and params[:test_status_id].to_i != 0
-           tests = Test.find_by_sql("SELECT * FROM tests where test_status_id = #{params[:test_status_id]}
-                              AND visit_id IN  (SELECT id FROM visits WHERE patient_id = #{params[:patient_id]}) #{accession_number_filter}
-                              ORDER BY time_created DESC LIMIT 10000000")
-        else
-          tests = Test.find_by_sql("SELECT * FROM tests where visit_id IN  (SELECT id FROM visits WHERE patient_id = #{params[:patient_id]}) #{accession_number_filter}
-                              ORDER BY time_created DESC LIMIT 10000000")
-        end
+      @value = params[:general_search_text]
+      text = "'"+params[:general_search_text]+"'"
+     
+      if params[:test_status_id] and params[:test_status_id].to_i != 0
+               @test = Test.find_by_sql("SELECT * FROM tests where test_status_id = #{params[:test_status_id]}
+                                  AND visit_id  IN  (SELECT id FROM visits WHERE patient_id IN
+                                 (SELECT id FROM patients WHERE (SUBSTRING(patients.name,1,#{params[:text_length]}) = #{text}) ) ) #{accession_number_filter}
+                                  ORDER BY time_created DESC").paginate(page: params[:page], per_page: 100)
+      else
+        @test = Test.find_by_sql("SELECT * FROM tests WHERE tests.visit_id IN  (SELECT id FROM visits WHERE patient_id IN
+                                 (SELECT id FROM patients WHERE (SUBSTRING(patients.name,1,#{params[:text_length]}) = #{text}) ) ) #{accession_number_filter}
+                                  ORDER BY time_created DESC").paginate(page: params[:page], per_page: 100)
+      
       end
+    else
+
+        if !params[:tracking_number].blank? && params[:tracking_number].match(/^X/i)
+          accession_number_filter = " AND tests.specimen_id IN (SELECT id FROM specimens WHERE tracking_number = '#{params[:tracking_number]}') "
+        end
+
+        if !params[:tracking_number].blank? && params[:tracking_number].match(/^\d+$/)
+          acc_num = settings["facility_code"] + params[:tracking_number]
+          accession_number_filter = " AND tests.specimen_id IN (SELECT id FROM specimens WHERE accession_number = '#{acc_num}') "
+        end
+
+        if params[:status] == 'all'
+          if params[:patient_id].blank? #pull tests for all patients
+            
+            if params[:test_status_id] and params[:test_status_id].to_i != 0
+
+              @test = Test.find_by_sql("SELECT * FROm tests WHERE test_status_id = #{params[:test_status_id]} #{accession_number_filter}
+                                        ORDER BY time_created DESC ").paginate(page: params[:page], per_page: 100)
+            
+            else      
+
+              @test = Test.find_by_sql("SELECT * FROM tests WHERE true #{accession_number_filter} ORDER BY time_created DESC").paginate(page: params[:page], per_page: 100)
+              
+            end
+          else #pull tests for one patient
+            if params[:test_status_id] and params[:test_status_id].to_i != 0
+               @test = Test.find_by_sql("SELECT * FROM tests where test_status_id = #{params[:test_status_id]}
+                                  AND visit_id IN  (SELECT id FROM visits WHERE patient_id = #{params[:patient_id]}) #{accession_number_filter}
+                                  ORDER BY time_created DESC ").paginate(page: params[:page], per_page: 100)
+            else
+              @test = Test.find_by_sql("SELECT * FROM tests where visit_id IN  (SELECT id FROM visits WHERE patient_id = #{params[:patient_id]}) #{accession_number_filter}
+                                  ORDER BY time_created DESC ").paginate(page: params[:page], per_page: 100)
+            end
+          end
+        end
     end
+
 
     @tests = []
     panels = []
-    (tests || []).each do |test|
+    (@test || []).each do |test|
       test_name = test.test_type.name
       next if panels.include?(test.panel_id)
 
@@ -49,7 +71,7 @@ class TestController < ApplicationController
         test_name = TestPanel.find(test.panel_id).panel_type.name
         panels << test.panel_id
       end
-  
+
       @tests << {
         :tracking_number => test.specimen.tracking_number,
         :location => test.visit.ward_or_location,
@@ -70,7 +92,7 @@ class TestController < ApplicationController
     end
 
   end
-
+  
   def new
     @patient = Patient.find(params[:patient_id])
     other_type = SpecimenType.find_by_name('Other')
