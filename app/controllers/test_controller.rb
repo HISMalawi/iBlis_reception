@@ -88,8 +88,9 @@ class TestController < ApplicationController
         :test_id => test.id,
         :specimen_status => test.specimen.status.name,
         :test_status => test.status.name,
-        :patient_name => "#{test.visit.patient.name} (#{test.visit.patient.gender == 0 ? 'M' : 'F'},#{(test.visit.patient.age rescue 'N/A')})"}
+        :patient_name => "#{test.visit.patient.name} (#{test.visit.patient.gender == 0 ? 'M' : 'F'},#{test.visit.patient.age[0]}#{test.visit.patient.age[1]}#{test.visit.patient.age[2]}#{test.visit.patient.age[3]}"}
     end
+  
 
   end
   
