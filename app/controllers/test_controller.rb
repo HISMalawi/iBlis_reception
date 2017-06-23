@@ -16,11 +16,11 @@ class TestController < ApplicationController
                @test = Test.find_by_sql("SELECT * FROM tests where test_status_id = #{params[:test_status_id]}
                                   AND visit_id  IN  (SELECT id FROM visits WHERE patient_id IN
                                  (SELECT id FROM patients WHERE (SUBSTRING(patients.name,1,#{params[:text_length]}) = #{text}) ) ) #{accession_number_filter}
-                                  ORDER BY time_created DESC").paginate(page: params[:page], per_page: 100)
+                                  ORDER BY time_created DESC").paginate(page: params[:page], per_page: 20)
       else
         @test = Test.find_by_sql("SELECT * FROM tests WHERE tests.visit_id IN  (SELECT id FROM visits WHERE patient_id IN
                                  (SELECT id FROM patients WHERE (SUBSTRING(patients.name,1,#{params[:text_length]}) = #{text}) ) ) #{accession_number_filter}
-                                  ORDER BY time_created DESC").paginate(page: params[:page], per_page: 100)
+                                  ORDER BY time_created DESC").paginate(page: params[:page], per_page: 20)
       
       end
     else
@@ -40,7 +40,7 @@ class TestController < ApplicationController
             if params[:test_status_id] and params[:test_status_id].to_i != 0
 
               @test = Test.find_by_sql("SELECT * FROm tests WHERE test_status_id = #{params[:test_status_id]} #{accession_number_filter}
-                                        ORDER BY time_created DESC ").paginate(page: params[:page], per_page: 100)
+                                        ORDER BY time_created DESC ").paginate(page: params[:page], per_page: 20)
             
             else      
 
@@ -51,10 +51,10 @@ class TestController < ApplicationController
             if params[:test_status_id] and params[:test_status_id].to_i != 0
                @test = Test.find_by_sql("SELECT * FROM tests where test_status_id = #{params[:test_status_id]}
                                   AND visit_id IN  (SELECT id FROM visits WHERE patient_id = #{params[:patient_id]}) #{accession_number_filter}
-                                  ORDER BY time_created DESC ").paginate(page: params[:page], per_page: 100)
+                                  ORDER BY time_created DESC ").paginate(page: params[:page], per_page: 20)
             else
               @test = Test.find_by_sql("SELECT * FROM tests where visit_id IN  (SELECT id FROM visits WHERE patient_id = #{params[:patient_id]}) #{accession_number_filter}
-                                  ORDER BY time_created DESC ").paginate(page: params[:page], per_page: 100)
+                                  ORDER BY time_created DESC ").paginate(page: params[:page], per_page: 20)
             end
           end
         end
