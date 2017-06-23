@@ -44,7 +44,7 @@ class TestController < ApplicationController
             
             else      
 
-              @test = Test.find_by_sql("SELECT * FROM tests WHERE true #{accession_number_filter} ORDER BY time_created DESC").paginate(page: params[:page], per_page: 100)
+              @test = Test.find_by_sql("SELECT * FROM tests WHERE true #{accession_number_filter} ORDER BY time_created DESC").paginate(page: params[:page], per_page: 20)
               
             end
           else #pull tests for one patient
