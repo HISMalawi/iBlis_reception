@@ -20,7 +20,7 @@ gem 'jquery-rails'
 gem 'turbolinks'
 
 #gem for pagination capability
-gem 'will_paginate'
+gem 'will_paginate', '3.1.5'
 
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 gem 'jbuilder', '~> 2.0'
@@ -45,7 +45,7 @@ gem 'spring',        group: :development
 gem 'passenger'
 gem 'mysql'
 gem 'mysql2'
-gem 'rest-client'
+gem 'rest-client', '1.6.3'
 #gem 'bcrypt-ruby', :require => 'bcrypt' 
 gem 'bcrypt'
 

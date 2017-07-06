@@ -12,7 +12,11 @@ class Patient < BlisConnection
 =end
 
   def age
-    birthdate = self.dob.to_date ; today = Date.today
+    birthdate = self.dob.to_date rescue nil
+
+    return [] if birthdate.blank?
+
+    today = Date.today
 
     patient_age = (today.year - birthdate.year) + ((today.month - birthdate.month) + ((today.day - birthdate.day) < 0 ? -1 : 0) < 0 ? -1 : 0)
     age = []

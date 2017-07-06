@@ -148,7 +148,7 @@
                 <p ><strong>Date of Birth</strong></p>
               </td>
               <td>
-                <p ><%= @patient.dob.to_date.strftime("%d-%m-%Y") rescue 'N/A' %>&nbsp;</p>
+                <p ><%= @patient.dob.to_date.strftime("%d-%b-%Y") rescue 'N/A' %>&nbsp;</p>
               </td>
               <td style="width: 50%;">
                 &nbsp;
@@ -192,7 +192,7 @@
                 <p><strong>Date Created</strong></p>
               </td>
               <td>
-                <p > <%= @patient.created_at.to_time.strftime("%d-%m-%Y  &nbsp;&nbsp; %H:%M:%S").html_safe %></p>
+                <p > <%= @patient.created_at.to_time.strftime("%d-%b-%Y  &nbsp;&nbsp; %H:%M:%S").html_safe %></p>
               </td>
               <td style="width: 50%;">
                 &nbsp;

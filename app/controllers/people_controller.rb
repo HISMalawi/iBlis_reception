@@ -31,7 +31,12 @@ class PeopleController < ApplicationController
 
     if @result['data'].blank? and params[:identifier]
       local_people = Patient.where(:external_patient_number => params[:identifier]).to_a
-      openmrs_people = Openmrs.search_by_npid(npid).to_a rescue []
+      if (File.exists?("#{Rails.root}/config/dde_connection.yml"))
+        openmrs_people = Openmrs.search_from_dde2_by_npid(npid, session['dde2_token']).to_a rescue []
+      else
+        openmrs_people = Openmrs.search_by_npid(npid).to_a rescue []
+      end
+
       @result = {'type' => 'people',
                  'data' => (local_people + openmrs_people)}
     end
@@ -88,7 +93,19 @@ class PeopleController < ApplicationController
       @exact_patients << p if p.name.downcase == ((params[:name]['given_name'] + " " + params[:name]['family_name']).downcase rescue nil)
     end
 
-    @patients = (@exact_patients + @patients).uniq
+    if (File.exists?("#{Rails.root}/config/dde_connection.yml"))
+      @remote_people = Openmrs.search_from_dde2_by_name(
+        {
+          'given_name' => params[:name]['given_name'],
+          'family_name' => params[:name]['family_name'],
+          'gender' => params[:gender]
+        }, session['dde2_token']
+      ).to_a rescue []
+    else
+      @remote_people = Openmrs.search_by_name(params[:name]['given_name'], params[:name]['family_name'], params[:gender]).to_a# rescue []
+    end
+
+    @patients = (@exact_patients + @patients + @remote_people).uniq
     render :layout => false
   end
 
@@ -149,13 +166,15 @@ P1'
   end
 
   def view
+
     if params[:patient_id].blank? || params[:patient_id].to_i == 0
       @patient = Patient.where(:external_patient_number => params[:external_patient_number],
-                               :name => EncryptionWrapper.cryptize(params[:name]),
+                               :name => (EncryptionWrapper.cryptize(params[:name]) rescue params[:name]),
                                :gender => ({'Male' => 0, 'Female' => 1}[params[:gender]]) || params[:gender]
       ).last
 
-      split_name = params[:name].split(/\s+/)[0] rescue []
+      split_name = params[:name].split(/\s+/) rescue []
+
       first_name_code = split_name.first.soundex rescue nil
       last_name_code = (split_name.length > 1 ? split_name.last.soundex : nil) rescue nil
 
