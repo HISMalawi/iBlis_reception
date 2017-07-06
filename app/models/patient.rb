@@ -27,12 +27,12 @@ class Patient < BlisConnection
           age[0] = ""
           age[1] = ""
           age[2] = ""
-          age[3] = "less than Six month(s) old"
+          age[3] = " less 6ms old"
         else
           age[0] = ""
           age[1] = ""
           age[2] = ""
-          age[3] = "less than Twelve month(s) old"
+          age[3] = "less 12ms old"
         end
 
     elsif ((today.year -  birthdate.year) == 1)
@@ -44,15 +44,15 @@ class Patient < BlisConnection
         if (total_months>12)
           
             age[0] = total_months/12
-            age[1] = "year(s)"
-            age[2] = total_months%12
-            age[3] = " month(s)"
+            age[1] = "yrs"
+            age[2] = ""
+            age[3] = ""
           
         elsif (total_months<12)
             age[0] = ""
             age[1] = ""
             age[2] = total_months
-            age[3] = " month(s)"
+            age[3] = "ms"
         end    
     else
     
@@ -63,15 +63,15 @@ class Patient < BlisConnection
 
       if (current_month>birth_month)
             age[0] = years
-            age[1] = "year(s)"
-            age[2] = current_month-birth_month
-            age[3] = " month(s)"
+            age[1] = "yrs"
+            age[2] = ""
+            age[3] = " "
       elsif (current_month<birth_month)
             pre_months = 12 - birth_month
             age[0] = years - 1
-            age[1] = "year(s)"
-            age[2] = current_month+pre_months 
-            age[3] = " month(s)"
+            age[1] = "yrs"
+            age[2] = ""
+            age[3] = ""
       end 
     end
 
