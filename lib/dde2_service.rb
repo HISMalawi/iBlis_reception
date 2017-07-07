@@ -95,7 +95,7 @@ module DDE2Service
   def self.validate_token(token)
     url = "#{self.dde2_url}/v1/authenticated/#{token}"
     response = nil
-    response = JSON.parse(RestClient.get(url)) if !token.blank?
+    response = JSON.parse(RestClient.get(url)) rescue nil if !token.blank?
 
     if !response.blank? && response['status'] == 200
       return token
