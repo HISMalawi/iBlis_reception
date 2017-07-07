@@ -17,91 +17,6 @@ require 'rest-client'
 
 module DDE2Service
 
-  class Patient
-
-    attr_accessor :patient, :person
-
-    def initialize(patient)
-      self.patient = patient
-      self.person = self.patient.person			
-    end
-
-    def get_full_attribute(attribute)
-      PersonAttribute.find(:first,:conditions =>["voided = 0 AND person_attribute_type_id = ? AND person_id = ?",
-          PersonAttributeType.find_by_name(attribute).id,self.person.id]) rescue nil
-    end
-
-    def set_attribute(attribute, value)
-      PersonAttribute.create(:person_id => self.person.person_id, :value => value,
-        :person_attribute_type_id => (PersonAttributeType.find_by_name(attribute).id))
-    end
-
-    def get_full_identifier(identifier)
-      PatientIdentifier.find(:first,:conditions =>["voided = 0 AND identifier_type = ? AND patient_id = ?",
-          PatientIdentifierType.find_by_name(identifier).id, self.patient.id]) rescue nil
-    end
-
-    def set_identifier(identifier, value)
-      PatientIdentifier.create(:patient_id => self.patient.patient_id, :identifier => value,
-        :identifier_type => (PatientIdentifierType.find_by_name(identifier).id))
-    end
-
-    def name
-      "#{self.person.names.first.given_name} #{self.person.names.first.family_name}".titleize rescue nil
-    end
-
-    def first_name
-      "#{self.person.names.first.given_name}".titleize rescue nil
-    end
-
-    def last_name
-      "#{self.person.names.first.family_name}".titleize rescue nil
-    end
-
-    def middle_name
-      "#{self.person.names.first.middle_name}".titleize rescue nil
-    end
-
-    def maiden_name
-      "#{self.person.names.first.family_name2}".titleize rescue nil
-    end
-
-    def current_address2
-      "#{self.person.addresses.last.city_village}" rescue nil
-    end
-
-    def current_address1
-      "#{self.person.addresses.last.address1}" rescue nil
-    end
-
-    def current_district
-      "#{self.person.addresses.last.state_province}" rescue nil
-    end
-
-    def current_address
-      "#{self.current_address1}, #{self.current_address2}, #{self.current_district}" rescue nil
-    end
-
-    def home_district
-      "#{self.person.addresses.last.address2}" rescue nil
-    end
-
-    def home_ta
-      "#{self.person.addresses.last.county_district}" rescue nil
-    end
-
-    def home_village
-      "#{self.person.addresses.last.neighborhood_cell}" rescue nil
-    end
-
-    def national_id(force = true)
-      id = self.patient.patient_identifiers.find_by_identifier_type(PatientIdentifierType.find_by_name("National id").id).identifier rescue nil
-      return id unless force
-      id ||= PatientIdentifierType.find_by_name("National id").next_identifier(:patient => self.patient).identifier
-      id
-    end
-  end
-
   def self.dde2_configs
     YAML.load_file("#{Rails.root}/config/dde_connection.yml")[Rails.env]
   end
@@ -110,6 +25,12 @@ module DDE2Service
     dde2_configs = self.dde2_configs
     protocol = dde2_configs['secure_connection'].to_s == 'true' ? 'https' : 'http'
     "#{protocol}://#{dde2_configs['dde_server']}"
+  end
+
+  def self.dde2_url_with_auth
+    dde2_configs = self.dde2_configs
+    protocol = dde2_configs['secure_connection'].to_s == 'true' ? 'https' : 'http'
+    "#{protocol}://#{dde2_configs['dde_username']}:#{dde2_configs['dde_password']}@#{dde2_configs['dde_server']}"
   end
 
   def self.authenticate
@@ -123,6 +44,7 @@ module DDE2Service
       token = res['data']['token']
     end
 
+    File.open("#{Rails.root}/tmp/token", 'w') {|f| f.write(token) } if token.present?
     token
   end
 
@@ -144,6 +66,7 @@ module DDE2Service
   def self.add_user(token)
     dde2_configs = self.dde2_configs
     url = "#{self.dde2_url}/v1/add_user"
+    url = url.gsub(/\/\//, "//admin:admin@")
 
     response = RestClient::Request.execute(
         method: :put,
@@ -151,25 +74,30 @@ module DDE2Service
         payload:{
             "username" => dde2_configs["dde_username"],  "password" => dde2_configs["dde_password"],
             "application" => dde2_configs["application_name"], "site_code" => dde2_configs["site_code"],
-            "token" => token,"description" => "AnteNatal Clinic"
+            "description" => "AnteNatal Clinic"
         }.to_json,
-        headers: {:content_type => :json, :accept => :json}
+        headers: {:content_type => 'application/json'}
     )
 
     if response['status'] == 201
       puts "DDE2 user created successfully"
-      return response['data']
+      return JSON.parse(response)['data']
     else
       puts "Failed with response code #{response['status']}"
       return false
     end
   end
 
+  def self.token
+    self.validate_token(File.read("#{Rails.root}/tmp/token"))
+  end
+
   def self.validate_token(token)
     url = "#{self.dde2_url}/v1/authenticated/#{token}"
-    response = JSON.parse(RestClient.get(url))
+    response = nil
+    response = JSON.parse(RestClient.get(url)) if !token.blank?
 
-    if response['status'] == 200
+    if !response.blank? && response['status'] == 200
       return token
     else
       return self.authenticate
@@ -257,8 +185,6 @@ module DDE2Service
 
     if valid && !params['birthdate'].match(/\d{4}-\d{1,2}-\d{1,2}/)
       valid = false
-      result = JSON.parse(RestClient.post(url, params, "headers" => {"Content-Type" => 'application/json'}))
-      result
     end
 
     if valid && !['Female', 'Male'].include?(params['gender'])
@@ -268,69 +194,41 @@ module DDE2Service
     valid
   end
 
-  def self.search_from_dde2(params, token)
-    token = self.validate_token(token)
-    return [] if params[:given_name].blank? ||  params[:family_name].blank? ||
-        params[:gender].blank? || !token || token.blank?
+  def self.dde2_url_with_auth
+    dde2_configs = self.dde2_configs
+    protocol = dde2_configs['secure_connection'].to_s == 'true' ? 'https' : 'http'
+    "#{protocol}://#{dde2_configs['dde_username']}:#{dde2_configs['dde_password']}@#{dde2_configs['dde_server']}"
+  end
 
-    url = "#{self.dde2_url}/v1/search_by_name_and_gender"
+  def self.search_from_dde2(params)
+    url = "#{self.dde2_url_with_auth}/v1/search_by_name_and_gender"
+    response = RestClient::Request.execute(
+        method: :post,
+        url:    url,
+        payload: {'given_name' => params['given_name'],
+                  'family_name' => params['family_name'],
+                  'gender' => ({"1" => "Female", "0" => "Male"}[params['gender']] || params['gender'])
+                 }.to_json,
+        headers: {:content_type => 'application/json'}
+    )
 
-    response = JSON.parse(RestClient.post(url,
-                                          {'given_name' => params['given_name'],
-                                           'family_name' => params['family_name'],
-                                           'gender' => params['gender'],
-                                           'token' => token}))
-
-    if response['status'] == 200
-      return response['data']
+    if !response.blank? || response['status'] == 200
+      return JSON.parse(response)['data']['hits']
     else
       return false
     end
   end
 
-  def self.create_from_dde2(params, token)
-    token = self.validate_token(token)
-    return false if !token || token.blank?
+  def self.search_by_identifier(npid)
 
-    params['token'] = token
-    url = "#{self.dde2_url}/v1/add_patient"
-
-    response = JSON.parse(RestClient.post(url, params))
-
-    if response['status'] == 201
-      return true
-    elsif response['status'] == 409
-      return response['data']
-    end
-  end
-
-  def self.search_by_identifier(npid, token)
-    return false if npid.blank?
-    token = self.validate_token(token)
-    return false if !token || token.blank?
-
-    url = "#{self.dde2_url}/v1/search_by_identifier/#{npid}/#{token}"
+    url = "#{self.dde2_url_with_auth}/v1/search_by_identifier/#{npid}/#{self.token}"
     response = JSON.parse(RestClient.get(url))
 
-    if [200, 204].include?(response['status'])
-      return response['data']
+    if response.present? && response['status']
+      return response['data']['hits']
     else
       return false
     end
   end
 
-  def self.mark_duplicate(npid, token)
-    return false if npid.blank?
-    token = self.validate_token(token)
-    return false if !token || token.blank?
-
-    url = "#{self.dde2_url}/v1/void_patient/#{npid}/#{token}"
-    response = JSON.parse(RestClient.get(url))
-
-    if response['status'] == 200
-      return response['data']
-    else
-      return false
-    end
-  end
 end

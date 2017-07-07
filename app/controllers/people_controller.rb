@@ -32,7 +32,7 @@ class PeopleController < ApplicationController
     if @result['data'].blank? and params[:identifier]
       local_people = Patient.where(:external_patient_number => params[:identifier]).to_a
       if (File.exists?("#{Rails.root}/config/dde_connection.yml"))
-        openmrs_people = Openmrs.search_from_dde2_by_npid(npid, session['dde2_token']).to_a rescue []
+        openmrs_people = Openmrs.search_from_dde2_by_npid(npid).to_a# rescue []
       else
         openmrs_people = Openmrs.search_by_npid(npid).to_a rescue []
       end
@@ -99,8 +99,8 @@ class PeopleController < ApplicationController
           'given_name' => params[:name]['given_name'],
           'family_name' => params[:name]['family_name'],
           'gender' => params[:gender]
-        }, session['dde2_token']
-      ).to_a rescue []
+        }
+      ).to_a #rescue []
     else
       @remote_people = Openmrs.search_by_name(params[:name]['given_name'], params[:name]['family_name'], params[:gender]).to_a# rescue []
     end

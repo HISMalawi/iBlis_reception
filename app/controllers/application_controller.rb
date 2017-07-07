@@ -19,6 +19,12 @@ class ApplicationController < ActionController::Base
 
   def check_logged_in
 
+    if (File.exists?("#{Rails.root}/config/dde_connection.yml"))
+      token = DDE2Service.validate_token(session[:dde2_authority])
+      session[:dde2_authority] = token
+      puts session[:dde2_authority]
+    end
+
     if session[:user_id].blank?
       respond_to do |format|
         format.html { redirect_to '/login' }

@@ -56,8 +56,8 @@ class Openmrs < ActiveRecord::Base
     results
   end
 
-  def self.search_from_dde2_by_npid(npid, token)
-    response = DDE2Service.search_by_identifier(npid, token)
+  def self.search_from_dde2_by_npid(npid)
+    response = DDE2Service.search_by_identifier(npid)
 
     results = []
     (response || []).each do |data|
@@ -69,7 +69,7 @@ class Openmrs < ActiveRecord::Base
 
       results << {
           'patient_number' => 0,
-          'external_patient_identifier' => data['npid'],
+          'external_patient_number' => data['npid'],
           'name' => name,
           'gender' => data['gender'],
           'dob' => data['birthdate'],
@@ -80,8 +80,8 @@ class Openmrs < ActiveRecord::Base
     results
   end
 
-  def self.search_from_dde2_by_name(params, token)
-    response = DDE2Service.search_from_dde2(params, token)
+  def self.search_from_dde2_by_name(params)
+    response = DDE2Service.search_from_dde2(params)
     results = []
 
     (response || []).each do |data|
@@ -93,7 +93,7 @@ class Openmrs < ActiveRecord::Base
 
       results << {
           'patient_number' => 0,
-          'external_patient_identifier' => data['npid'],
+          'external_patient_number' => data['npid'],
           'name' => name,
           'gender' => data['gender'],
           'dob' => data['birthdate'],
