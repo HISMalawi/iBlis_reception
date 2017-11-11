@@ -57,10 +57,14 @@ class Openmrs < ActiveRecord::Base
   end
 
   def self.search_from_dde2_by_npid(npid)
-    response = DDE2Service.search_by_identifier(npid)
+    response = DDE2Service.search_by_identifier(npid) rescue nil
 
     results = []
     (response || []).each do |data|
+      next if data['gender'].blank?
+      next if data['birthdate'].blank?
+      next if data['npid'].length > 30
+
       name = "#{data['names']['given_name']} #{data['names']['middle_name']} #{data['names']['family_name']}"
       address = (data['addresses']['current_village'].blank? || data['addresses']['current_village'] == 'Other') ?
           data['addresses']['current_residence'] : data['addresses']['current_village']
@@ -85,6 +89,11 @@ class Openmrs < ActiveRecord::Base
     results = []
 
     (response || []).each do |data|
+
+      next if data['gender'].blank?
+      next if data['birthdate'].blank?
+      next if data['npid'].length > 30
+      
       name = "#{data['names']['given_name']} #{data['names']['middle_name']} #{data['names']['family_name']}"
       address = (data['addresses']['current_village'].blank? || data['addresses']['current_village'] == 'Other') ?
           data['addresses']['current_residence'] : data['addresses']['current_village']
