@@ -1,0 +1,16 @@
+default: &default
+  application_name: LIMS
+  dde_server: 192.168.6.211:3009
+  dde_username: admin
+  dde_password: admin
+  site_code: KCH
+  secure_connection: false
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default
