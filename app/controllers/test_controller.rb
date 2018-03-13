@@ -1,4 +1,5 @@
 require 'will_paginate/array' 
+require 'nlims_service.rb'
 
 class TestController < ApplicationController
   skip_before_action :verify_authenticity_token
@@ -168,7 +169,7 @@ class TestController < ApplicationController
              :middle_name=> middle_name,
              :date_of_birth=> patient.dob.to_date.strftime("%a %b %d %Y"),
              :gender=> (patient.gender == 1 ? "F" : "M"),
-             :national_patient_id=> patient.external_patient_number,
+             :national_patient_id=>  '505050',
              :phone_number=> patient.phone_number,
              :reason_for_test=> '',
              :sample_collector_last_name=> c_last_name,
@@ -185,75 +186,167 @@ class TestController < ApplicationController
              :art_start_date => "",
              :date_dispatched => "",
              :date_received => Time.now,
+             :requesting_clinician => '',
              :return_json => 'true'
     }
 
-    url = "#{settings['national-repo-node']}/create_hl7_order"
+    configs = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")
 
-    paramz = JSON.parse(RestClient.post(url, json))
+    if configs['nlims_controller'] == true      
+      res = NlimsService.check_token_validity
 
-    tracking_number = paramz['tracking_number']
+      if res == true
+          res = NlimsService.create_order(json)
 
+          if res == false
 
-    acc_num = new_accession_number
-    visit = Visit.new
-    visit.patient_id = params[:patient_id]
-    visit.visit_type = VisitType::find(params[:visit_type]).name
-    visit.ward_or_location = params[:ward]
-    visit.save
+          else
+              tracking_number = res
+             
+              acc_num = new_accession_number
+              visit = Visit.new
+              visit.patient_id = params[:patient_id]
+              visit.visit_type = VisitType::find(params[:visit_type]).name
+              visit.ward_or_location = params[:ward]
+              visit.save
 
-    if !params[:test_types].blank?
-      specimen = Specimen.new
-      specimen.specimen_type_id = params[:specimen_type]
-      specimen.accepted_by = User.current.id
-      specimen.priority = params[:priority].blank? ? 'Routine' : params[:priority]
-      specimen.accession_number = acc_num
-      specimen.tracking_number = tracking_number
-      specimen.save
-    end
+              if !params[:test_types].blank?
+                specimen = Specimen.new
+                specimen.specimen_type_id = params[:specimen_type]
+                specimen.accepted_by = User.current.id
+                specimen.priority = params[:priority].blank? ? 'Routine' : params[:priority]
+                specimen.accession_number = acc_num
+                specimen.tracking_number = tracking_number
+                specimen.save
+              end
 
-    params[:test_types].each do |name|
-      name = CGI.unescapeHTML(name)
-      type = TestType.find_by_name(name)
-      panel_type = PanelType.find_by_name(name)
+              params[:test_types].each do |name|
+                name = CGI.unescapeHTML(name)
+                type = TestType.find_by_name(name)
+                panel_type = PanelType.find_by_name(name)
 
-      if !panel_type.blank?
-        member_tests = Panel.where(:panel_type_id => panel_type.id)
+                if !panel_type.blank?
+                  member_tests = Panel.where(:panel_type_id => panel_type.id)
 
-        test_panel = TestPanel.new
-        test_panel.panel_type_id = panel_type.id
-        test_panel.save
+                  test_panel = TestPanel.new
+                  test_panel.panel_type_id = panel_type.id
+                  test_panel.save
 
-        (member_tests || []).each do |m_test|
-          test = Test.new
-          test.visit_id = visit.id
-          test.test_type_id = m_test.test_type_id
-          test.specimen_id = specimen.id
-          test.test_status_id = 2
-          test.not_done_reasons = 0
-          test.person_talked_to_for_not_done = 0
-          test.created_by = User.current.id
-          test.panel_id = test_panel.id
-          test.requested_by = clinician
-          test.save
-        end
+                  (member_tests || []).each do |m_test|
+                    test = Test.new
+                    test.visit_id = visit.id
+                    test.test_type_id = m_test.test_type_id
+                    test.specimen_id = specimen.id
+                    test.test_status_id = 2
+                    test.not_done_reasons = 0
+                    test.person_talked_to_for_not_done = 0
+                    test.created_by = User.current.id
+                    test.panel_id = test_panel.id
+                    test.requested_by = clinician
+                    test.save
+                  end
+                else
+                  test = Test.new
+                  test.visit_id = visit.id
+                  test.test_type_id = type.id
+                  test.specimen_id = specimen.id
+                  test.test_status_id = 2
+                  test.not_done_reasons = 0
+                  test.person_talked_to_for_not_done = 0
+                  test.created_by = User.current.id
+                  test.requested_by = clinician
+                  test.save
+                end
+              end
+
+              print_and_redirect("/test/print_accession_number?specimen_id=#{specimen.id}", "/tests/all?patient_id=#{visit.patient_id}&show_actions=true")
+              
+          end
+
       else
-        test = Test.new
-        test.visit_id = visit.id
-        test.test_type_id = type.id
-        test.specimen_id = specimen.id
-        test.test_status_id = 2
-        test.not_done_reasons = 0
-        test.person_talked_to_for_not_done = 0
-        test.created_by = User.current.id
-        test.requested_by = clinician
-        test.save
+          res = NlimsService.re_authenticate_user
+          if res == true
+            res = NlimsService.create_order(params)
+              if res == true
+
+              else
+
+              end
+          else
+            
+          end
       end
+
+    else
+            url = "#{settings['national-repo-node']}/create_hl7_order"
+
+            paramz = JSON.parse(RestClient.post(url, json))
+
+            tracking_number = paramz['tracking_number']
+
+
+            acc_num = new_accession_number
+            visit = Visit.new
+            visit.patient_id = params[:patient_id]
+            visit.visit_type = VisitType::find(params[:visit_type]).name
+            visit.ward_or_location = params[:ward]
+            visit.save
+
+            if !params[:test_types].blank?
+              specimen = Specimen.new
+              specimen.specimen_type_id = params[:specimen_type]
+              specimen.accepted_by = User.current.id
+              specimen.priority = params[:priority].blank? ? 'Routine' : params[:priority]
+              specimen.accession_number = acc_num
+              specimen.tracking_number = tracking_number
+              specimen.save
+            end
+
+            params[:test_types].each do |name|
+              name = CGI.unescapeHTML(name)
+              type = TestType.find_by_name(name)
+              panel_type = PanelType.find_by_name(name)
+
+              if !panel_type.blank?
+                member_tests = Panel.where(:panel_type_id => panel_type.id)
+
+                test_panel = TestPanel.new
+                test_panel.panel_type_id = panel_type.id
+                test_panel.save
+
+                (member_tests || []).each do |m_test|
+                  test = Test.new
+                  test.visit_id = visit.id
+                  test.test_type_id = m_test.test_type_id
+                  test.specimen_id = specimen.id
+                  test.test_status_id = 2
+                  test.not_done_reasons = 0
+                  test.person_talked_to_for_not_done = 0
+                  test.created_by = User.current.id
+                  test.panel_id = test_panel.id
+                  test.requested_by = clinician
+                  test.save
+                end
+              else
+                test = Test.new
+                test.visit_id = visit.id
+                test.test_type_id = type.id
+                test.specimen_id = specimen.id
+                test.test_status_id = 2
+                test.not_done_reasons = 0
+                test.person_talked_to_for_not_done = 0
+                test.created_by = User.current.id
+                test.requested_by = clinician
+                test.save
+              end
+            end
+
+            Sender.send_data(patient, specimen)
+
+            print_and_redirect("/test/print_accession_number?specimen_id=#{specimen.id}", "/tests/all?patient_id=#{visit.patient_id}&show_actions=true")
+            
     end
 
-    Sender.send_data(patient, specimen)
-
-    print_and_redirect("/test/print_accession_number?specimen_id=#{specimen.id}", "/tests/all?patient_id=#{visit.patient_id}&show_actions=true")
   end
 
   def accept
