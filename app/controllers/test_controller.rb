@@ -197,11 +197,9 @@ class TestController < ApplicationController
 
       if res == true
           res = NlimsService.create_order(json)
-
-          if res == false
-
-          else
-              tracking_number = res
+     
+          if res[1] == true
+              tracking_number = res[0]
              
               acc_num = new_accession_number
               visit = Visit.new
@@ -260,20 +258,82 @@ class TestController < ApplicationController
               end
 
               print_and_redirect("/test/print_accession_number?specimen_id=#{specimen.id}", "/tests/all?patient_id=#{visit.patient_id}&show_actions=true")
-              
+          else
+            msg = res
+           
+            redirect_to("/test/new?patient_id=#{params[:patient_id]}",  flash: {error: 'national_lims:  '+ msg[0] })
+           
           end
 
       else
           res = NlimsService.re_authenticate_user
           if res == true
-            res = NlimsService.create_order(params)
-              if res == true
+              res = NlimsService.create_order(params)
+              if res[1] == true
+                       tracking_number = res[0]
+             
+                  acc_num = new_accession_number
+                  visit = Visit.new
+                  visit.patient_id = params[:patient_id]
+                  visit.visit_type = VisitType::find(params[:visit_type]).name
+                  visit.ward_or_location = params[:ward]
+                  visit.save
 
+                  if !params[:test_types].blank?
+                    specimen = Specimen.new
+                    specimen.specimen_type_id = params[:specimen_type]
+                    specimen.accepted_by = User.current.id
+                    specimen.priority = params[:priority].blank? ? 'Routine' : params[:priority]
+                    specimen.accession_number = acc_num
+                    specimen.tracking_number = tracking_number
+                    specimen.save
+                  end
+
+                  params[:test_types].each do |name|
+                    name = CGI.unescapeHTML(name)
+                    type = TestType.find_by_name(name)
+                    panel_type = PanelType.find_by_name(name)
+
+                    if !panel_type.blank?
+                      member_tests = Panel.where(:panel_type_id => panel_type.id)
+
+                      test_panel = TestPanel.new
+                      test_panel.panel_type_id = panel_type.id
+                      test_panel.save
+
+                      (member_tests || []).each do |m_test|
+                        test = Test.new
+                        test.visit_id = visit.id
+                        test.test_type_id = m_test.test_type_id
+                        test.specimen_id = specimen.id
+                        test.test_status_id = 2
+                        test.not_done_reasons = 0
+                        test.person_talked_to_for_not_done = 0
+                        test.created_by = User.current.id
+                        test.panel_id = test_panel.id
+                        test.requested_by = clinician
+                        test.save
+                      end
+                    else
+                      test = Test.new
+                      test.visit_id = visit.id
+                      test.test_type_id = type.id
+                      test.specimen_id = specimen.id
+                      test.test_status_id = 2
+                      test.not_done_reasons = 0
+                      test.person_talked_to_for_not_done = 0
+                      test.created_by = User.current.id
+                      test.requested_by = clinician
+                      test.save
+                    end
+                  end
               else
-
+                msg = res           
+                redirect_to("/test/new?patient_id=#{params[:patient_id]}",  flash: {error: 'national_lims:  '+ msg[0] })
               end
           else
-            
+              msg = res
+              redirect_to("/test/new?patient_id=#{params[:patient_id]}", flash: {error: 'national_lims:  '+ msg } )
           end
       end
 

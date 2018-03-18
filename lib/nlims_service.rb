@@ -15,7 +15,7 @@ module NlimsService
 		if res['error'] == false
 			return true
 		else
-			return false
+			return res['message']
 		end
 
 	end
@@ -25,7 +25,7 @@ module NlimsService
 		username = $configs['nlims_custome_username']
 		password = $configs['nlims_custome_password']
 
-		res = JSON.parse(RestClient.get($check_token_url + username + "/" + password, :content_type => "application/json"))
+		res = JSON.parse(RestClient.get($re_authenticate_user_url + username + "/" + password, :content_type => "application/json"))
 		
 		if res['error'] == false
 			token = res['data']['token']
@@ -34,7 +34,7 @@ module NlimsService
 			}
 			return true
 		else	
-			return false
+			return res['message']
 		end
 
 	end
@@ -43,11 +43,11 @@ module NlimsService
 	def self.create_order(params)
 		token = File.read("#{Rails.root}/tmp/nlims_token")
 		res = JSON.parse(RestClient.post($create_order_url + token.to_s ,params, :content_type => 'application/json'))
-
+		
 		if res['error'] == false
-			return res['data']['tracking_number']
+			return [res['data']['tracking_number'],true]
 		else
-			return false
+			return  [res['message'],false]
 		end
 
 	end
@@ -61,7 +61,7 @@ module NlimsService
 		if res['error'] == false
 			return true
 		else
-			return false
+			return  res['message']
 		end
 
 	end
