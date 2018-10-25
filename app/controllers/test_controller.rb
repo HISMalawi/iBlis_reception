@@ -189,13 +189,41 @@ class TestController < ApplicationController
              :requesting_clinician => '',
              :return_json => 'true'
     }
-
+   
     configs = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")
 
     if configs['nlims_controller'] == true      
-      res = NlimsService.check_token_validity
 
+      json = {
+              :district => settings['district'],
+              :health_facility_name => settings['facility_name'],
+              :first_name=> first_name,
+              :last_name=> last_name,
+              :middle_name=> middle_name,
+              :date_of_birth=> patient.dob.to_date.strftime("%Y%m%d%H%M%S"),
+              :gender=> (patient.gender == 1 ? "F" : "M"),
+              :national_patient_id=>  '505050',
+              :phone_number=> "000-00-00-00",
+              :reason_for_test=> '',
+              :who_order_test_last_name=> clinician,
+              :who_order_test_first_name=> clinician,
+              :who_order_test_phone_number=> '',
+              :who_order_test_id=> '',
+              :order_location=> params[:ward],
+              :sample_type=> SpecimenType.find(params[:specimen_type]).name,
+              :date_sample_drawn=> Date.today.strftime("%Y%m%d%H%M%S"),
+              :tests=> params[:test_types].collect{|t| CGI.unescapeHTML(t)},
+              :sample_priority=> params[:priority] || 'Routine',
+              :target_lab=> settings['facility_name'],             
+              :art_start_date => "",             
+              :date_received => Date.today.strftime("%Y%m%d%H%M%S"),
+              :requesting_clinician => clinician            
+      }
+
+      res = NlimsService.check_token_validity
+     
       if res == true
+     
           res = NlimsService.create_order(json)
      
           if res[1] == true
@@ -268,6 +296,7 @@ class TestController < ApplicationController
       else
           res = NlimsService.re_authenticate_user
           if res == true
+            
               res = NlimsService.create_order(params)
               if res[1] == true
                        tracking_number = res[0]
@@ -418,7 +447,31 @@ class TestController < ApplicationController
         :accepted_by => User.current.id,
         :time_accepted => Time.now
     )
-    Sender.send_data(patient, specimen)
+   
+    configs = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")
+
+    if configs['nlims_controller'] == true
+        who = User.current
+        updater = {
+          'first_name': who.name.strip.scan(/^\w+/).first,
+          'last_name': who.name.strip.scan(/\w+$/).last,
+          'id_number': who.id,
+          'phone_number': ''
+        }
+        status = SpecimenStatus.find(specimen.specimen_status_id).name
+        if SpecimenStatus.find(specimen.specimen_status_id).name == "specimen-accepted"
+          status = "specimen_accepted"
+        end
+        update_details = {
+          "tracking_number": specimen.tracking_number,
+          "who_updated": updater,
+          "status": status
+        }        
+        res = NlimsService.update_order(update_details)
+    else
+      Sender.send_data(patient, specimen)
+    end
+
     redirect_to request.referrer
   end
 
@@ -526,16 +579,52 @@ class TestController < ApplicationController
   def do_reject
     specimen = Specimen.find(params[:specimen_id])
     patient = specimen.tests.last.visit.patient
-
+    rejection_re =  params[:rejection_reason]
+    rejection_explained = params[:person_talked_to]
     specimen.update_attributes(
         :specimen_status_id => SpecimenStatus.find_by_name("specimen-rejected").id,
         :rejected_by => User.current.id,
-        :rejection_reason_id => RejectionReason.find_by_reason(params[:rejection_reason]).id,
-        :reject_explained_to => params[:person_talked_to],
+        :rejection_reason_id => RejectionReason.find_by_reason(rejection_re).id,
+        :reject_explained_to => rejection_explained,
         :time_rejected => Time.now
     )
+    configs = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")
 
-    Sender.send_data(patient, specimen)
+    if configs['nlims_controller'] == true
+      who = User.current
+      rejecter = {}
+      updater = {
+        'first_name': who.name.strip.scan(/^\w+/).first,
+        'last_name': who.name.strip.scan(/\w+$/).last,
+        'id_number': who.id,
+        'phone_number': ''
+      }
+      status = SpecimenStatus.find(specimen.specimen_status_id).name
+      if  SpecimenStatus.find(specimen.specimen_status_id).name == "specimen-rejected"
+        status = "specimen_rejected"
+      end
+      rejecter = {
+          'person_talked_to': rejection_explained,
+          'reason_for_rejection': rejection_re,
+          'first_name': who.name.strip.scan(/^\w+/).first,
+          'last_name': who.name.strip.scan(/\w+$/).last,
+          'id_number': who.id,
+          'phone_number': ''          
+        }
+
+      update_details = {
+        "tracking_number": specimen.tracking_number,
+        "who_updated": updater,
+        "status": status,
+        "who_rejected": rejecter
+      }        
+
+
+      res = NlimsService.update_order(update_details)
+    else
+      Sender.send_data(patient, specimen)
+    end
+    
     redirect_to params[:return_uri]
   end
 
@@ -649,7 +738,7 @@ class TestController < ApplicationController
 
       type = TestType.find_by_name(params[:test_type])
       panel_type = PanelType.find_by_name(params[:test_type])
-
+      tests_to_nlims = []
       if !panel_type.blank?
         member_tests = Panel.where(:panel_type_id => panel_type.id)
 
@@ -663,24 +752,47 @@ class TestController < ApplicationController
           test.test_type_id = m_test.test_type_id
           test.specimen_id = specimen.id
           test.test_status_id = 2
+          test.not_done_reasons = 0
+          test.person_talked_to_for_not_done = 0
           test.created_by = User.current.id
           test.panel_id = test_panel.id
           test.requested_by = specimen.tests.last.requested_by
           test.save
+          tests_to_nlims.push(test.test_type.name)
         end
+      
       else
         test = Test.new
         test.visit_id = visit.id
         test.test_type_id = type.id
         test.specimen_id = specimen.id
         test.test_status_id = 2
+        test.not_done_reasons = 0
+        test.person_talked_to_for_not_done = 0
         test.created_by = User.current.id
         test.requested_by = specimen.tests.last.requested_by
         test.save
+        tests_to_nlims.push(test.test_type.name)
       end
+    configs = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")
 
-    Sender.send_data(visit.patient, specimen)
-
+    if configs['nlims_controller'] == true
+        who = User.current
+        updater = {
+          'first_name': who.name.strip.scan(/^\w+/).first,
+          'last_name': who.name.strip.scan(/\w+$/).last,
+          'id_number': who.id,
+          'phone_number': ''
+        }
+        update_details = {
+          "tracking_number": specimen.tracking_number,
+          "who_updated": updater,
+          "tests": tests_to_nlims
+        }        
+        res = NlimsService.add_test(update_details)
+    else
+      Sender.send_data(visit.patient, specimen)
+    end
     redirect_to params[:return_uri]
   end
 
