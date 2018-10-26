@@ -28,7 +28,6 @@ module NlimsService
 		password = $configs['nlims_custome_password']
 
 		res = JSON.parse(RestClient.get($re_authenticate_user_url + username + "/" + password, :content_type => "application/json"))
-		
 		if res['error'] == false
 			token = res['data']['token']
 			File.open("#{Rails.root}/tmp/nlims_token", "w") { |f|

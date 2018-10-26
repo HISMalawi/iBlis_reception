@@ -220,22 +220,17 @@ class TestController < ApplicationController
               :requesting_clinician => clinician            
       }
 
-      res = NlimsService.check_token_validity
-     
-      if res == true
-     
-          res = NlimsService.create_order(json)
-     
+      res = NlimsService.check_token_validity     
+      if res == true     
+          res = NlimsService.create_order(json)     
           if res[1] == true
-              tracking_number = res[0]
-             
+              tracking_number = res[0]             
               acc_num = new_accession_number
               visit = Visit.new
               visit.patient_id = params[:patient_id]
               visit.visit_type = VisitType::find(params[:visit_type]).name
               visit.ward_or_location = params[:ward]
               visit.save
-
               if !params[:test_types].blank?
                 specimen = Specimen.new
                 specimen.specimen_type_id = params[:specimen_type]
@@ -245,19 +240,15 @@ class TestController < ApplicationController
                 specimen.tracking_number = tracking_number
                 specimen.save
               end
-
               params[:test_types].each do |name|
                 name = CGI.unescapeHTML(name)
                 type = TestType.find_by_name(name)
                 panel_type = PanelType.find_by_name(name)
-
                 if !panel_type.blank?
                   member_tests = Panel.where(:panel_type_id => panel_type.id)
-
                   test_panel = TestPanel.new
                   test_panel.panel_type_id = panel_type.id
                   test_panel.save
-
                   (member_tests || []).each do |m_test|
                     test = Test.new
                     test.visit_id = visit.id
@@ -284,30 +275,25 @@ class TestController < ApplicationController
                   test.save
                 end
               end
-
               print_and_redirect("/test/print_accession_number?specimen_id=#{specimen.id}", "/tests/all?patient_id=#{visit.patient_id}&show_actions=true")
           else
-            msg = res
-           
-            redirect_to("/test/new?patient_id=#{params[:patient_id]}",  flash: {error: 'national_lims:  '+ msg[0] })
-           
+            msg = res           
+            redirect_to("/test/new?patient_id=#{params[:patient_id]}",  flash: {error: 'national_lims:  '+ msg[0] })           
           end
-
       else
-          res = NlimsService.re_authenticate_user
-          if res == true
-            
-              res = NlimsService.create_order(params)
+          res = NlimsService.re_authenticate_user         
+          if res == true            
+              res = NlimsService.create_order(json)
+              puts "checker-----------------"
+              puts res
               if res[1] == true
-                       tracking_number = res[0]
-             
+                       tracking_number = res[0]             
                   acc_num = new_accession_number
                   visit = Visit.new
                   visit.patient_id = params[:patient_id]
                   visit.visit_type = VisitType::find(params[:visit_type]).name
                   visit.ward_or_location = params[:ward]
                   visit.save
-
                   if !params[:test_types].blank?
                     specimen = Specimen.new
                     specimen.specimen_type_id = params[:specimen_type]
@@ -317,19 +303,15 @@ class TestController < ApplicationController
                     specimen.tracking_number = tracking_number
                     specimen.save
                   end
-
                   params[:test_types].each do |name|
                     name = CGI.unescapeHTML(name)
                     type = TestType.find_by_name(name)
                     panel_type = PanelType.find_by_name(name)
-
                     if !panel_type.blank?
                       member_tests = Panel.where(:panel_type_id => panel_type.id)
-
                       test_panel = TestPanel.new
                       test_panel.panel_type_id = panel_type.id
                       test_panel.save
-
                       (member_tests || []).each do |m_test|
                         test = Test.new
                         test.visit_id = visit.id
@@ -356,6 +338,7 @@ class TestController < ApplicationController
                       test.save
                     end
                   end
+                  print_and_redirect("/test/print_accession_number?specimen_id=#{specimen.id}", "/tests/all?patient_id=#{visit.patient_id}&show_actions=true")
               else
                 msg = res           
                 redirect_to("/test/new?patient_id=#{params[:patient_id]}",  flash: {error: 'national_lims:  '+ msg[0] })
