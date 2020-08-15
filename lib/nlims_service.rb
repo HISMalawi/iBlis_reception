@@ -1,5 +1,6 @@
 require "rest-client"
 
+
 module NlimsService
 
 	$configs 					= YAML.load_file("#{Rails.root}/config/nlims_connection.yml")
@@ -8,13 +9,18 @@ module NlimsService
 	$create_order_url		 	= "#{$configs['nlims_controller_ip']}/api/#{$configs['nlims_api_version']}/create_order"	
 	$update_order				= "#{$configs['nlims_controller_ip']}/api/#{$configs['nlims_api_version']}/update_order"
 	$add_test 					= "#{$configs['nlims_controller_ip']}/api/#{$configs['nlims_api_version']}/add_test"
+
+
 	def self.check_token_validity
 		token_ = File.read("#{Rails.root}/tmp/nlims_token")
-		headers = {
-			content_type: 'application/json',
+
+		headers = { 
+			content_type: 'application/json', 
 			token: token_
 		}
+
 		res = JSON.parse(RestClient.get($check_token_url, headers))		
+
 		if res['error'] == false
 			return true
 		else
@@ -22,12 +28,12 @@ module NlimsService
 		end
 	end
 
-
 	def self.re_authenticate_user
 		username = $configs['nlims_custome_username']
 		password = $configs['nlims_custome_password']
 
 		res = JSON.parse(RestClient.get($re_authenticate_user_url + username + "/" + password, :content_type => "application/json"))
+
 		if res['error'] == false
 			token = res['data']['token']
 			File.open("#{Rails.root}/tmp/nlims_token", "w") { |f|
@@ -37,9 +43,7 @@ module NlimsService
 		else	
 			return res['message']
 		end
-
 	end
-
 
 	def self.create_order(order_data)
 		
@@ -55,7 +59,6 @@ module NlimsService
 		else
 			return  [res['message'],false]
 		end
-
 	end
 
 	def self.update_order(params)
@@ -87,7 +90,4 @@ module NlimsService
 			return res['message']
 		end	
 	end
-
-
-
 end

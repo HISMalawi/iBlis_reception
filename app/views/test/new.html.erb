@@ -84,13 +84,14 @@
         :tt_onLoad => "__$('nextButton').style.display = 'none'; seen(tstCurrentPage)"
         }%>
 
-<%= select_tag 'test_types[]', nil,
+<%= select_tag "test_types[]", nil,
         :helpText => "Select test types" ,
+        :id => "test_types",
         :tt_onLoad => "__$('nextButton').style.display = 'inline';
                 __$('keyboard').style.display = 'block'; set_ajaxURL_for_suggestions('/test/types?filter_value=' ,document.getElementById('specimen_type').value);",
-        :multiple =>  true,
+        
         :tt_pageStyleClass => "longSelectList"
-%>
+        %>
 
 <%= select_tag "priority", options_for_select(['', 'Routine', 'Stat']),
                {:helpText => 'Specify Priority',
