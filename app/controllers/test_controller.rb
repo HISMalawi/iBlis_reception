@@ -221,6 +221,7 @@ class TestController < ApplicationController
             :tests=> params[:test_types].collect{|t| CGI.unescapeHTML(t)},
             :sample_priority=> params[:priority] || 'Routine',
             :sample_status => 1,
+            :specimen_status_id => 1,
             :target_lab=> settings['facility_name'],             
             :art_start_date => "",             
             :date_received => Date.today.strftime("%Y%m%d%H%M%S"),
