@@ -168,38 +168,6 @@ class TestController < ApplicationController
     c_last_name = clinician.strip.scan(/\s\w+$/).last
 
     tracking_number = 0
-
-    # json = { :return_path => "http://#{request.host}:#{request.port}",
-    #          :district => settings['district'],
-    #          :health_facility_name => settings['facility_name'],
-    #          :first_name=> first_name,
-    #          :last_name=> last_name,
-    #          :middle_name=> middle_name,
-    #          :date_of_birth=> patient.dob.to_date.strftime("%a %b %d %Y"),
-    #          :gender=> (patient.gender == 1 ? "F" : "M"),
-    #          :national_patient_id=>  '505050',
-    #          :phone_number=> patient.phone_number,
-    #          :reason_for_test=> '',
-    #          :sample_collector_last_name=> c_last_name,
-    #          :sample_collector_first_name=> c_first_name,
-    #          :sample_collector_phone_number=> '',
-    #          :sample_collector_id=> '',
-    #          :sample_order_location=> params[:ward],
-    #          :sample_type=> SpecimenType.find(params[:specimen_type]).name,
-    #          :date_sample_drawn=> Date.today.strftime("%a %b %d %Y"),
-    #          :tests=> params[:test_types].collect{|t| CGI.unescapeHTML(t)},
-    #          :sample_priority=> params[:priority] || 'Routine',
-    #          :target_lab=> settings['facility_name'],
-    #          :tracking_number => "",
-    #          :art_start_date => "",
-    #          :date_dispatched => "",
-    #          :date_received => Time.now,
-    #          :requesting_clinician => '',
-    #          :return_json => 'true'
-    # }
-   
-    # configs = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")
-   
     json = {
             :district => settings['district'],
             :health_facility_name => settings['facility_name'],
@@ -867,7 +835,7 @@ class TestController < ApplicationController
   def new_accession_number
     # Generate the next accession number for specimen registration
     @mutex = Mutex.new if @mutex.blank?
-    @mutex.lock
+    @mutex.lockleft
     max_acc_num = 0
     return_value = nil
     sentinel = 99999999
