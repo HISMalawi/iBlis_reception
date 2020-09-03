@@ -835,7 +835,7 @@ class TestController < ApplicationController
   def new_accession_number
     # Generate the next accession number for specimen registration
     @mutex = Mutex.new if @mutex.blank?
-    @mutex.lockleft
+    @mutex.lock()
     max_acc_num = 0
     return_value = nil
     sentinel = 99999999
@@ -863,3 +863,5 @@ class TestController < ApplicationController
     return return_value
   end
 end
+
+

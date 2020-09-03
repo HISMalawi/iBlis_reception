@@ -2,6 +2,7 @@ class PeopleController < ApplicationController
 
   def find
     settings = YAML.load_file("#{Rails.root}/config/application.yml")["#{Rails.env}"]
+
     @result = {}
     npid = ""
     tracking_number = params[:identifier] || ""
@@ -13,14 +14,23 @@ class PeopleController < ApplicationController
     @patients = []
 
     if tracking_number && tracking_number.match(/X/i)
-      remote_url = "#{settings['national-repo-node']}/query_results/#{tracking_number}"
-      remote_results = JSON.parse(RestClient.get(remote_url))
-      @result = {'type' => 'remote_order', 'data' => remote_results} if remote_results
+      token_ = File.read("#{Rails.root}/tmp/nlims_token")
+      headers = {
+        content_type: 'application/json',
+        token: token_
+      }
+		  
+      remote_url = "#{settings['national-repo-node']}/api/v1/query_results_by_tracking_number/#{tracking_number}"
+      remote_results = JSON.parse(RestClient.get(remote_url,headers))
+
+      @result = ({'type' => 'remote_order', 'data' => remote_results}).to_json if remote_results
+
+      # raise  @result['data'].inspect
 
       if @result['data'].blank?
-        @result = {'type' => 'local_order',
-                   'data' => Specimen.where(:tracking_number => tracking_number).last
-        }
+          @result = {'type' => 'local_order',
+                    'data' => Specimen.where(:tracking_number => tracking_number).last
+          }
       end
     elsif tracking_number.match(/^\d+$/)
       acc_num = settings['facility_code'] + tracking_number
@@ -40,17 +50,17 @@ class PeopleController < ApplicationController
 
     if @result['type'] == 'local_order' and !@result['data'].blank?
       redirect_to "/tests/all/?tracking_number=" + tracking_number
-    elsif @result['type'] == 'remote_order' and !@result['data'].blank?
+      elsif @result['type'] == 'remote_order' and !@result['data'].blank?
 
-      @data = @result['data']
-      @is_supported_test = Test.supported?(@data['results'].keys)
-      render :layout => false, :template => "/test/preview_remote_order",
-             :tracking_number => tracking_number and return
-    elsif @result['type'] == 'people' and @result['data'].length == 1 and !local_people.blank?
-      redirect_to '/people/view?patient_id=' + @result['data'].first.id.to_s and return
-    elsif @result['type'] == "people" and @result['data'].length > 0
-      @patients = @result['data']
-      render :layout => false, :template => '/people/people_search_results' and return
+        @data = @result['data']
+        @is_supported_test = Test.supported?(@data['results'].keys)
+        render :layout => false, :template => "/test/preview_remote_order",
+              :tracking_number => tracking_number and return
+      elsif @result['type'] == 'people' and @result['data'].length == 1 and !local_people.blank?
+        redirect_to '/people/view?patient_id=' + @result['data'].first.id.to_s and return
+      elsif @result['type'] == "people" and @result['data'].length > 0
+        @patients = @result['data']
+        render :layout => false, :template => '/people/people_search_results' and return
     end
   end
 

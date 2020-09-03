@@ -3,11 +3,11 @@ development:
  facility_code: KCH
  district: Lilongwe
  central_repo: http://localhost:3004
- national-repo-node: http://localhost:3014
+ national-repo-node: http://localhost:7070
 production:
  facility_name: Kamuzu Central Hospital
  facility_code: KCH
  district: Lilongwe
  central_repo: http://localhost:3004
- national-repo-node: http://localhost:3014
+ national-repo-node: http://localhost:7070
 
