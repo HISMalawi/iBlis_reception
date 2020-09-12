@@ -1,11 +1,11 @@
 nlims_controller: true
-nlims_controller_ip: http://localhost:7070
-nlims_default_password: knock-know
+nlims_controller_ip: http://192.168.43.50:3020
+nlims_default_password: knock-knock
 nlims_default_username: admin
 app_name: iblis_reception
 partner_name: baobab health trust
-nlims_custome_password: password
-nlims_custome_username: username
+nlims_custome_password: knock-knock
+nlims_custome_username: admin
 nlims_api_version: v1
 district: Lilongwe
 

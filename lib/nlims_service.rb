@@ -52,8 +52,9 @@ module NlimsService
 			content_type: 'application/json',
 			token: token_
 		}
-		res = JSON.parse(RestClient.post($create_order_url,order_data, headers ))
+
 		
+		res = JSON.parse(RestClient.post($create_order_url,order_data, headers ))
 		if res['error'] == false
 			return [res['data']['tracking_number'],true]
 		else

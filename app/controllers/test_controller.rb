@@ -103,7 +103,6 @@ class TestController < ApplicationController
     
     other_type = SpecimenType.find_by_name('Other')
 
-    # raise params[:patient_id] #other_type.count
     @specimen_types = [[]] + (SpecimenType.all().collect{|type| [type['name'], type.id]} - [['Other', other_type.id]]).sort + [['Other', other_type.id]]
     @visit_types = [[]] + VisitType.all().collect{|visit| [visit['name'], visit.id]}
   end
@@ -157,6 +156,7 @@ class TestController < ApplicationController
     settings = YAML.load_file("#{Rails.root}/config/application.yml")[Rails.env]
     patient = Patient.find(params[:patient_id])
 
+    
     #Patient Details
     first_name = patient.name.strip.scan(/^\w+\s/).first
     last_name = patient.name.strip.scan(/\s\w+$/).last
@@ -196,10 +196,9 @@ class TestController < ApplicationController
             :requesting_clinician => clinician            
     }
 
-    res = NlimsService.check_token_validity     
-    if res == true     
+    res = NlimsService.check_token_validity    
+    if res == true   
         res = NlimsService.create_order(json)  
-
         if res[1] == true
             tracking_number = res[0]             
             acc_num = new_accession_number
