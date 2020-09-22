@@ -148,7 +148,7 @@ class TestController < ApplicationController
   end
 
   def create
-    settings = YAML.load_file("#{Rails.root}/config/application.yml")[Rails.env]
+    settings = YAML.load_file("#{Rails.root}/config/application.yml")
     patient = Patient.find(params[:patient_id])
 
     #Patient Details
@@ -258,6 +258,11 @@ class TestController < ApplicationController
   end
 
   def accept
+
+    settings = YAML.load_file("#{Rails.root}/config/application.yml")
+    nlims = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")  
+    status = ApplicationController.up?("#{nlims['nlims_service']}")
+   
     specimen = Specimen.find(params[:specimen_id])
     patient = specimen.tests.last.visit.patient
     tracking_number = specimen.tracking_number
@@ -279,7 +284,7 @@ class TestController < ApplicationController
       }
     }
 
-    res = NlimsService.update_specimen(update_details)
+    NlimsService.update_specimen(update_details) if status == true
     Sender.send_data(patient, specimen)
     redirect_to request.referrer
   end
@@ -390,6 +395,11 @@ class TestController < ApplicationController
   end
 
   def do_reject
+
+    settings = YAML.load_file("#{Rails.root}/config/application.yml")
+    nlims = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")  
+    status = ApplicationController.up?("#{nlims['nlims_service']}")
+   
     specimen = Specimen.find(params[:specimen_id])
     patient = specimen.tests.last.visit.patient
 
@@ -412,9 +422,12 @@ class TestController < ApplicationController
       }
     }
 
-    res = NlimsService.update_specimen(update_details)
+    if status == true
+      res = NlimsService.update_specimen(update_details)      
+    end
 
     Sender.send_data(patient, specimen)
+
     redirect_to params[:return_uri]
   end
 
@@ -599,7 +612,7 @@ class TestController < ApplicationController
     return_value = nil
     sentinel = 99999999
 
-    settings = YAML.load_file("#{Rails.root}/config/application.yml")[Rails.env]
+    settings = YAML.load_file("#{Rails.root}/config/application.yml")
     code = settings['facility_code']
     year = Date.today.year.to_s[2..3]
 

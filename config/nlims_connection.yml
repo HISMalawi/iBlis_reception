@@ -1,6 +1,6 @@
 nlims_controller: true
 nlims_controller_ip: http://192.168.43.50:3010
-nlims_service: http://192.168.43.50
+nlims_service: 192.168.43.50
 nlims_default_password: knock_knock
 nlims_default_username: admin
 app_name: iblis_reception

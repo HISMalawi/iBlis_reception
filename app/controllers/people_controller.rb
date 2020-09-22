@@ -1,8 +1,10 @@
 class PeopleController < ApplicationController
 
   def find
-    settings = YAML.load_file("#{Rails.root}/config/application.yml")["#{Rails.env}"]
+    settings = YAML.load_file("#{Rails.root}/config/application.yml")
     nlims = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")
+    status = ApplicationController.up?("#{nlims['nlims_service']}")
+
     @result = {}
     npid = ""
     tracking_number = params[:identifier] || ""
@@ -20,16 +22,17 @@ class PeopleController < ApplicationController
       headers = {
         content_type: "application/json",
         token: _token
-      }    
+      }
+      
+      if status  == true
+        remote_results = JSON.parse(RestClient.get(remote_url,headers)) 
+        @result = {'type' => 'remote_order', 'data' => remote_results} if remote_results
 
-      remote_results = JSON.parse(RestClient.get(remote_url,headers))
-    
-      @result = {'type' => 'remote_order', 'data' => remote_results} if remote_results
-
-      if @result['data'].blank?
-        @result = {'type' => 'local_order',
-                   'data' => Specimen.where(:tracking_number => tracking_number).last
-        }
+        if @result['data'].blank?
+          @result = {'type' => 'local_order',
+                    'data' => Specimen.where(:tracking_number => tracking_number).last
+          }
+        end
       end
     elsif tracking_number.match(/^\d+$/)
       acc_num = settings['facility_code'] + tracking_number

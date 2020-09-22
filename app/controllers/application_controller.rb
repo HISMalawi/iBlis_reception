@@ -1,3 +1,6 @@
+require 'net/ping'
+require 'rubygems'
+
 class ApplicationController < ActionController::Base
   # Prevent CSRF attacks by raising an exception.
   # For APIs, you may want to use :null_session instead.
@@ -20,7 +23,7 @@ class ApplicationController < ActionController::Base
 
 
   def self.up?(host)
-    check = Net::Ping::HTTP.new(host)
+    check = Net::Ping::External.new(host)
     check.ping?
   end
 
@@ -41,7 +44,7 @@ class ApplicationController < ActionController::Base
             token: _token
         }
 
-       
+
         if ApplicationController.up?("#{configs['nlims_service']}")
             url = "#{configs['nlims_controller_ip']}/api/v1/check_token_validity"
             res = JSON.parse(RestClient.get(url,headers))

@@ -7,7 +7,7 @@ class Sender
         "sample_status" => SpecimenStatus.find(specimen.specimen_status_id).name.titleize
     }
     configs = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")
-   
+    status = ApplicationController.up?("#{configs['nlims_service']}")
         update_details = {
           "tracking_number": order['_id']
         }
@@ -45,29 +45,39 @@ class Sender
             end
 
             update_details['results'] = r
-            res = NlimsService.update_test(update_details)
+            res = NlimsService.update_test(update_details) if status == true
         end      
 
   end
 
   def self.create_order_remote(data)
+    
     _token = File.read("#{Rails.root}/tmp/nlims_token")
-    settings = YAML.load_file("#{Rails.root}/config/application.yml")["#{Rails.env}"]
+    settings = YAML.load_file("#{Rails.root}/config/application.yml")
     nlims = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")
   
+    status = ApplicationController.up?("#{nlims['nlims_service']}")
+    
     headers = {
       content_type: "application/json",
       token: _token
-    }    
-    url  = "#{nlims['nlims_controller_ip']}/api/v1/create_order"
-    res = JSON.parse(RestClient.post(url,data,headers))
+    }  
 
+      url  = "#{nlims['nlims_controller_ip']}/api/v1/create_order"
+      res = JSON.parse(RestClient.post(url,data,headers)) if status == true
+      res = NlimsService.create_local_tracking_number if status == false
+      NlimsService.prepare_next_tracking_number if status == false
+    
 
-    if res['error'] == false
-			return [res['data']['tracking_number'],true]
-		else
-			return  [res['message'],false]
-		end
+    if status == true
+      if res['error'] == false
+        return [res['data']['tracking_number'],true]        
+      else
+        return  [res['message'],false] 
+      end
+    else
+      return [res,true]
+    end
 
     
   end
