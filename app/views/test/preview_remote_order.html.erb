@@ -119,7 +119,9 @@
           <p><strong>Test Types</strong></p>
         </td>
         <td>
-          <p ><%= Panel.disambiguate(@data['test_types']).join(', ')%></p>
+          <% @data['data']['tests'].keys.each do |tst| %>
+            <p > <%= tst %> </p>
+          <%end%>
         </td>
         <td style="width: 5%;">
           &nbsp;
@@ -130,7 +132,8 @@
           <p ><strong>Date Ordered</strong></p>
         </td>
         <td>
-          <p ><%= @data['date_drawn']%></p>
+         
+          <p ><%= @data['data']['other']['date_created']%></p>
         </td>
         <td style="width: 5%;">
           &nbsp;
@@ -141,7 +144,7 @@
           <p ><strong>Receipt Date</strong></p>
         </td>
         <td>
-          <p ><%= @data['date_received']%></p>
+          <p ><%= @data['data']['other']['date_created']%></p>
         </td>
         <td style="width: 5%;">
           &nbsp;
@@ -152,7 +155,7 @@
           <p ><strong>Sending Facility</strong></p>
         </td>
         <td>
-          <p ><%= @data['sending_facility']%>&nbsp;</p>
+          <p ><%= @data['data']['other']['sending_lab']%>&nbsp;</p>
         </td>
         <td style="width: 5%;">
           &nbsp;
@@ -163,7 +166,7 @@
           <p><strong>Receiving Facility</strong></p>
         </td>
         <td>
-          <p> <%= @data['receiving_facility'] %>&nbsp;</p>
+          <p> <%= @data['data']['other']['receiving_lab']%>&nbsp;</p>
         </td>
         <td style="width: 5%;">
           &nbsp;
@@ -175,7 +178,7 @@
           <p><strong>Requesting Ward/Location</strong></p>
         </td>
         <td>
-          <p ><%= @data['order_location'] %>&nbsp;</p>
+          <p ><%= @data['data']['other']['order_location']%>&nbsp;</p>
         </td>
         <td style="width: 5%;">
           &nbsp;
@@ -187,7 +190,8 @@
           <p><strong>Ordered By</strong></p>
         </td>
         <td>
-          <p ><%= @data['who_order_test']['first_name']%> <%= @data['who_order_test']['last_name']%>&nbsp;</p>
+        
+          <p ><%= @data['data']['other']['sample_created_by']['name'].split(" ")[0]%> <%= @data['data']['other']['sample_created_by']['name'].split(" ")[1]%>&nbsp;</p>
         </td>
         <td style="width: 5%;">
           &nbsp;
@@ -242,22 +246,23 @@
               <div class="col-md-3">
                 <p><strong>Patient No.</strong></p></div>
               <div class="col-md-9">
-                <%= @data['patient']['national_patient_id']%></div></div>
+              
+                <%= @data['data']['other']['patient']['id']%></div></div>
             <div class="row">
               <div class="col-md-3">
                 <p><strong>Patient Name</strong></p></div>
               <div class="col-md-9">
-                <%= @data['patient']['first_name'] + @data['patient']['middle_name'] +  @data['patient']['last_name']  %></div></div>
+                <%= @data['data']['other']['patient']['name'].split(" ")[0]+ @data['data']['other']['patient']['name'].split(" ")[1]  %></div></div>
             <div class="row">
               <div class="col-md-3">
                 <p><strong>Date of Birth</strong></p></div>
               <div class="col-md-9">
-                <%= @data['patient']['date_of_birth']%></div></div>
+                <%= @data['data']['other']['patient']['dob']%></div></div>
             <div class="row">
               <div class="col-md-3">
                 <p><strong>Sex</strong></p></div>
               <div class="col-md-9">
-                <%= {'F' => 'Female', 'M' => 'Male'}[@data['patient']['gender']]%>
+                <%= {'F' => 'Female', 'M' => 'Male'}[@data['data']['other']['patient']['gender']]%>
               </div></div>
           </div>
         </div> <!-- ./ panel-body -->
@@ -273,7 +278,8 @@
                 <p><strong>Specimen Type</strong></p>
               </div>
               <div class="col-md-8">
-                <%= @data['sample_type']%>
+            
+                <%= @data['data']['other']['sample_type']%>
               </div>
             </div>
             <div class="row">
@@ -281,7 +287,7 @@
                 <p><strong>Tracking Number</strong></p>
               </div>
               <div class="col-md-8">
-                <%= @data['_id']%>
+                <%= @trac_number%>
               </div>
             </div>
             <div class="row">
@@ -289,7 +295,7 @@
                 <p><strong>Accession Number</strong></p>
               </div>
               <div class="col-md-8">
-                <%= Specimen.where(:tracking_number => @data['_id']).last.accession_number rescue nil%>
+                <%= Specimen.where(:tracking_number => @trac_number).last.accession_number rescue nil%>
               </div>
             </div>
             <div class="row">
@@ -297,7 +303,7 @@
                 <p><strong>Specimen Status</strong></p>
               </div>
               <div class="col-md-8">
-                <%= @data['status']%>
+                <%= @data['data']['other']['specimen_status']%>
               </div>
             </div>
           </div>
@@ -309,29 +315,19 @@
 </div>
 </div>
 
+
 <form id = 'data-form' action="/test/save_remote" method="POST">
   <input type="hidden" value="<%= params[:identifier]%>" name="identifier"/>
   <input type="hidden" value="<%= @data.to_json%>" name="data"/>
 </form>
 
-<% if request.referrer.match(/patient_id/)%>
-    <div class="footer">
-      <button class="btn-home btn btl-lg btn-success" onmousedown="document.location='/tests/all/?patient_id=<%= @patient.id%>'">|< Back</button>
-    </div>
-<% elsif request.referrer.match(/all/)%>
-    <div class="footer">
-      <button class="btn-home btn btl-lg btn-success" onmousedown="document.location='/tests/all'">|< Back</button>
-      <% if @is_supported_test %>
-        <button class="btn-save btn btl-lg btn-success" onmousedown="document.location='/'"> Proceed </button>
-      <% end %>
-    </div>
-<% else %>
+
     <div class="footer">
       <button class="btn-home btn btl-lg btn-success" onmousedown="document.location='/'">|< Back Home</button>
       <% if @is_supported_test %>
         <button class="btn-save btn btl-lg btn-success" onmousedown="document.getElementById('data-form').submit();"> Proceed </button>
       <% end %>
     </div>
-<% end %>
+
 
 

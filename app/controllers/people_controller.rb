@@ -2,6 +2,7 @@ class PeopleController < ApplicationController
 
   def find
     settings = YAML.load_file("#{Rails.root}/config/application.yml")["#{Rails.env}"]
+    nlims = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")
     @result = {}
     npid = ""
     tracking_number = params[:identifier] || ""
@@ -13,8 +14,16 @@ class PeopleController < ApplicationController
     @patients = []
 
     if tracking_number && tracking_number.match(/X/i)
-      remote_url = "#{settings['national-repo-node']}/query_results/#{tracking_number}"
-      remote_results = JSON.parse(RestClient.get(remote_url))
+      remote_url = "#{nlims['nlims_controller_ip']}/api/v1/query_order_by_tracking_number/#{tracking_number}"
+      _token = File.read("#{Rails.root}/tmp/nlims_token")
+     
+      headers = {
+        content_type: "application/json",
+        token: _token
+      }    
+
+      remote_results = JSON.parse(RestClient.get(remote_url,headers))
+    
       @result = {'type' => 'remote_order', 'data' => remote_results} if remote_results
 
       if @result['data'].blank?
@@ -43,7 +52,8 @@ class PeopleController < ApplicationController
     elsif @result['type'] == 'remote_order' and !@result['data'].blank?
 
       @data = @result['data']
-      @is_supported_test = Test.supported?(@data['results'].keys)
+      @is_supported_test = Test.supported?(@data['data']['tests'].keys)
+      @trac_number = tracking_number
       render :layout => false, :template => "/test/preview_remote_order",
              :tracking_number => tracking_number and return
     elsif @result['type'] == 'people' and @result['data'].length == 1 and !local_people.blank?

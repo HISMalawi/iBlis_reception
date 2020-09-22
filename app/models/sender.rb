@@ -7,8 +7,7 @@ class Sender
         "sample_status" => SpecimenStatus.find(specimen.specimen_status_id).name.titleize
     }
     configs = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")
-
-    if configs['nlims_controller'] == true
+   
         update_details = {
           "tracking_number": order['_id']
         }
@@ -28,6 +27,14 @@ class Sender
               'id_number': who.id
             }
 
+            if specimen.specimen_status_id == 2
+              test.test_status_id = 3
+              test.save
+            elsif specimen.specimen_status_id == 3
+              test.test_status_id = 8
+              test.save
+            end
+
             update_details['who_updated'] = updater        
             order['results'] = {} if order['results'].blank?            
             r = {}
@@ -38,58 +45,31 @@ class Sender
             end
 
             update_details['results'] = r
-        end
-
-        res = NlimsService.update_test(update_details)
-
-        if res == true
-          puts res
-
-        else
-
-
-        end
-
-    else
-
-        tests = specimen.tests
-        tests.each  do |test|
-          test_name = test.test_type.name
-          order['results'] = {} if order['results'].blank?
-          order['results']["#{test_name}"] = {} if order['results']["#{test_name}"].blank?
-
-          h = {}
-          h['test_status'] = TestStatus.find(test.test_status_id).name
-          h['remarks'] = test.interpretation
-          h['datetime_started'] = test.time_started.to_datetime rescue ''
-          h['datetime_completed'] = test.time_completed.to_datetime rescue ''
-
-          h['who_updated'] = {} if test['who_updated'].blank?
-          who = User.current
-          h['who_updated']['first_name'] = who.name.strip.scan(/^\w+/).first
-          h['who_updated']['last_name'] = who.name.strip.scan(/\w+$/).last
-          h['who_updated']['ID_number'] = who.id
-
-          r = {}
-
-          test.test_results.each do |result|
-            measure = Measure.find(result.measure_id) rescue next
-            r["#{measure.name}"] = "#{result.result} #{measure.unit}"
-          end
-
-          h['results'] = r
-          order['results']["#{test.name}"] = h
-        end
-
-        settings = YAML.load_file("#{Rails.root}/config/application.yml")[Rails.env]
-        remote_post_url = "#{settings['central_repo']}/pass_json/"
-
-        order = RestClient.post(remote_post_url, order.to_json, "content_type" => "application/json")
-
-        order
-    end
+            res = NlimsService.update_test(update_details)
+        end      
 
   end
 
+  def self.create_order_remote(data)
+    _token = File.read("#{Rails.root}/tmp/nlims_token")
+    settings = YAML.load_file("#{Rails.root}/config/application.yml")["#{Rails.env}"]
+    nlims = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")
+  
+    headers = {
+      content_type: "application/json",
+      token: _token
+    }    
+    url  = "#{nlims['nlims_controller_ip']}/api/v1/create_order"
+    res = JSON.parse(RestClient.post(url,data,headers))
+
+
+    if res['error'] == false
+			return [res['data']['tracking_number'],true]
+		else
+			return  [res['message'],false]
+		end
+
+    
+  end
 end
 

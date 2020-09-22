@@ -28,19 +28,23 @@ namespace :nlims do
   task create_account: :environment do
     config = YAML.load_file("#{Rails.root}/config/application.yml")
     configs = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")
-    token = File.read("#{Rails.root}/tmp/token")
-    nlims_url = configs['nlims_controller_ip'] + "/api/v1/create_user/" + token.to_s
-    
+    token = File.read("#{Rails.root}/tmp/nlims_token")
+    nlims_url = configs['nlims_controller_ip'] + "/api/v1/create_user"
+    #raise nlims_url.inspect
+      headers = {
+        content_type:  'application/json',
+        token: token
+      }
     account_details = {
             "partner": configs['partner_name'],
             "app_name": configs['app_name'],
-            "location": config['district'],
+            "location": "Lilongwe",
             "password": configs['nlims_custome_password'],
             "username": configs['nlims_custome_username']
     }   
 
-    res =  JSON.parse(RestClient.post(nlims_url, account_details, :content_type => 'application/json'))
-  
+    res =  JSON.parse(RestClient.post(nlims_url, account_details,headers))
+     
         if res['error'] == false
             File.open("#{Rails.root}/tmp/nlims_token",'w') {|f|
               f.write(res['data']['token'].to_s)

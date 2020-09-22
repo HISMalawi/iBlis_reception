@@ -7,6 +7,7 @@ module NlimsService
 	$re_authenticate_user_url 	= "#{$configs['nlims_controller_ip']}/api/#{$configs['nlims_api_version']}/re_authenticate/"
 	$create_order_url		 	= "#{$configs['nlims_controller_ip']}/api/#{$configs['nlims_api_version']}/create_order/"
 	$update_test 				= "#{$configs['nlims_controller_ip']}/api/#{$configs['nlims_api_version']}/update_test/"
+	$update_specimen			= "#{$configs['nlims_controller_ip']}/api/#{$configs['nlims_api_version']}/update_order/"
 
 	def self.check_token_validity
 		token = File.read("#{Rails.root}/tmp/nlims_token")
@@ -55,8 +56,30 @@ module NlimsService
 
 
 	def self.update_test(params)
-		token = File.read("#{Rails.root}/tmp/nlims_token")
-		res = JSON.parse(RestClient.post($update_test + token.to_s ,params, :content_type => 'application/json'))
+		_token = File.read("#{Rails.root}/tmp/nlims_token")
+		headers = {
+      		content_type: "application/json",
+      		token: _token
+		}
+		res = JSON.parse(RestClient.post($update_test,params, headers))
+
+		if res['error'] == false
+			return true
+		else
+			return  res['message']
+		end
+
+	end
+
+
+	def self.update_specimen(params)
+		_token = File.read("#{Rails.root}/tmp/nlims_token")
+		headers = {
+      		content_type: "application/json",
+      		token: _token
+		}  
+	
+		res = JSON.parse(RestClient.post($update_specimen,params,headers))
 
 		if res['error'] == false
 			return true
