@@ -28,7 +28,7 @@ class Sender
             }
 
             if specimen.specimen_status_id == 2
-              test.test_status_id = 3
+              test.test_status_id = 2
               test.save
             elsif specimen.specimen_status_id == 3
               test.test_status_id = 8
@@ -45,7 +45,31 @@ class Sender
             end
 
             update_details['results'] = r
-            res = NlimsService.update_test(update_details) if status == true
+            
+          if status == true
+            res = NlimsService.update_test(update_details)
+          else
+            if specimen.specimen_status_id == 2
+              order = UnsyncOrder.new
+              order.specimen_id = test.id
+              order.data_not_synced = 'pending'    
+              order.data_level = 'test'
+              order.sync_status = 'not-synced'
+              order.updated_by_name = User.current.name
+              order.updated_by_id = User.current.id
+              order.save
+            elsif specimen.specimen_status_id == 3
+              order = UnsyncOrder.new
+              order.specimen_id = test.id
+              order.data_not_synced = 'rejected'    
+              order.data_level = 'test'
+              order.sync_status = 'not-synced'
+              order.updated_by_name = User.current.name
+              order.updated_by_id = User.current.id
+              order.save
+            end
+
+          end
         end      
 
   end
@@ -64,10 +88,15 @@ class Sender
     }  
 
       url  = "#{nlims['nlims_controller_ip']}/api/v1/create_order"
-      res = JSON.parse(RestClient.post(url,data,headers)) if status == true
-      res = NlimsService.create_local_tracking_number if status == false
-      NlimsService.prepare_next_tracking_number if status == false
+     
     
+      if status == true
+        res = JSON.parse(RestClient.post(url,data,headers)) 
+      else
+        res = NlimsService.create_local_tracking_number
+        NlimsService.prepare_next_tracking_number        
+      end
+
 
     if status == true
       if res['error'] == false

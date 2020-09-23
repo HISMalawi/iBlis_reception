@@ -150,6 +150,8 @@ class TestController < ApplicationController
   def create
     settings = YAML.load_file("#{Rails.root}/config/application.yml")
     patient = Patient.find(params[:patient_id])
+    nlims = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")  
+    status = ApplicationController.up?("#{nlims['nlims_service']}")
 
     #Patient Details
     first_name = patient.name.strip.scan(/^\w+\s/).first
@@ -212,6 +214,17 @@ class TestController < ApplicationController
                 specimen.tracking_number = tracking_number              
                 specimen.save
               end
+
+            if status == false
+              order = UnsyncOrder.new
+              order.specimen_id = specimen.id
+              order.data_not_synced = 'new order'    
+              order.data_level = 'specimen'
+              order.sync_status = 'not-synced'
+              order.updated_by_name = User.current.name
+              order.updated_by_id = User.current.id
+              order.save
+            end
 
               params[:test_types].each do |name|
                 name = CGI.unescapeHTML(name)
@@ -284,7 +297,19 @@ class TestController < ApplicationController
       }
     }
 
-    NlimsService.update_specimen(update_details) if status == true
+    if status == true
+      NlimsService.update_specimen(update_details)
+    else
+      order = UnsyncOrder.new
+      order.specimen_id = specimen.id
+      order.data_not_synced = 'accept specimen'    
+      order.data_level = 'specimen'
+      order.sync_status = 'not-synced'
+      order.updated_by_name = User.current.name
+      order.updated_by_id = User.current.id
+      order.save
+    end
+
     Sender.send_data(patient, specimen)
     redirect_to request.referrer
   end
@@ -422,8 +447,18 @@ class TestController < ApplicationController
       }
     }
 
+
     if status == true
-      res = NlimsService.update_specimen(update_details)      
+      res = NlimsService.update_specimen(update_details)  
+    else
+      order = UnsyncOrder.new
+      order.specimen_id = specimen.id
+      order.data_not_synced = 'specimen-rejection'    
+      order.data_level = 'specimen'
+      order.sync_status = 'not-synced'
+      order.updated_by_name = User.current.name
+      order.updated_by_id = User.current.id
+      order.save
     end
 
     Sender.send_data(patient, specimen)
