@@ -46,6 +46,7 @@ class ApplicationController < ActionController::Base
 
 
         if ApplicationController.up?("#{configs['nlims_service']}")
+          
             url = "#{configs['nlims_controller_ip']}/api/v1/check_token_validity"
             res = JSON.parse(RestClient.get(url,headers))
             if res['error'] == true
