@@ -19,14 +19,6 @@ body {
   height: 80px;
   padding-right: 20px;
 }
-
-.pagination{
-  display: inline-block;
-  color: black;
-  padding: 8px 16px;
-}
-
-
 .btn-home, .btn-home:active, .btn-home:hover {
     background-image: linear-gradient(to bottom, #5cb85c 0px, #5cb85c 100%);
     background-repeat: repeat-x;
@@ -134,7 +126,7 @@ body {
 
         <option  value='0'>All</option>
         <%(TestStatus.all || []).each do |status|%>
-          <option <%= params[:test_status_id].to_i == status.id ? 'selected' : ''%> value=<%=status.id%>> Test&nbsp;<%=status.name%></option>
+          <option <%= params[:test_status_id].to_i == status.id ? 'selected' : ''%> value=<%=status.id%>>Test&nbsp;<%=status.name%></option>
         <%end%>
       </select>
     </div>
@@ -167,11 +159,9 @@ body {
     </th>
   </tr>
 </table>
-
 <div class="tests-data-div" >
-<table id="ff" class="table" style="width: 100%">
-    <% if @tests.length>0 %>
-      <%(@tests || []).each_with_index do |test, i|%>
+<table class="table" style="width: 100%">
+        <%(@tests || []).each_with_index do |test, i|%>
         <tr id="row_<%=i%>" class="row hidable <%= cycle('odd', 'even')%>" onmousedown="javascript:showModal('<%=test[:specimen_id]%>',
                 '<%=test[:specimen_status]%>',
                 '<%=test[:test_status]%>',
@@ -204,20 +194,10 @@ body {
             <label class="data"><%=test[:test_status].sub(/specimen\-/, '')%></label>
           </td>
         </tr>
-      <%end%>
-      
-    <%else%>
-       <tr id="row" class="row hidable" >
-          <td style="width: 14%;" colspan="6">
-            <span class="data" style="color:red;">....no record found....</span>
-          </td>         
-       </tr>
+
     <%end%>
-
 </table>
-
 </div>
-<div id="pagination" style="font-size: 40px;"> <%= will_paginate @test %> </div>
 
 <div class="footer">
   <button class="btn-home btn btl-lg btn-success" onmousedown="document.location='/'">|< Back Home</button>
@@ -412,7 +392,6 @@ body {
         jQuery('#row_0').mousedown();
     <% end %>
 
-
     function showModal(id, specimen_status, test_status, sample_type, accession_number, patient_name, tests_ordered, test_id, tracking_number){
 
         jQuery("#name").html(patient_name);
@@ -601,7 +580,7 @@ body {
         }
     }
 
-   function showKeyboardX(){
+    function showKeyboardX(){
         key = document.getElementById("keypad")
         if(key.style.display == 'none' || key.style.display == ""){
             key.style.display = "inline";
@@ -610,21 +589,12 @@ body {
 
         key.style.display = "none";
     }
-    var dt = "/getData";
-    var txt = document.getElementById('barcode-txt');
-    var tb = document.getElementById('ff');    
 
-    function search(value){    
-      
-      var opt = document.getElementById('test-status');
-      status_id = opt.value;
-      var count = value.length;
+    function search(value){
+        jQuery('.hidable').hide();
+        jQuery('.hidable :Contains("'+value+'")').parent('tr').show();
 
-      window.location = "/tests/all?test_status_id=" + status_id + "&general_search_text="+ value +"&text_length="+ count;      
     }
-
-    var txt = document.getElementById('search');
-    txt.value = "<%= @value %>";
 
     function pressX(pressedChar){
         searchVal = document.getElementById("search")
