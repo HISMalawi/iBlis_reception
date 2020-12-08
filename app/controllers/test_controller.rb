@@ -182,7 +182,7 @@ class TestController < ApplicationController
              :target_lab=> settings['facility_name'],
              :art_start_date => "",
              :date_received => Time.now,
-             :requesting_clinician => ''
+             :requesting_clinician => '',
              :return_json => 'true'
     }
    
@@ -259,7 +259,7 @@ class TestController < ApplicationController
               # Sender.send_data(patient, specimen)
               
               print_and_redirect("/test/print_accession_number?specimen_id=#{specimen.id}", "/tests/all?patient_id=#{visit.patient_id}&show_actions=true")
-   
+   end
   end
 
   def accept
