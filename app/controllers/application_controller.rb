@@ -30,7 +30,7 @@ class ApplicationController < ActionController::Base
   def check_nlims_token
         configs = YAML.load_file "#{Rails.root}/config/nlims_connection.yml"
         settings = YAML.load_file "#{Rails.root}/config/application.yml"
-        _token = File.read("#{Rails.root}/tmp/token")
+        _token = File.read("#{Rails.root}/tmp/nlims_token")
 
         host = configs['host']
         prefix = configs['prefix']

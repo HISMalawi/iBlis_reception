@@ -9,7 +9,7 @@ class Sender
     configs = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")
     status = ApplicationController.up?("#{configs['nlims_service']}")
         update_details = {
-          "tracking_number": order['_id']
+          "tracking_number" => order['_id']
         }
         tests = specimen.tests
         tests.each  do |test|
@@ -22,9 +22,9 @@ class Sender
             update_details['time_update'] = Date.today.strftime("%a %b %d %Y")
 
             updater = {
-              'first_name': who.name.strip.scan(/^\w+/).first,
-              'last_name': who.name.strip.scan(/\w+$/).last,
-              'id_number': who.id
+              'first_name'=> who.name.strip.scan(/^\w+/).first,
+              'last_name'=> who.name.strip.scan(/\w+$/).last,
+              'id_number'=> who.id
             }
 
             if specimen.specimen_status_id == 2

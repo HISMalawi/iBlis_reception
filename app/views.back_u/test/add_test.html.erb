@@ -1,0 +1,49 @@
+
+<style>
+
+    li {
+        color: black;
+        font-family: "Nimbus Sans L","Arial Narrow",sans-serif;
+        font-size: 1.5em;
+        list-style: outside none none;
+        margin-bottom: 5px;
+        margin-top: 5px;
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+</style>
+
+
+
+<script>
+  var tt_cancel_destination = "/tests/all";
+  selectAll = false;
+  var skipped = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+  function seen(page) {
+    return;
+    for (var i = page; i >= 0; i--) {
+      skipped[i] = 1;
+    }
+  }
+
+  function set_ajaxURL_for_suggestions(url, filter_value) {
+      $('touchscreenInput'+tstCurrentPage).setAttribute('ajaxURL', url + filter_value + "&search_string=");
+      listSuggestions(tstCurrentPage);
+  }
+
+</script>
+
+
+<%= form_tag("/test/do_add_test", id: "create-form", method: 'post', enctype: 'multipart/form-data') do %>
+
+    <input type="hidden" name="specimen_id" value="<%= params[:specimen_id]%>" />
+    <input type="hidden" name="return_uri" value="<%= request.referrer%>" />
+
+    <%= select_tag "test_type", options_for_select(@testtypes),
+            {:helpText => 'Select Test Type',
+            :id => "test_type",
+            :tt_onLoad => "seen(tstCurrentPage)"
+            }%>
+
+<% end %>

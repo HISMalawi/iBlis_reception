@@ -29,25 +29,25 @@ namespace :nlims do
     config = YAML.load_file("#{Rails.root}/config/application.yml")
     configs = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")
     token = File.read("#{Rails.root}/tmp/nlims_token")
-    nlims_url = configs['nlims_controller_ip'] + "/api/v1/by_sending_facility_based_on_time/2017-03-14/2020-10-14"
-    #nlims_url = configs['nlims_controller_ip'] + "/api/v1/create_user"
+    #nlims_url = configs['nlims_controller_ip'] + "/api/v1/create"
+    nlims_url = configs['nlims_controller_ip'] + "/api/v1/create_user"
     #raise nlims_url.inspect
       headers = {
         content_type:  'application/json',
         token: token
       }
-    account_details = {
-            "partner": configs['partner_name'],
-            "app_name": configs['app_name'],
-            "location": "Lilongwe",
-            "password": configs['nlims_custome_password'],
-            "username": configs['nlims_custome_username']
+    
+	account_details = {
+            "partner" => configs['partner_name'],
+            "app_name" => configs['app_name'],
+            "location" => "Lilongwe",
+            "password" => configs['nlims_custome_password'],
+            "username" => configs['nlims_custome_username']
     }   
 
-    #res =  JSON.parse(RestClient.post(nlims_url,account_details,headers))
-    res =  JSON.parse(RestClient.get(nlims_url,headers))
-  raise res.inspect
-     
+    res =  JSON.parse(RestClient.post(nlims_url,account_details,headers))
+    #res =  JSON.parse(RestClient.get(nlims_url,headers))
+    # puts res
         if res['error'] == false
             File.open("#{Rails.root}/tmp/nlims_token",'w') {|f|
               f.write(res['data']['token'].to_s)
