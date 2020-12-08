@@ -229,12 +229,12 @@
                     <div class="col-md-3">
                       <p><strong>Age</strong></p></div>
                     <div class="col-md-9">
-                      <%= @test.visit.patient.age[0] rescue 'N/A'%> <%=@test.visit.patient.age[1]%> <%=@test.visit.patient.age[2]%><%=@test.visit.patient.age[3]%></div></div>
+                      <%= @test.visit.patient.age rescue 'N/A'%> yrs</div></div>
                   <div class="row">
                     <div class="col-md-3">
                       <p><strong>Sex</strong></p></div>
                     <div class="col-md-9">
-                      <%= @test.visit.patient.gender== 0 ? "Male" : "Female" %>
+                      <%= @test.visit.patient.gender==0?"Male" : "Female"%>
                     </div></div>
                 </div>
               </div> <!-- ./ panel-body -->
