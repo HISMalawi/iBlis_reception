@@ -1,11 +1,11 @@
 nlims_controller: true
-nlims_controller_ip: http://192.168.43.50:3020
+nlims_controller_ip: http://192.168.43.50:3009
 nlims_service: 192.168.43.50
-nlims_default_password: knock_knock_
-nlims_default_username: admin_
+nlims_default_password: knock_knock
+nlims_default_username: admin
 app_name: iblis_reception
 partner_name: baobab health trust
-nlims_custome_password: knock_knock_
-nlims_custome_username: admin_
+nlims_custome_password: knock_knockk111
+nlims_custome_username: adminn111
 nlims_api_version: v1
 
