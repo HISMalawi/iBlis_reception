@@ -8,7 +8,8 @@ class ApplicationController < ActionController::Base
   
   before_filter :check_logged_in, :except => ['login', 'dashboard_stats', 'dashboard_aggregates']
 
-  before_action :check_nlims_token, :except => []
+ #before_action :check_nlims_token, :except => []
+  before_action :check_nlims_token, :except => ['create','new_accession_number','clinicians_suggest','details','index','accept','save_remote','add_test','print_accession_number','numerical_ac','find','family_names','given_names','search','people_search_results','view','update','calDOB','types']
 
   def print_and_redirect(print_url, redirect_url, message = "Printing, please wait...", show_next_button = false, patient_id = nil)
     @print_url = print_url
