@@ -166,7 +166,7 @@ class TestController < ApplicationController
              :patient_location => "",
              :patient_town => "",
              :patient_district => "",
-             :national_patient_id=>  '',
+             :national_patient_id=>  '000000',
              :phone_number=> '',
              :reason_for_test=> '',
              :who_order_test_last_name=> c_last_name,
