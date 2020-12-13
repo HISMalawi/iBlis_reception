@@ -502,7 +502,7 @@ class TestController < ApplicationController
   end
 
   def numerical_ac(num)
-    settings = YAML.load_file("#{Rails.root}/config/application.yml")[Rails.env]
+    settings = YAML.load_file("#{Rails.root}/config/application.yml")
     code = settings['facility_code']
     num = num.sub(/^#{code}/, '')
     num
