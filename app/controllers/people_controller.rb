@@ -76,6 +76,7 @@ class PeopleController < ApplicationController
   end
   
   def search(field_name, search_string)
+    
     search_string = "" if search_string.nil?
     i = 0 if field_name == 'first_name_code'
     i = 1 if field_name == 'last_name_code'
@@ -90,9 +91,11 @@ class PeopleController < ApplicationController
   end
 
   def people_search_results
-
+    g_name =  params[:name]['given_name']
+    f_name =  params[:name]['family_name']
     given_name = params[:name]['given_name'].soundex  rescue nil
     family_name = params[:name]['family_name'].soundex rescue nil
+    
     @patients = Patient.where("first_name_code = ? AND last_name_code = ? AND gender = ?",
      "#{given_name}" ,"#{family_name}", params[:gender]).limit(50)
     @exact_patients = []
@@ -109,6 +112,8 @@ class PeopleController < ApplicationController
 
     first_name = params[:person]['names']['given_name']
     last_name = params[:person]['names']['family_name']
+    first_name = first_name.gsub("qt0","'")
+    last_name =  last_name.gsub("qt0","'")
 
     patient = Patient.create(
       :name => "#{first_name} #{last_name}",

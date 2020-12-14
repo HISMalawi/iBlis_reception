@@ -1,6 +1,7 @@
 require 'will_paginate/array' 
 require 'nlims_service.rb'
 
+
 class TestController < ApplicationController
   skip_before_action :verify_authenticity_token
   def index
@@ -8,63 +9,38 @@ class TestController < ApplicationController
     accession_number_filter = ""
     settings = YAML.load_file("#{Rails.root}/config/application.yml")[Rails.env]
 
-    if !params[:general_search_text].blank?
-
-      @value = params[:general_search_text]
-      text = "'"+params[:general_search_text]+"'"
-     
-      if params[:test_status_id] and params[:test_status_id].to_i != 0
-               @test = Test.find_by_sql("SELECT * FROM tests where test_status_id = #{params[:test_status_id]}
-                                  AND visit_id  IN  (SELECT id FROM visits WHERE patient_id IN
-                                 (SELECT id FROM patients WHERE (SUBSTRING(patients.name,1,#{params[:text_length]}) = #{text}) ) ) #{accession_number_filter}
-                                  ORDER BY time_created DESC").paginate(page: params[:page], per_page: 100)
-      else
-        @test = Test.find_by_sql("SELECT * FROM tests WHERE tests.visit_id IN  (SELECT id FROM visits WHERE patient_id IN
-                                 (SELECT id FROM patients WHERE (SUBSTRING(patients.name,1,#{params[:text_length]}) = #{text}) ) ) #{accession_number_filter}
-                                  ORDER BY time_created DESC").paginate(page: params[:page], per_page: 100)
-      
-      end
-    else
-
-        if !params[:tracking_number].blank? && params[:tracking_number].match(/^X/i)
-          accession_number_filter = " AND tests.specimen_id IN (SELECT id FROM specimens WHERE tracking_number = '#{params[:tracking_number]}') "
-        end
-
-        if !params[:tracking_number].blank? && params[:tracking_number].match(/^\d+$/)
-          acc_num = settings["facility_code"] + params[:tracking_number]
-          accession_number_filter = " AND tests.specimen_id IN (SELECT id FROM specimens WHERE accession_number = '#{acc_num}') "
-        end
-
-        if params[:status] == 'all'
-          if params[:patient_id].blank? #pull tests for all patients
-            
-            if params[:test_status_id] and params[:test_status_id].to_i != 0
-
-              @test = Test.find_by_sql("SELECT * FROm tests WHERE test_status_id = #{params[:test_status_id]} #{accession_number_filter}
-                                        ORDER BY time_created DESC ").paginate(page: params[:page], per_page: 100)
-            
-            else      
-
-              @test = Test.find_by_sql("SELECT * FROM tests WHERE true #{accession_number_filter} ORDER BY time_created DESC").paginate(page: params[:page], per_page: 100)
-              
-            end
-          else #pull tests for one patient
-            if params[:test_status_id] and params[:test_status_id].to_i != 0
-               @test = Test.find_by_sql("SELECT * FROM tests where test_status_id = #{params[:test_status_id]}
-                                  AND visit_id IN  (SELECT id FROM visits WHERE patient_id = #{params[:patient_id]}) #{accession_number_filter}
-                                  ORDER BY time_created DESC ").paginate(page: params[:page], per_page: 100)
-            else
-              @test = Test.find_by_sql("SELECT * FROM tests where visit_id IN  (SELECT id FROM visits WHERE patient_id = #{params[:patient_id]}) #{accession_number_filter}
-                                  ORDER BY time_created DESC ").paginate(page: params[:page], per_page: 100)
-            end
-          end
-        end
+    if !params[:tracking_number].blank? && params[:tracking_number].match(/^X/i)
+      accession_number_filter = " AND tests.specimen_id IN (SELECT id FROM specimens WHERE tracking_number = '#{params[:tracking_number]}') "
     end
 
+    if !params[:tracking_number].blank? && params[:tracking_number].match(/^\d+$/)
+      acc_num = settings["facility_code"] + params[:tracking_number]
+      accession_number_filter = " AND tests.specimen_id IN (SELECT id FROM specimens WHERE accession_number = '#{acc_num}') "
+    end
+
+    if params[:status] == 'all'
+      if params[:patient_id].blank? #pull tests for all patients
+        if params[:test_status_id] and params[:test_status_id].to_i != 0
+          tests = Test.find_by_sql("SELECT * FROm tests WHERE test_status_id = #{params[:test_status_id]} #{accession_number_filter}
+                                    ORDER BY time_created DESC LIMIT 100")
+        else
+          tests = Test.find_by_sql("SELECT * FROM tests WHERE true #{accession_number_filter} ORDER BY time_created DESC LIMIT 100")
+        end
+      else #pull tests for one patient
+        if params[:test_status_id] and params[:test_status_id].to_i != 0
+          tests = Test.find_by_sql("SELECT * FROM tests where test_status_id = #{params[:test_status_id]}
+                              AND visit_id IN  (SELECT id FROM visits WHERE patient_id = #{params[:patient_id]}) #{accession_number_filter}
+                              ORDER BY time_created DESC LIMIT 100")
+        else
+          tests = Test.find_by_sql("SELECT * FROM tests where visit_id IN  (SELECT id FROM visits WHERE patient_id = #{params[:patient_id]}) #{accession_number_filter}
+                              ORDER BY time_created DESC LIMIT 100")
+        end
+      end
+    end
 
     @tests = []
     panels = []
-    (@test || []).each do |test|
+    (tests || []).each do |test|
       test_name = test.test_type.name
       next if panels.include?(test.panel_id)
 
@@ -89,12 +65,11 @@ class TestController < ApplicationController
         :test_id => test.id,
         :specimen_status => test.specimen.status.name,
         :test_status => test.status.name,
-        :patient_name => "#{test.visit.patient.name} (#{test.visit.patient.gender == 0 ? 'M' : 'F'},#{test.visit.patient.age[0]}#{test.visit.patient.age[1]}#{test.visit.patient.age[2]}#{test.visit.patient.age[3]}"}
+        :patient_name => "#{test.visit.patient.name} (#{test.visit.patient.gender == 0 ? 'M' : 'F'},#{(test.visit.patient.age rescue 'N/A')})"}
     end
-  
 
   end
-  
+
   def new
     @patient = Patient.find(params[:patient_id])
     other_type = SpecimenType.find_by_name('Other')
@@ -147,6 +122,14 @@ class TestController < ApplicationController
     render :text => "<li>" + tests.uniq.map{|n| n } .join("</li><li>") + "</li>"
   end
 
+  def check_clinician
+	name = params[:clinician]
+       
+    if (clinician == "unknown" || clinician == "Unknown")
+        redirect_to("/test/new?patient_id=#{params[:patient_id]}", flash: {error: 'clinician can not be unknown'})   
+    end
+    render :text => "good"
+  end
   def create
     settings = YAML.load_file("#{Rails.root}/config/application.yml")
     patient = Patient.find(params[:patient_id])
@@ -157,11 +140,19 @@ class TestController < ApplicationController
     first_name = patient.name.strip.scan(/^\w+\s/).first
     last_name = patient.name.strip.scan(/\s\w+$/).last
     middle_name = patient.name.strip.scan(/\s\w+\s/).last
+	
+    date_sample_collected = params[:day_sample_collected].to_s + " " + params[:time_sample_collected].to_s
+    date_sample_collected = date_sample_collected.to_time.strftime("%Y%m%d%H%M%S")     
+
 
     #Orderer
-		clinician = CGI.unescapeHTML(params[:clinician])
-		c_first_name = clinician.strip.scan(/^\w+\s/).first
-    c_last_name = clinician.strip.scan(/\s\w+$/).last
+		clinician = CGI.unescapeHTML(params[:clinician].strip).split(/\s+/)
+    c_last_name = clinician.last
+    c_first_name = (clinician - [c_last_name]).join(" ")
+    clinician = CGI.unescapeHTML(params[:clinician].strip)
+    if (clinician == "unknown" || clinician == "Unknown")
+        redirect_to("/test/new?patient_id=#{params[:patient_id]}", flash: {error: 'clinician can not be unknown'})
+    else
 
           json = {
              :district => settings['district'],
@@ -171,12 +162,12 @@ class TestController < ApplicationController
              :middle_name=> middle_name,
              :date_of_birth=> patient.dob.to_date.strftime("%a %b %d %Y"),
              :gender=> (patient.gender == 1 ? "F" : "M"),
-             :patient_residence => "residence",
-             :patient_location => "loca",
-             :patient_town => "town",
-             :patient_district => "pat_dist",
-             :national_patient_id=>  '505050',
-             :phone_number=> '0992513151',
+             :patient_residence => "",
+             :patient_location => "",
+             :patient_town => "",
+             :patient_district => "",
+             :national_patient_id=>  '000000',
+             :phone_number=> '',
              :reason_for_test=> '',
              :who_order_test_last_name=> c_last_name,
              :who_order_test_first_name=> c_first_name,
@@ -184,17 +175,18 @@ class TestController < ApplicationController
              :who_order_test_id=> '',
              :order_location=> params[:ward],
              :sample_type=> SpecimenType.find(params[:specimen_type]).name,
-             :date_sample_drawn=> Date.today.strftime("%a %b %d %Y"),
+             :date_sample_drawn=> date_sample_collected,
              :tests=> params[:test_types].collect{|t| CGI.unescapeHTML(t)},
              :sample_status => 'specimen_not_collected',
              :sample_priority=> params[:priority] || 'Routine',
              :target_lab=> settings['facility_name'],
              :art_start_date => "",
              :date_received => Time.now,
-             :requesting_clinician => ''
-          }
-
-  
+             :requesting_clinician => '',
+             :return_json => 'true'
+    }
+   
+     
               res = Sender.create_order_remote(json)
               tracking_number = res[0]
 
@@ -267,7 +259,7 @@ class TestController < ApplicationController
               # Sender.send_data(patient, specimen)
               
               print_and_redirect("/test/print_accession_number?specimen_id=#{specimen.id}", "/tests/all?patient_id=#{visit.patient_id}&show_actions=true")
-   
+   end
   end
 
   def accept
@@ -510,7 +502,7 @@ class TestController < ApplicationController
   end
 
   def numerical_ac(num)
-    settings = YAML.load_file("#{Rails.root}/config/application.yml")[Rails.env]
+    settings = YAML.load_file("#{Rails.root}/config/application.yml")
     code = settings['facility_code']
     num = num.sub(/^#{code}/, '')
     num
@@ -593,7 +585,9 @@ class TestController < ApplicationController
           test.created_by = User.current.id
           test.panel_id = test_panel.id
           test.requested_by = specimen.tests.last.requested_by
-          test.save
+          test.not_done_reasons = ''
+          test.person_talked_to_for_not_done = ''
+	  test.save
         end
       else
         test = Test.new
@@ -603,7 +597,9 @@ class TestController < ApplicationController
         test.test_status_id = 2
         test.created_by = User.current.id
         test.requested_by = specimen.tests.last.requested_by
-        test.save
+        test.not_done_reasons = ''
+        test.person_talked_to_for_not_done = ''
+	test.save
       end
 
     Sender.send_data(visit.patient, specimen)

@@ -1,0 +1,42 @@
+<%= form_tag("/login", id: "login-form", method: 'post', enctype: 'multipart/form-data') do %>
+
+<%= text_field(:user, :username, :helpText=> "Enter Username", 
+    :textCase => "lower",
+    :field_type => "password",
+    :tt_pageonload=>"loadBarcodePage") %><br>
+<label for="user_password">Password</label>
+<%= password_field(:user, :password, :helpText => "Enter Password", 
+    :textCase => "lower",
+    :field_type => "password") %><br>
+
+    <%= hidden_field_tag "location_name", "Lab Reception"%>
+<%end%>
+
+<script>
+    tt_cancel_destination = '/';
+    tt_cancel_show = '/';
+    var setFocusTimeout = 1000;
+    var checkForBarcodeTimeout = 1500;
+
+    function loadBarcodePage() {
+        window.setInterval("focusForBarcodeInput()", 400);
+        window.setInterval("focusForBarcodeInput()", 400);
+        window.setInterval("moveNext()", 400);
+    }
+
+    function focusForBarcodeInput(){
+        var barcode = document.getElementById("touchscreenInput2");
+        if (barcode) {
+            barcode.focus();
+        }
+    }
+
+
+    function moveNext(){
+        usertext=document.getElementById("touchscreenInput2");
+        if (usertext.value.match(/.+\$$/i) != null){
+            usertext.value=usertext.value.substring(0,usertext.value.length -1);
+            gotoNextPage();
+        }
+    }
+    window.setTimeout("loadBarcodePage()", checkForBarcodeTimeout);</script>
