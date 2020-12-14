@@ -161,7 +161,7 @@ namespace :nlims do
           }
           
           status = ApplicationController.up?("#{configs['nlims_service']}")
-          puts status
+          
           if status == true
             res = JSON.parse(RestClient.post(url,json,headers))
             if res['status'] == 200
