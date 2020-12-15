@@ -134,7 +134,7 @@ class TestController < ApplicationController
     settings = YAML.load_file("#{Rails.root}/config/application.yml")
     patient = Patient.find(params[:patient_id])
     nlims = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")  
-    status = ApplicationController.up?("#{nlims['nlims_service']}")
+    #status = ApplicationController.up?("#{nlims['nlims_service']}")
 
     #Patient Details
     first_name = patient.name.strip.scan(/^\w+\s/).first
@@ -184,11 +184,11 @@ class TestController < ApplicationController
              :date_received => Time.now,
              :requesting_clinician => '',
              :return_json => 'true'
-    }
+          }
    
-     
-              res = Sender.create_order_remote(json)
-              tracking_number = res[0]
+              res = NlimsService.create_local_tracking_number
+              NlimsService.prepare_next_tracking_number            
+              tracking_number = res
 
               acc_num = new_accession_number
               visit = Visit.new
@@ -206,17 +206,17 @@ class TestController < ApplicationController
                 specimen.tracking_number = tracking_number              
                 specimen.save
               end
-
-            if status == false
-              order = UnsyncOrder.new
-              order.specimen_id = specimen.id
-              order.data_not_synced = 'new order'    
-              order.data_level = 'specimen'
-              order.sync_status = 'not-synced'
-              order.updated_by_name = User.current.name
-              order.updated_by_id = User.current.id
-              order.save
-            end
+              
+              
+                order = UnsyncOrder.new
+                order.specimen_id = specimen.id
+                order.data_not_synced = 'new order'    
+                order.data_level = 'specimen'
+                order.sync_status = 'not-synced'
+                order.updated_by_name = User.current.name
+                order.updated_by_id = User.current.id
+                order.save
+              
 
               params[:test_types].each do |name|
                 name = CGI.unescapeHTML(name)

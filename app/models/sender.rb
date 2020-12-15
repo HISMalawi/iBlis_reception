@@ -6,8 +6,7 @@ class Sender
         "_id" => specimen.tracking_number,
         "sample_status" => SpecimenStatus.find(specimen.specimen_status_id).name.titleize
     }
-    configs = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")
-    status = ApplicationController.up?("#{configs['nlims_service']}")
+       
         update_details = {
           "tracking_number" => order['_id']
         }
@@ -33,22 +32,8 @@ class Sender
             elsif specimen.specimen_status_id == 3
               test.test_status_id = 8
               test.save
-            end
-
-            update_details['who_updated'] = updater        
-            order['results'] = {} if order['results'].blank?            
-            r = {}
-
-            test.test_results.each do |result|
-              measure = Measure.find(result.measure_id) rescue next
-              r["#{measure.name}"] = "#{result.result} #{measure.unit}"
-            end
-
-            update_details['results'] = r
+            end            
             
-          if status == true
-            res = NlimsService.update_test(update_details)
-          else
             if specimen.specimen_status_id == 2
               order = UnsyncOrder.new
               order.specimen_id = test.id
@@ -68,8 +53,6 @@ class Sender
               order.updated_by_id = User.current.id
               order.save
             end
-
-          end
         end      
 
   end

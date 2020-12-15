@@ -154,7 +154,8 @@ namespace :nlims do
              :national_patient_id=>  p_id,
              :phone_number=> '0000',
           }
-          url = "http://192.168.43.50:3009/api/v1/create_order/"
+          
+          url = "#{configs['nlims_controller_ip']}/api/v1/create_order/"
           headers = {
             content_type: "application/json",
             token: "5N1EildpXWVK" 
