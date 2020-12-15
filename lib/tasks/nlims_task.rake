@@ -127,7 +127,7 @@ namespace :nlims do
              :health_facility_name => settings['facility_name'],           
              :sample_type=> sample_type,
              :date_sample_drawn=> date_of_collection,            
-             :sample_status => sample_status,
+             :sample_status => sample_status.gsub("-","_"),
              :sample_priority=> priority || 'Routine',
              :target_lab=> settings['facility_name'],
              :art_start_date => "",
@@ -158,7 +158,7 @@ namespace :nlims do
           url = "#{configs['nlims_controller_ip']}/api/v1/create_order/"
           headers = {
             content_type: "application/json",
-            token: "5N1EildpXWVK" 
+            token: "DRp62QHrm1QO" 
           }
           
           status = ApplicationController.up?("#{configs['nlims_service']}")
