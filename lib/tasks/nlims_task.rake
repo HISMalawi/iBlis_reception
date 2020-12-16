@@ -67,12 +67,27 @@ namespace :nlims do
   task create_order_to_nlims: :environment do
     settings = YAML.load_file("#{Rails.root}/config/application.yml")
     configs = YAML.load_file "#{Rails.root}/config/nlims_connection.yml"
+    token_ = ""
 
     data = UnsyncOrder.find_by_sql("SELECT specimens.drawn_by_id AS drawn_id, specimens.drawn_by_name AS drawn_name,specimens.id AS specimen_id, specimens.tracking_number,specimens.priority,specimens.date_of_collection,specimen_types.name AS specimen_type ,specimen_statuses.name AS sample_status FROM unsync_orders                        
                                     INNER JOIN specimens ON specimens.id = unsync_orders.specimen_id 
                                     INNER JOIN specimen_types ON specimens.specimen_type_id = specimen_types.id
                                     INNER JOIN specimen_statuses ON specimen_statuses.id = specimens.specimen_status_id           
                                   WHERE (data_level='specimen' AND sync_status='not-synced') AND data_not_synced='new order'")
+
+    headers = {
+        content_type: "application/json",
+        token: token_
+    }          
+                                  
+    username = configs['nlims_custome_password']
+    password = configs['nlims_custome_username']
+    url = "#{configs['nlims_controller_ip']}/api/v1/re_authenticate/#{username}/#{password}"
+    res = JSON.parse(RestClient.get(url,headers))
+    if res['error'] == false
+      token_ = res['data']['token']      
+    end
+
     data.each do |order|
       json = {}
       tracking_number = order.tracking_number 
@@ -127,7 +142,7 @@ namespace :nlims do
              :health_facility_name => settings['facility_name'],           
              :sample_type=> sample_type,
              :date_sample_drawn=> date_of_collection,            
-             :sample_status => sample_status,
+             :sample_status => sample_status.gsub("_","-"),
              :sample_priority=> priority || 'Routine',
              :target_lab=> settings['facility_name'],
              :art_start_date => "",
@@ -158,7 +173,7 @@ namespace :nlims do
           url = "#{configs['nlims_controller_ip']}/api/v1/create_order/"
           headers = {
             content_type: "application/json",
-            token: "5N1EildpXWVK" 
+            token: token_
           }
           
           status = ApplicationController.up?("#{configs['nlims_service']}")
@@ -174,6 +189,85 @@ namespace :nlims do
           puts res
          
     end
+  end
+
+
+
+
+
+
+
+
+  desc "TODO"
+  task update_order_to_nlims: :environment do
+
+    settings = YAML.load_file("#{Rails.root}/config/application.yml")
+    configs = YAML.load_file "#{Rails.root}/config/nlims_connection.yml"
+    token_ = ""
+
+    headers = {
+      content_type: "application/json",
+      token: token_
+    }          
+                                  
+    username = configs['nlims_custome_password']
+    password = configs['nlims_custome_username']
+    url = "#{configs['nlims_controller_ip']}/api/v1/re_authenticate/#{username}/#{password}"
+    res = JSON.parse(RestClient.get(url,headers))
+    if res['error'] == false
+      token_ = res['data']['token']      
+    end
+
+       puts token_
+
+    res = UnsyncOrder.find_by_sql("SELECT specimens.id AS sample_id, specimens.tracking_number, unsync_orders.data_not_synced AS sample_status, unsync_orders.updated_by_name AS updater, unsync_orders.updated_by_id AS updater_id FROM unsync_orders                        
+                                    INNER JOIN specimens ON specimens.id = unsync_orders.specimen_id          
+                                  WHERE (data_level='specimen' AND sync_status='not-synced') AND 
+                                  (data_not_synced='specimen-rejected' OR data_not_synced='specimen-accepted' OR data_not_synced='specimen-collected')")
+    if !res.blank?
+      res.each do |order|
+        json = {}
+        tracking_number = order.tracking_number
+        sample_status = order.sample_status.gsub("-","_")
+        updater_f_name =  order.updater.split(" ")[0]
+        updater_l_name =  order.updater.split(" ")[1]
+        updater_f_name = "N/A" if  order.updater.split(" ")[0].blank?
+        updater_l_name = "N/A" if order.updater.split(" ")[1].blank?
+        updater_id = order.updater_id
+        sample_id = order.sample_id
+
+        json = {
+          :tracking_number => tracking_number,
+          :status => sample_status,
+          :who_updated => {
+            :first_name => updater_f_name,
+            :last_name => updater_l_name,
+            :id => updater_id
+          }
+        }
+
+        headers = {
+          content_type: "application/json",
+          token: token_
+        }        
+       
+
+        url = "#{configs['nlims_controller_ip']}/api/v1/update_order"
+        status = ApplicationController.up?("#{configs['nlims_service']}")
+      
+          if status == true
+            re = JSON.parse(RestClient.post(url,json,headers))
+            
+            if re['status'] == 200
+                r = UnsyncOrder.find_by(sync_status: "not-synced", data_not_synced: "#{order.sample_status}", specimen_id: sample_id)
+                r.sync_status = "synced"
+                r.save
+            end
+          end
+        puts re          
+      end
+    end
+
   end
 
 end
