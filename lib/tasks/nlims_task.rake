@@ -142,7 +142,7 @@ namespace :nlims do
              :health_facility_name => settings['facility_name'],           
              :sample_type=> sample_type,
              :date_sample_drawn=> date_of_collection,            
-             :sample_status => sample_status.gsub("_","-"),
+             :sample_status => sample_status.gsub("-","_"),
              :sample_priority=> priority || 'Routine',
              :target_lab=> settings['facility_name'],
              :art_start_date => "",
