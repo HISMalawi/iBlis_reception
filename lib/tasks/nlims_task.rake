@@ -143,8 +143,7 @@ namespace :nlims do
              :sample_type=> sample_type,
              :date_sample_drawn=> date_of_collection,            
              :sample_status => sample_status.gsub("-","_"),
-             :sample_priority=> priority || 'Routine',
-             :target_lab=> settings['facility_name'],
+             :sample_priority=> priority || 'Routine',            
              :art_start_date => "",
              :date_received => date_of_collection,
              :requesting_clinician => '',
@@ -370,5 +369,6 @@ namespace :nlims do
 
   end
   
+
 end
 
