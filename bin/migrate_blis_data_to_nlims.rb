@@ -38,16 +38,15 @@ puts "--------------------------------------------------------------------------
      
     
         headers = {
-            content_type: "application/json",
-            token: token_
+            content_type: "application/json"
         }          
                                       
-        username = configs['nlims_default_password']
-        password = configs['nlims_default_username']
-       
+        password = configs['nlims_default_password']
+        username = configs['nlims_default_username']
+
         url = "#{configs['nlims_controller_ip']}/api/v1/re_authenticate/#{username}/#{password}"
         res = JSON.parse(RestClient.get(url,headers))
-       
+	
         if res['error'] == false
           token_ = res['data']['token']      
         end
@@ -199,8 +198,9 @@ puts "--------------------------------------------------------------------------
           end
     
               url = "#{configs['nlims_controller_ip']}/api/v1/create_order/"
+              token_ = "sss"
               headers = {
-                content_type: "application/json",
+		            content_type: "application/json",
                 token: token_
               }
               json = JSON.generate(json)
@@ -208,14 +208,29 @@ puts "--------------------------------------------------------------------------
               
               if status == true
                 res = JSON.parse(RestClient.post(url,json,headers))
-              
+                
+                if res['status'] == 401 && res['message'] == "token expired"
+                  url = "#{configs['nlims_controller_ip']}/api/v1/re_authenticate/#{username}/#{password}"
+                  res = JSON.parse(RestClient.get(url,headers))
+            
+                  if res['error'] == false
+                    token_ = res['data']['token']      
+                  end
+
+                  headers = {
+                    content_type: "application/json",
+                    token: token_
+                  }
+                  url = "#{configs['nlims_controller_ip']}/api/v1/create_order/"
+                  res = JSON.parse(RestClient.post(url,json,headers))
+                end
                 if res['status'] == 200
                 
                   #if order.tracking_number.blank?
                     r = Specimen.find_by(id: "#{sample_id}")
-                    r.tracking_number = res['data']['tracking_number']
+                    r.tracking_number = res['data']['tracking_number'] 
                     r.save
-                    tracking_number = res['data']['tracking_number']
+                    tracking_number = res['data']['tracking_number'] 
                   #end
                   
                   tests_with_statuses.each do |tst_status|                
