@@ -8,8 +8,7 @@ if !File.exists?("#{Rails.root}/public/sample_tracker")
     FileUtils.touch("#{Rails.root}/public/sample_tracker")   
 end
 
-puts "new migration or continuation? (n/c)"
-continue_from_last = gets.chomp
+
 
 
 
@@ -107,6 +106,52 @@ def self.get_month(month)
 
 end
 
+def measure_look_up(measure)
+  measures = {
+    "ALPU" => "ALP-H",
+    "Urea/Bun" => "Urea",
+    "Glu" => "Glucose",
+    "Bilirubin Total(BIT))" => "Bilirubin Total(BIT)",
+    "Epithelial cell" => "Epithelial cells",
+    "Cast" => "Casts",
+    "Yeast cell" => "Yeast cells",
+    "HepB" => "Hepatitis B"
+  }
+  return measures[measure] if !measures[measure].blank?
+  return measure if measures[measure].blank?
+end
+
+def test_type_look_up(test)
+  test_types = {
+    "Hepatitis C" => "Hepatitis C Test",
+    "Hepatitis B" => "Hepatitis B Test",
+    "FBC (Paeds)" => "FBC",
+    "Electrolytes (Paeds)" => "Electrolytes",
+    "Renal Function Tests (Paeds)" => "Renal Function Test",
+    "Glucose (Paeds)" => "Glucose",
+    "Liver Function Tests (Paeds)" => "Liver Function Tests",
+    "Hepatitis B test (Paeds)" => "Hepatitis B Test",
+    "Hepatitis C test (Paeds)" => "Hepatitis C Test",
+    "Urine chemistry (paeds)" => "Urine chemistries",
+    "Urine Macroscopy (Paeds)" => "Urine Macroscopy",
+    "Urine Microscopy (Paeds)" => "Urine Microscopy",
+    "Malaria Screening (Paeds)" => "Malaria Screening",
+    "Syphilis (Paeds)" => "Syphilis Test",
+    "Minerals (Paeds)" => "Minerals",
+    "Cell Count (Paeds)" => "Cell Count",
+    "Culture & Sensitivity (Paeds)" => "Culture & Sensitivity",
+    "Differential (Paeds)" => "Differential",
+    "Gram Stain (Paeds)"  => "Gram Stain",
+    "India Ink (Paeds)"  => "India Ink",
+    "Stool Analysis (Paeds)" => "Stool Analysis",
+    "Lipogram (Paeds)" => "Lipogram",
+    "HbA1c (Paeds)" => "HbA1c"
+  }
+  return test_types[test] if !test_types[test].blank?
+  return test if test_types[test].blank?
+end
+
+
 def self.get_day(day)
 
   case day
@@ -178,10 +223,38 @@ def self.get_day(day)
 end
 
 #----------------------------------------------------------------------------------
+puts "-------------------------------------------------------------------------------------------------------------"
+puts "checking for orderes having sam tracking number from iblis database before migration"
+dupl = Specimen.find_by_sql("SELECT tracking_number, count(*) FROM iblis.specimens group by tracking_number having count(*) > 1")
+dup_total = dupl.length
 
+if dup_total > 0
+  puts "-------------------------------------------------------------------------------------------------------------"
+  puts "duplicats found: #{dup_total}"
+  puts "-------------------------------------------------------------------------------------------------------------"
+  puts "now resolving duplicates, please wait............."
 
+  dupl.each do |dupl_rec|
+    if !dupl_rec['tracking_number'].blank?
+      da = Specimen.find_by_sql("SELECT * FROM specimens WHERE tracking_number='#{dupl_rec['tracking_number']}'")
+      da.each do |reso|
+        id_ = reso['id']
+        updater = Specimen.find_by(id: id_)
+        updater.tracking_number = generate_tracking_number
+        updater.save       
+        prepare_next_tracking_number     
+      end
+    end  
+  end
+  puts "-------------------------------------------------------------------------------------------------------------"
+  puts "finished resolving duplicates, now can migrate the data"
+else
+  puts "-------------------------------------------------------------------------------------------------------------"
+  puts "now duplicates found, now can migrate the data"
+end
 
-
+puts "new migration or continuation? (n/c)"
+continue_from_last = gets.chomp
 
 counter = 0
 previous_tracking_number = ""
@@ -260,7 +333,8 @@ puts "--------------------------------------------------------------------------
                           )
           
           tests.each do |tst|
-            tests_.push(tst.test_name)
+            
+            tests_.push(test_type_look_up(tst.test_name))
             test_id = tst.test_id
             
             user_name = ""
@@ -299,7 +373,7 @@ puts "--------------------------------------------------------------------------
     
           birth_date =  p_dob.to_date.strftime("%a %b %d %Y") if !p_dob.blank?
           birth_date = date_of_collection if p_dob.blank?
-    
+          sample_type = sample_type.strip
           if order.tracking_number.blank?
             json = {
               :district => settings['district'],
@@ -335,23 +409,6 @@ puts "--------------------------------------------------------------------------
     
           else
               
-           
-            r = Specimen.find_by_sql("SELECT * FROM specimens WHERE tracking_number ='#{order.tracking_number}'")
-            
-            if r.length > 1
-              counter_ = 0
-              r.each do |d|                
-                if counter_ > 0 
-                  id_ = d['id']
-                  updater = Specimen.find_by(id: id_)
-                  updater.tracking_number = generate_tracking_number
-                  updater.save       
-                  prepare_next_tracking_number           
-                end
-                counter_ = counter_ + 1
-              end
-            end
-
               tracking_number = order.tracking_number  
               #if previous_tracking_number == order.tracking_number
               #   tracking_number = generate_tracking_number
@@ -433,7 +490,7 @@ puts "--------------------------------------------------------------------------
                   previous_tracking_number =  order.tracking_number
                   tests_with_statuses.each do |tst_status|                
                     status = tst_status[1]
-                    test_n = tst_status[0]                       
+                    test_n = test_type_look_up(tst_status[0])                       
                         json_ = {
                           :tracking_number => tracking_number,
                           :test_status => status,
@@ -456,7 +513,8 @@ puts "--------------------------------------------------------------------------
                   tests_with_results.each do |rst_|       
                     t_id = rst_[0]
                     status = rst_[1]
-                    test_n = rst_[2]
+                    test_n = test_type_look_up(rst_[2])
+                    
                     updater = rst_[3]
                        
                         json_ = {
@@ -477,14 +535,17 @@ puts "--------------------------------------------------------------------------
                         measures = {}
                         res.each do |result_details|              
                           measure_name = result_details.m_name
-                          result_value = result_details.result_va 
+                          measure_name = measure_look_up(measure_name)
+                          result_value = result_details.result_va
+                          result_value = result_value.force_encoding("ASCII-8BIT").encode('UTF-8', undef: :replace, replace: '')
                           measures[measure_name] = result_value
                           r_date = result_details.time_entered
                         end
                         
                         json_["results"] = measures
                         json_["result_date"] = r_date
-                        json_ = JSON.generate(json_)
+		
+			json_ = JSON.generate(json_)
                         url = "#{configs['nlims_controller_ip']}/api/v1/update_test"
                         
                             re = JSON.parse(RestClient.post(url,json_,headers))                                    
