@@ -115,7 +115,15 @@ def measure_look_up(measure)
     "Epithelial cell" => "Epithelial cells",
     "Cast" => "Casts",
     "Yeast cell" => "Yeast cells",
-    "HepB" => "Hepatitis B"
+    "HepB" => "Hepatitis B",
+    "ALT" => "ALT-H",
+    "AST" => "AST-H",
+    "ALP" => "ALP-H",
+    "ALB" => "ALB-H",
+    "TBIL-VOX" => "Bilirubin Total(TBIL-VOX)",
+    "DBIL-VOX" => "Bilirubin Direct(DBIL-VOX)",
+    "HDL-C"  => "HDL Direct (HDL-C)",
+    "LDL-C" => "LDL Direct (LDL-C)"
   }
   return measures[measure] if !measures[measure].blank?
   return measure if measures[measure].blank?
@@ -145,7 +153,11 @@ def test_type_look_up(test)
     "India Ink (Paeds)"  => "India Ink",
     "Stool Analysis (Paeds)" => "Stool Analysis",
     "Lipogram (Paeds)" => "Lipogram",
-    "HbA1c (Paeds)" => "HbA1c"
+    "HbA1c (Paeds)" => "HbA1c",
+    "Total Protein" => "Protein",
+    "ZN" => "ZN Stain",
+    "Urine chemistry" => "Urine chemistries", 
+    "sickle cell" => "Sickling Test"
   }
   return test_types[test] if !test_types[test].blank?
   return test if test_types[test].blank?
@@ -225,7 +237,7 @@ end
 #----------------------------------------------------------------------------------
 puts "-------------------------------------------------------------------------------------------------------------"
 puts "checking for orderes having sam tracking number from iblis database before migration"
-dupl = Specimen.find_by_sql("SELECT tracking_number, count(*) FROM iblis.specimens group by tracking_number having count(*) > 1")
+dupl = Specimen.find_by_sql("SELECT tracking_number, count(*) FROM specimens group by tracking_number having count(*) > 1")
 dup_total = dupl.length
 
 if dup_total > 0
