@@ -125,6 +125,7 @@ def measure_look_up(measure)
     "HDL-C"  => "HDL Direct (HDL-C)",
     "LDL-C" => "LDL Direct (LDL-C)",
     "Sickle" => "Sickling Screen"
+    "Cholestero l(CHOL)" => "Cholesterol(CHOL)"
   }
   return measures[measure] if !measures[measure].blank?
   return measure if measures[measure].blank?
