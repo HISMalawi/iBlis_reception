@@ -124,7 +124,7 @@ def measure_look_up(measure)
     "DBIL-VOX" => "Bilirubin Direct(DBIL-VOX)",
     "HDL-C"  => "HDL Direct (HDL-C)",
     "LDL-C" => "LDL Direct (LDL-C)",
-    "Sickle" => "Sickling Screen"
+    "Sickle" => "Sickling Screen",
     "Cholestero l(CHOL)" => "Cholesterol(CHOL)"
   }
   return measures[measure] if !measures[measure].blank?
