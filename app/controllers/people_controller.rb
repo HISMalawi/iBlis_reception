@@ -10,6 +10,16 @@ class PeopleController < ApplicationController
     tracking_number = params[:identifier] || ""
     npid = params[:identifier].gsub(/\-/, '') rescue nil
 
+    # code to handle specimen registration using barcode label
+    if !npid.blank? && npid.match("~")
+      segments = npid.split("~")
+
+      patient = Patient.create_from_scan(segments)
+      specimen_id = Test.create_order_from_scan(patient, segments)
+
+      print_and_redirect("/test/print_accession_number?specimen_id=#{specimen_id}&history=#{segments[6]}", "/tests/all?patient_id=#{patient.id}&show_actions=true") and return
+    end
+
     openmrs_people = []
     local_people = []
     remote_results = []
