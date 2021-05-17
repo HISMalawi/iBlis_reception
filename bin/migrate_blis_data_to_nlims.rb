@@ -136,7 +136,9 @@ def measure_look_up(measure)
     "Total Cholesterol(CHOL)" => "Cholesterol(CHOL)",
     "GLU-O" => "GLU-O-H",
     "TG" => "TG-H",
-    "Sickle" => "Sickling Screen"
+    "Sickle" => "Sickling Screen",
+    "Cholestero l(CHOL)" => "Cholesterol(CHOL)"
+
   }
   return measures[measure] if !measures[measure].blank?
   return measure if measures[measure].blank?
