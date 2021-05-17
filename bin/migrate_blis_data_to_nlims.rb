@@ -124,7 +124,19 @@ def measure_look_up(measure)
     "DBIL-VOX" => "Bilirubin Direct(DBIL-VOX)",
     "HDL-C"  => "HDL Direct (HDL-C)",
     "LDL-C" => "LDL Direct (LDL-C)",
-    "Cholestero l(CHOL)" => "Cholesterol(CHOL)"
+    "Cholestero l(CHOL)" => "Cholesterol(CHOL)",
+    "r-GT" => "GGT/r-GT",
+    "DBIL-DSA" => "DBIL-DSA-H",
+    "TBIL-DSA" => "TBIL-DSA-H",
+    "TP" => "TP-H",
+    "Results" => "Blood film",
+    "GGT" => "GGT/r-GT",
+    "Sickling Screen By Sodium Metabiosulphate Method" => "Sickling Screen",
+    "P_LCR" => "P-LCR",
+    "Total Cholesterol(CHOL)" => "Cholesterol(CHOL)",
+    "GLU-O" => "GLU-O-H",
+    "TG" => "TG-H",
+    "Sickle" => "Sickling Screen"
   }
   return measures[measure] if !measures[measure].blank?
   return measure if measures[measure].blank?
@@ -158,7 +170,11 @@ def test_type_look_up(test)
     "Total Protein" => "Protein",
     "ZN" => "ZN Stain",
     "Urine chemistry" => "Urine chemistries", 
-    "sickle cell" => "Sickling Test"
+    "sickle cell" => "Sickling Test", 
+    "Macroscopy" => "Urine Macroscopy",
+    "Culture/sensistivity" => "Culture & Sensitivity",
+    "TB Microscopy" => "TB Microscopic Exam",
+    "cryptococcal antigen" => "Cryptococcus Antigen Test"
   }
   return test_types[test] if !test_types[test].blank?
   return test if test_types[test].blank?
@@ -548,7 +564,8 @@ puts "--------------------------------------------------------------------------
                         measures = {}
                         res.each do |result_details|              
                           measure_name = result_details.m_name
-                          measure_name = measure_look_up(measure_name)
+                          next if measure_name.blank?
+			  measure_name = measure_look_up(measure_name)
                           result_value = result_details.result_va
                           result_value = result_value.force_encoding("ASCII-8BIT").encode('UTF-8', undef: :replace, replace: '')
                           measures[measure_name] = result_value
