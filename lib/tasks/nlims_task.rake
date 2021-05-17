@@ -154,7 +154,7 @@ namespace :nlims do
                       )
       tests.each do |tst|
         name_ = test_types[tst.test_name]
-        tests_.push(name)
+        tests_.push(name_)
         test_id = tst.test_id
         date_of_collection = tst.time_created
       end
