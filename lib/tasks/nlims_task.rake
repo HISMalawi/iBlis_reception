@@ -80,13 +80,49 @@ namespace :nlims do
         token: token_
     }          
                                   
-    username = configs['nlims_custome_password']
-    password = configs['nlims_custome_username']
+    password = configs['nlims_default_password']
+    username = configs['nlims_default_username']
     url = "#{configs['nlims_controller_ip']}/api/v1/re_authenticate/#{username}/#{password}"
     res = JSON.parse(RestClient.get(url,headers))
+
     if res['error'] == false
       token_ = res['data']['token']      
     end
+
+    test_types = {
+      "Hepatitis C" => "Hepatitis C Test",
+      "Hepatitis B" => "Hepatitis B Test",
+      "FBC (Paeds)" => "FBC",
+      "Electrolytes (Paeds)" => "Electrolytes",
+      "Renal Function Tests (Paeds)" => "Renal Function Test",
+      "Glucose (Paeds)" => "Glucose",
+      "Liver Function Tests (Paeds)" => "Liver Function Tests",
+      "Hepatitis B test (Paeds)" => "Hepatitis B Test",
+      "Hepatitis C test (Paeds)" => "Hepatitis C Test",
+      "Urine chemistry (paeds)" => "Urine chemistries",
+      "Urine Macroscopy (Paeds)" => "Urine Macroscopy",
+      "Urine Microscopy (Paeds)" => "Urine Microscopy",
+      "Malaria Screening (Paeds)" => "Malaria Screening",
+      "Syphilis (Paeds)" => "Syphilis Test",
+      "Minerals (Paeds)" => "Minerals",
+      "Cell Count (Paeds)" => "Cell Count",
+      "Culture & Sensitivity (Paeds)" => "Culture & Sensitivity",
+      "Differential (Paeds)" => "Differential",
+      "Gram Stain (Paeds)"  => "Gram Stain",
+      "India Ink (Paeds)"  => "India Ink",
+      "Stool Analysis (Paeds)" => "Stool Analysis",
+      "Lipogram (Paeds)" => "Lipogram",
+      "HbA1c (Paeds)" => "HbA1c",
+      "Total Protein" => "Protein",
+      "ZN" => "ZN Stain",
+      "Urine chemistry" => "Urine chemistries",
+      "sickle cell" => "Sickling Test",
+      "Macroscopy" => "Urine Macroscopy",
+      "Culture/sensistivity" => "Culture & Sensitivity",
+      "TB Microscopy" => "TB Microscopic Exam",
+      "cryptococcal antigen" => "Cryptococcus Antigen Test"
+    }
+
 
     data.each do |order|
       json = {}
@@ -111,14 +147,16 @@ namespace :nlims do
 
       tests_ = []
       test_id = 0
-      tests =  Test.find_by_sql("SELECT tests.id AS test_id, test_types.name AS test_name                        
+      tests =  Test.find_by_sql("SELECT tests.id AS test_id, test_types.name AS test_name,tests.time_created AS time_created                        
                         FROM tests 
                         INNER JOIN test_types ON test_types.id = tests.test_type_id
                         WHERE tests.specimen_id ='#{sample_id}'"                      
                       )
       tests.each do |tst|
-        tests_.push(tst.test_name)
+        name_ = test_types[tst.test_name]
+        tests_.push(name)
         test_id = tst.test_id
+        date_of_collection = tst.time_created
       end
 
       vst = Visit.find_by_sql("SELECT ward_or_location AS ward, patients.name AS pat_name, patients.dob, patients.gender,
