@@ -174,6 +174,7 @@ namespace :nlims do
         p_phone = visit.phone_number
         ward = visit.ward
       end
+      brth = p_dob.to_date.strftime("%a %b %d %Y") rescue nil
       json = {
              :tracking_number => tracking_number, 
              :district => settings['district'],
@@ -197,7 +198,7 @@ namespace :nlims do
              :last_name=> p_last_name,
              :middle_name=> "",
              :reason_for_test=> '',
-             :date_of_birth=> p_dob.to_date.strftime("%a %b %d %Y"),
+             :date_of_birth=> brth,
              :gender=> (p_gender == 1 ? "F" : "M"),
              :patient_residence => "",
              :patient_location => "",
@@ -255,12 +256,14 @@ namespace :nlims do
       token_ = res['data']['token']      
     end
     
-    res = UnsyncOrder.find_by_sql("SELECT specimens.id AS sample_id, specimens.tracking_number, unsync_orders.data_not_synced AS sample_status, unsync_orders.updated_by_name AS updater, unsync_orders.updated_by_id AS updater_id FROM unsync_orders                        
+    res = UnsyncOrder.find_by_sql("SELECT specimens.id AS sample_id, specimens.tracking_number, unsync_orders.data_not_synced AS sample_status, 
+                                    unsync_orders.updated_by_name AS updater, unsync_orders.updated_by_id AS updater_id FROM unsync_orders                        
                                     INNER JOIN specimens ON specimens.id = unsync_orders.specimen_id          
                                   WHERE (data_level='specimen' AND sync_status='not-synced') AND 
-                                  (data_not_synced='specimen-rejected' OR data_not_synced='specimen-accepted' OR data_not_synced='specimen-collected')")
+                                  (data_not_synced='specimen-rejected' OR data_not_synced='specimen-accepted' OR data_not_synced='specimen-collected' OR data_not_synced='accept specimen')")
     if !res.blank?
       res.each do |order|
+        raise order.tracking_number.inspect
         json = {}
         tracking_number = order.tracking_number
         sample_status = order.sample_status.gsub("-","_")
