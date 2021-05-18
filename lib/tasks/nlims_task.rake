@@ -153,7 +153,8 @@ namespace :nlims do
                         WHERE tests.specimen_id ='#{sample_id}'"                      
                       )
       tests.each do |tst|
-        name_ = test_types[tst.test_name]
+        name_ = tst.test_name
+        name_ = test_types[tst.test_name] if !test_types[tst.test_name].blank?
         tests_.push(name_)
         test_id = tst.test_id
         date_of_collection = tst.time_created
@@ -263,7 +264,7 @@ namespace :nlims do
                                   (data_not_synced='specimen-rejected' OR data_not_synced='specimen-accepted' OR data_not_synced='specimen-collected' OR data_not_synced='accept specimen')")
     if !res.blank?
       res.each do |order|
-        raise order.tracking_number.inspect
+      
         json = {}
         tracking_number = order.tracking_number
         sample_status = order.sample_status.gsub("-","_")
@@ -320,11 +321,45 @@ namespace :nlims do
       token: token_
     }          
 
+     measures = {
+      "ALPU" => "ALP-H",
+      "Urea/Bun" => "Urea",
+      "Glu" => "Glucose",
+      "Bilirubin Total(BIT))" => "Bilirubin Total(BIT)",
+      "Epithelial cell" => "Epithelial cells",
+      "Cast" => "Casts",
+      "Yeast cell" => "Yeast cells",
+      "HepB" => "Hepatitis B",
+      "ALT" => "ALT-H",
+      "AST" => "AST-H",
+      "ALP" => "ALP-H",
+      "ALB" => "ALB-H",
+      "TBIL-VOX" => "Bilirubin Total(TBIL-VOX)",
+      "DBIL-VOX" => "Bilirubin Direct(DBIL-VOX)",
+      "HDL-C"  => "HDL Direct (HDL-C)",
+      "LDL-C" => "LDL Direct (LDL-C)",
+      "Cholestero l(CHOL)" => "Cholesterol(CHOL)",
+      "r-GT" => "GGT/r-GT",
+      "DBIL-DSA" => "DBIL-DSA-H",
+      "TBIL-DSA" => "TBIL-DSA-H",
+      "TP" => "TP-H",
+      "Results" => "Blood film",
+      "GGT" => "GGT/r-GT",
+      "Sickling Screen By Sodium Metabiosulphate Method" => "Sickling Screen",
+      "P_LCR" => "P-LCR",
+      "Total Cholesterol(CHOL)" => "Cholesterol(CHOL)",
+      "GLU-O" => "GLU-O-H",
+      "TG" => "TG-H",
+      "Sickle" => "Sickling Screen",
+      "Cholestero l(CHOL)" => "Cholesterol(CHOL)"
+
+    }
                            
-    username = configs['nlims_custome_password']
-    password = configs['nlims_custome_username']
+    password = configs['nlims_default_password']
+    username = configs['nlims_default_username']
     url = "#{configs['nlims_controller_ip']}/api/v1/re_authenticate/#{username}/#{password}"
     res = JSON.parse(RestClient.get(url,headers))
+
     if res['error'] == false
       token_ = res['data']['token']      
     end
@@ -377,6 +412,7 @@ namespace :nlims do
           if !t_r.blank?
             t_r.each do |rs_data|
               measure_name = rs_data.m_name
+              measure_name = measures[measure_name] if !measures[measure_name].blank?
               result_value = rs_data.result_va 
               measures[measure_name] = result_value
             end
