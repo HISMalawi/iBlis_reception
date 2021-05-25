@@ -74,9 +74,9 @@ module TestUtils
 
     if !history.blank?
       s += "\n##########BEGIN FORM##########\n\n"
-      s += "\nN\nq616\nQ026,0\nZT\n"
+      s += "\nN\nq616\nQ090,0\nZT\n"
       s += "A150,50,0,3,1,1,N,\"#{settings['facility_name']}\"\n"
-      s += "A180,90,0,3,1,1,N,\"Laboratory Test Order Form V2.0.0\"\n"
+      s += "A80,90,0,3,1,1,N,\"Laboratory Test Order Form V2.0.0\"\n"
       s += "A30,130,0,3,1,1,N,\"Patient : #{patient.name} (#{gender})\"\n"
       s += "A30,170,0,3,1,1,N,\"Patient ID : #{npid}\"\n"
       s += "A30,210,0,3,1,1,N,\"Patient DOB: #{dob}\"\n"
@@ -92,7 +92,7 @@ module TestUtils
         s += "A50,#{line},0,3,1,1,N,\"-#{name}\"\n"
         line +=40
       end
-      s += "B200,#{line},0,1A,2,2,N,\"#{specimen.accession_number}\"\n"
+      s += "B180,#{line},0,1A,2,2,120,N,\"#{numerical_acc_num}\"\n"
       s += "P1\n\n"
     end
 

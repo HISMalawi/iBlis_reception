@@ -39,7 +39,7 @@ class Patient < BlisConnection
         :phone_number		=> nil,
         :gender					=> 	segments[2],
         :patient_number => 	(Patient.count + 1),
-        :dob => Time.at(segments[3]).to_date,
+        :dob => Time.at(segments[3].to_i).to_date,
         :dob_estimated => 0,
         :external_patient_number => segments[1])
     end
