@@ -26,4 +26,24 @@ class Patient < BlisConnection
     end     
   end
 
+  def self.create_from_scan(segments)
+
+    patient = self.find_by_external_patient_number(segments[1])
+    if patient.blank?
+      patient = self.create(
+        :name 		=> segments[0].gsub("^", " ").gsub(/\s+/, " "),
+        :first_name_code => (segments[0].split("^")[0].soundex rescue ""),
+        :last_name_code  => (segments[0].split("^")[2].soundex rescue ""),
+        :created_by			=> User.current.id,
+        :address				=> nil,
+        :phone_number		=> nil,
+        :gender					=> 	segments[2],
+        :patient_number => 	(Patient.count + 1),
+        :dob => Time.at(segments[3].to_i).to_date,
+        :dob_estimated => 0,
+        :external_patient_number => segments[1])
+    end
+
+    patient
+  end
 end

@@ -88,11 +88,6 @@ module NlimsService
 	end
 
 
-
-
-
-
-
 	def self.create_local_tracking_number
 		configs = YAML.load_file "#{Rails.root}/config/application.yml"
 		site_code = configs['facility_code']
@@ -125,7 +120,7 @@ module NlimsService
 				
 				value = "0" + counter.to_s
 			else
-				value = counter.to_s
+				value = counter.to_s rescue "001"
 			end
 			
 

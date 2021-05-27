@@ -1,13 +1,13 @@
 require 'will_paginate/array' 
 require 'nlims_service.rb'
-
+require 'test_utils.rb'
 
 class TestController < ApplicationController
   skip_before_action :verify_authenticity_token
   def index
 
     accession_number_filter = ""
-    settings = YAML.load_file("#{Rails.root}/config/application.yml")[Rails.env]
+    settings = YAML.load_file("#{Rails.root}/config/application.yml") #[Rails.env]
 
     if !params[:tracking_number].blank? && params[:tracking_number].match(/^X/i)
       accession_number_filter = " AND tests.specimen_id IN (SELECT id FROM specimens WHERE tracking_number = '#{params[:tracking_number]}') "
@@ -190,7 +190,7 @@ class TestController < ApplicationController
               NlimsService.prepare_next_tracking_number            
               tracking_number = res
 
-              acc_num = new_accession_number
+              acc_num = TestUtils.new_accession_number
               visit = Visit.new
               visit.patient_id = params[:patient_id]
               visit.visit_type = VisitType::find(params[:visit_type]).name
@@ -333,7 +333,7 @@ class TestController < ApplicationController
     if specimen.blank?
       specimen = Specimen.new
       specimen.specimen_type_id = SpecimenType.where(:name => data['data']['other']['sample_type']).last.id
-      specimen.accession_number = new_accession_number
+      specimen.accession_number = TestUtils.new_accession_number
       specimen.tracking_number = identifier
       specimen.drawn_by_name = data['data']['other']['sample_created_by']['name']
       specimen.drawn_by_id = data['data']['other']['sample_created_by']['id']
@@ -495,63 +495,16 @@ class TestController < ApplicationController
     now = Time.now.utc.to_date
     now.year - dob.year - ((now.month > dob.month || (now.month == dob.month && now.day >= dob.day)) ? 0 : 1)
   end
-  def format_ac(num)
-    num = num.insert(3, '-')
-    num = num.insert(-9, '-')
-    num
-  end
-
-  def numerical_ac(num)
-    settings = YAML.load_file("#{Rails.root}/config/application.yml")
-    code = settings['facility_code']
-    num = num.sub(/^#{code}/, '')
-    num
-  end
 
   def print_accession_number
-    require 'auto12epl'
-    specimen = Specimen.find(params[:specimen_id])
-    tests = specimen.tests
-    patient = tests.first.visit.patient
-    npid = patient.external_patient_number
-    npid = "-" if npid.blank?
-    name = patient.name
-    date = tests.first.time_created.strftime("%d-%b-%Y %H:%M")
 
-    test_names = []
-    panels = []
-    tests.each do |t|
-      next if !t.panel_id.blank?  and panels.include?(t.panel_id)
-      if t.panel_id.blank?
-        test_names << t.short_name || t.name
-      else
-        test_names << TestPanel.find(t.panel_id).panel_type.short_name || TestPanel.find(t.panel_id).panel_type.name
-      end
-
-    end
-
-    tname = test_names.uniq.join(', ')
-    first_name = name.strip.scan(/^\w+/).first.strip rescue ""
-    last_name = name.strip.scan(/\w+$/).last.strip rescue ""
-    middle_initial = name.strip.scan(/\s\w+\s/).first.strip[0 .. 2] rescue ""
-    dob = patient.dob.to_date.strftime("%d-%b-%Y")
-    age = patient.age
-    gender = patient.gender == 0 ? "M" : "F"
-    col_datetime = date
-    col_by = User.find(tests.first.created_by).username
-    formatted_acc_num = format_ac(specimen.accession_number)
-    stat_el = specimen.priority.downcase.to_s == "stat" ? "STAT" : nil
-    numerical_acc_num = numerical_ac(specimen.accession_number)
-
-    auto = Auto12Epl.new
-    s =  auto.generate_epl(last_name.to_s, first_name.to_s, middle_initial.to_s, npid.to_s, dob, age.to_s,
-                           gender.to_s, col_datetime, col_by.to_s, tname.to_s,
-                           stat_el, formatted_acc_num.to_s, numerical_acc_num)
+    history = (params[:history].blank? ?  "" : params[:history])
+    s = TestUtils.create_specimen_label(params[:specimen_id],history)
 
     send_data(s,
               :type=>"application/label; charset=utf-8",
               :stream=> false,
-              :filename=>"#{specimen.id}-#{rand(10000)}.lbl",
+              :filename=>"#{params[:specimen_id]}-#{rand(10000)}.lbl",
               :disposition => "inline"
     )
   end
@@ -635,34 +588,5 @@ class TestController < ApplicationController
   end
 
   private
-  def new_accession_number
-    # Generate the next accession number for specimen registration
-    @mutex = Mutex.new if @mutex.blank?
-    @mutex.lock
-    max_acc_num = 0
-    return_value = nil
-    sentinel = 99999999
 
-    settings = YAML.load_file("#{Rails.root}/config/application.yml")
-    code = settings['facility_code']
-    year = Date.today.year.to_s[2..3]
-
-    record = Specimen.find_by_sql("SELECT * FROM specimens WHERE accession_number IS NOT NULL ORDER BY id DESC LIMIT 1").last.accession_number rescue nil
-
-    if !record.blank?
-      max_acc_num = record[5..20].match(/\d+/)[0].to_i #first 5 chars are for facility code and 2 digit year
-    end
-
-    if (max_acc_num < sentinel)
-        max_acc_num += 1
-    else
-        max_acc_num = 1
-    end
-
-    max_acc_num = max_acc_num.to_s.rjust(8, '0')
-    return_value = "#{code}#{year}#{max_acc_num}"
-    @mutex.unlock
-
-    return return_value
-  end
 end
