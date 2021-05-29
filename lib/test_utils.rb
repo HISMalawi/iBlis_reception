@@ -74,7 +74,7 @@ module TestUtils
 
     if !history.blank?
       s += "\n##########BEGIN FORM##########\n\n"
-      s += "\nN\nq616\nQ026,0\nZT\n"
+      s += "\nN\nq616\nQ090,0\nZT\n"
       s += "A150,50,0,3,1,1,N,\"#{settings['facility_name']}\"\n"
       s += "A80,90,0,3,1,1,N,\"Laboratory Test Order Form V2.0.0\"\n"
       s += "A30,130,0,3,1,1,N,\"Patient : #{patient.name} (#{gender})\"\n"

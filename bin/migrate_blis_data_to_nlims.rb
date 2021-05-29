@@ -124,7 +124,6 @@ def measure_look_up(measure)
     "DBIL-VOX" => "Bilirubin Direct(DBIL-VOX)",
     "HDL-C"  => "HDL Direct (HDL-C)",
     "LDL-C" => "LDL Direct (LDL-C)",
-    "Cholestero l(CHOL)" => "Cholesterol(CHOL)",
     "r-GT" => "GGT/r-GT",
     "DBIL-DSA" => "DBIL-DSA-H",
     "TBIL-DSA" => "TBIL-DSA-H",
@@ -137,11 +136,25 @@ def measure_look_up(measure)
     "GLU-O" => "GLU-O-H",
     "TG" => "TG-H",
     "Sickle" => "Sickling Screen",
-    "Cholestero l(CHOL)" => "Cholesterol(CHOL)"
+    "Cholestero l(CHOL)" => "Cholesterol(CHOL)",
+    "Cryptococcal Antigen" => "CrAg",
+    "Cryptococcal Antig" => "CrAg",
+    "Cryptococcal Anti" => "CrAg",
+    "RIF RESISTANT" => "RIF Resistance",
+    "Total Protien" => "Total Proteins"
 
   }
   return measures[measure] if !measures[measure].blank?
   return measure if measures[measure].blank?
+end
+
+def facility_check_up(facility_)
+  facility = {
+	"Kawale Health Center" => "Kawale Health Centre",
+	"Kawale Health Facility" => "Kawale Health Centre"
+   }
+  return facility[facility_] if !facility[facility_].blank?
+  return facility_ if facility[facility_].blank?
 end
 
 def test_type_look_up(test)
@@ -176,7 +189,11 @@ def test_type_look_up(test)
     "Macroscopy" => "Urine Macroscopy",
     "Culture/sensistivity" => "Culture & Sensitivity",
     "TB Microscopy" => "TB Microscopic Exam",
-    "cryptococcal antigen" => "Cryptococcus Antigen Test"
+    "cryptococcal antigen" => "Cryptococcus Antigen Test",
+    "TB" => "TB Tests",
+    "CrAg" => "Cryptococcus Antigen Test",
+    "Haemoglobin" => "Heamoglobin",
+    "Genexpert MTB" => "TB Tests"
   }
   return test_types[test] if !test_types[test].blank?
   return test if test_types[test].blank?
@@ -401,7 +418,10 @@ puts "--------------------------------------------------------------------------
             p_phone = visit.phone_number
             ward = visit.ward
           end
-    
+          
+	  ward = settings['facility_name'] if ward.blank?
+	  ward = facility_check_up(ward)
+
           birth_date =  p_dob.to_date.strftime("%a %b %d %Y") if !p_dob.blank?
           birth_date = date_of_collection if p_dob.blank?
           sample_type = sample_type.strip
@@ -498,7 +518,7 @@ puts "--------------------------------------------------------------------------
                 if res['status'] == 401 && res['message'] == "token expired"
                   url = "#{configs['nlims_controller_ip']}/api/v1/re_authenticate/#{username}/#{password}"
                   res = JSON.parse(RestClient.get(url,headers))
-            
+                  
                   if res['error'] == false
                     token_ = res['data']['token']      
                   end
@@ -510,6 +530,7 @@ puts "--------------------------------------------------------------------------
                   url = "#{configs['nlims_controller_ip']}/api/v1/create_order/"
                   res = JSON.parse(RestClient.post(url,json,headers))
                 end
+
                 if res['status'] == 200
                 
                   if order.tracking_number.blank?
@@ -517,7 +538,7 @@ puts "--------------------------------------------------------------------------
                     r.tracking_number = res['data']['tracking_number'] 
                     r.save
                     tracking_number = res['data']['tracking_number'] 
-                  end
+                  Iend
                   previous_tracking_number =  order.tracking_number
                   tests_with_statuses.each do |tst_status|                
                     status = tst_status[1]
@@ -595,4 +616,4 @@ puts "--------------------------------------------------------------------------
               counter = counter + 1             
             puts "records migrated: #{counter}"
         end
- 
+ end
