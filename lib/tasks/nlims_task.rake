@@ -227,6 +227,24 @@ namespace :nlims do
                 r = UnsyncOrder.find_by(sync_status: "not-synced", data_not_synced: "new order", specimen_id: sample_id)
                 r.sync_status = "synced"
                 r.save
+            elsif res['status'] == 401 && res['message'] == "token expired"
+              url = "#{configs['nlims_controller_ip']}/api/v1/re_authenticate/#{username}/#{password}"
+              res = JSON.parse(RestClient.get(url,headers))
+          
+              if res['error'] == false
+                token_ = res['data']['token']   
+                headers = {
+                  content_type: "application/json",
+                  token: token_
+                }                
+                res = JSON.parse(RestClient.post(url,json,headers))
+                if res['status'] == 200
+                  r = UnsyncOrder.find_by(sync_status: "not-synced", data_not_synced: "new order", specimen_id: sample_id)
+                  r.sync_status = "synced"
+                  r.save
+                end
+              end          
+
             end
 	  elsif res['status'] == 401 && res['message'] == "token expired"
               url = "#{configs['nlims_controller_ip']}/api/v1/re_authenticate/#{username}/#{password}"
@@ -359,7 +377,6 @@ namespace :nlims do
     "DBIL-VOX" => "Bilirubin Direct(DBIL-VOX)",
     "HDL-C"  => "HDL Direct (HDL-C)",
     "LDL-C" => "LDL Direct (LDL-C)",
-    "Cholestero l(CHOL)" => "Cholesterol(CHOL)",
     "r-GT" => "GGT/r-GT",
     "DBIL-DSA" => "DBIL-DSA-H",
     "TBIL-DSA" => "TBIL-DSA-H",
@@ -407,7 +424,7 @@ namespace :nlims do
         puts tst_name
       
         tracking_number = order.tracking_number
-        test_status = order.test_status.gsub("-","_")
+        test_status = order.test_status.gsub("-","_")       
         updater_f_name =  order.updater.split(" ")[0]
         updater_l_name =  order.updater.split(" ")[1]
         updater_f_name = "N/A" if  order.updater.split(" ")[0].blank?
@@ -415,7 +432,7 @@ namespace :nlims do
         updater_id = order.updater_id
         sample_id = order.sample_id
         result_date = order.updated_at
-        test_status = "completed" if test_status == "result"
+        test_status = "verified" if test_status == "result"
         result_date = "" if test_status != "result"
         json = {
             :tracking_number => tracking_number,
@@ -452,15 +469,15 @@ namespace :nlims do
           token: token_
         }        
        
-
+        test_status = "result" if test_status == "verified"
         url = "#{configs['nlims_controller_ip']}/api/v1/update_test"
         status = ApplicationController.up?("#{configs['nlims_service']}")
-      
+        
           if status == true
             re = JSON.parse(RestClient.post(url,json,headers))
             
             if re['status'] == 200
-                r = UnsyncOrder.find_by(sync_status: "not-synced", data_not_synced: "#{test_status}", specimen_id: "#{order.test_id}")
+                r = UnsyncOrder.find_by(sync_status: "not-synced", data_not_synced: "#{test_status}", specimen_id: "#{order.test_id}")                
                 r.sync_status = "synced"
                 r.save
             end
