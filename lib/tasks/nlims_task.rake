@@ -64,7 +64,8 @@ namespace :nlims do
 
 
   desc "TODO"
-  task create_order_to_nlims: :environment do
+  task synchronize_with_nlims: :environment do
+    puts "--creating orders to nlims--"
     settings = YAML.load_file("#{Rails.root}/config/application.yml")
     configs = YAML.load_file "#{Rails.root}/config/nlims_connection.yml"
     token_ = ""
@@ -267,6 +268,264 @@ namespace :nlims do
           puts res
          
     end
+
+
+
+
+
+    #-----------------------updating orders to nlims----------------------------------------
+    puts "--updating orders to nlims--"
+
+    settings = YAML.load_file("#{Rails.root}/config/application.yml")
+    configs = YAML.load_file "#{Rails.root}/config/nlims_connection.yml"
+    token_ = ""
+
+    headers = {
+      content_type: "application/json",
+      token: token_
+    }          
+                                  
+    username = configs['nlims_custome_password']
+    password = configs['nlims_custome_username']
+    url = "#{configs['nlims_controller_ip']}/api/v1/re_authenticate/#{username}/#{password}"
+    res = JSON.parse(RestClient.get(url,headers))
+    if res['error'] == false
+      token_ = res['data']['token']      
+    end
+    
+    res = UnsyncOrder.find_by_sql("SELECT specimens.id AS sample_id, specimens.tracking_number, unsync_orders.data_not_synced AS sample_status, 
+                                    unsync_orders.updated_by_name AS updater, unsync_orders.updated_by_id AS updater_id FROM unsync_orders                        
+                                    INNER JOIN specimens ON specimens.id = unsync_orders.specimen_id          
+                                  WHERE (data_level='specimen' AND sync_status='not-synced') AND 
+                                  (data_not_synced='specimen-rejected' OR data_not_synced='verified' OR data_not_synced='specimen-accepted' OR data_not_synced='specimen-collected' OR data_not_synced='accept specimen')")
+    if !res.blank?
+      res.each do |order|
+      
+        json = {}
+        tracking_number = order.tracking_number
+        sample_status = order.sample_status.gsub("-","_")
+        updater_f_name =  order.updater.split(" ")[0]
+        updater_l_name =  order.updater.split(" ")[1]
+        updater_f_name = "N/A" if  order.updater.split(" ")[0].blank?
+        updater_l_name = "N/A" if order.updater.split(" ")[1].blank?
+        updater_id = order.updater_id
+        sample_id = order.sample_id
+        sample_status = "specimen_accepted" if sample_status == "verified"
+
+        json = {
+          :tracking_number => tracking_number,
+          :status => sample_status,
+          :who_updated => {
+            :first_name => updater_f_name,
+            :last_name => updater_l_name,
+            :id => updater_id
+          }
+        }
+
+        headers = {
+          content_type: "application/json",
+          token: token_
+        }        
+       
+
+        url = "#{configs['nlims_controller_ip']}/api/v1/update_order"
+        status = ApplicationController.up?("#{configs['nlims_service']}")
+      
+          if status == true
+            re = JSON.parse(RestClient.post(url,json,headers))
+            
+            if re['status'] == 200
+                r = UnsyncOrder.find_by(sync_status: "not-synced", data_not_synced: "#{order.sample_status}", specimen_id: sample_id)
+                r.sync_status = "synced"
+                r.save
+            end
+          end
+        puts re          
+      end
+    end
+
+
+
+
+
+
+
+
+
+    #----------------------------------updating tests to nlims---------------------------------------
+    puts "--updating tests to nlims--"
+
+    settings = YAML.load_file("#{Rails.root}/config/application.yml")
+    configs = YAML.load_file "#{Rails.root}/config/nlims_connection.yml"
+    token_ = ""
+
+    headers = {
+      content_type: "application/json",
+      token: token_
+    }          
+
+     measures = {
+    "ALPU" => "ALP-H",
+    "Urea/Bun" => "Urea",
+    "Glu" => "Glucose",
+    "Bilirubin Total(BIT))" => "Bilirubin Total(BIT)",
+    "Epithelial cell" => "Epithelial cells",
+    "Cast" => "Casts",
+    "Yeast cell" => "Yeast cells",
+    "HepB" => "Hepatitis B",
+    "ALT" => "ALT-H",
+    "AST" => "AST-H",
+    "ALP" => "ALP-H",
+    "ALB" => "ALB-H",
+    "TBIL-VOX" => "Bilirubin Total(TBIL-VOX)",
+    "DBIL-VOX" => "Bilirubin Direct(DBIL-VOX)",
+    "HDL-C"  => "HDL Direct (HDL-C)",
+    "LDL-C" => "LDL Direct (LDL-C)",
+    "r-GT" => "GGT/r-GT",
+    "DBIL-DSA" => "DBIL-DSA-H",
+    "TBIL-DSA" => "TBIL-DSA-H",
+    "TP" => "TP-H",
+    "Results" => "Blood film",
+    "GGT" => "GGT/r-GT",
+    "Sickling Screen By Sodium Metabiosulphate Method" => "Sickling Screen",
+    "P_LCR" => "P-LCR",
+    "Total Cholesterol(CHOL)" => "Cholesterol(CHOL)",
+    "GLU-O" => "GLU-O-H",
+    "TG" => "TG-H",
+    "Sickle" => "Sickling Screen",
+    "Cholestero l(CHOL)" => "Cholesterol(CHOL)",
+    "Cryptococcal Antigen" => "CrAg",
+    "Cryptococcal Antig" => "CrAg",
+    "Cryptococcal Anti" => "CrAg",
+    "RIF RESISTANT" => "RIF Resistance",
+    "Total Protien" => "Total Proteins"
+
+    }
+                           
+    test_types = {
+      "Hepatitis C" => "Hepatitis C Test",
+      "Hepatitis B" => "Hepatitis B Test",
+      "FBC (Paeds)" => "FBC",
+      "Electrolytes (Paeds)" => "Electrolytes",
+      "Renal Function Tests (Paeds)" => "Renal Function Test",
+      "Glucose (Paeds)" => "Glucose",
+      "Liver Function Tests (Paeds)" => "Liver Function Tests",
+      "Hepatitis B test (Paeds)" => "Hepatitis B Test",
+      "Hepatitis C test (Paeds)" => "Hepatitis C Test",
+      "Urine chemistry (paeds)" => "Urine chemistries",
+      "Urine Macroscopy (Paeds)" => "Urine Macroscopy",
+      "Urine Microscopy (Paeds)" => "Urine Microscopy",
+      "Malaria Screening (Paeds)" => "Malaria Screening",
+      "Syphilis (Paeds)" => "Syphilis Test",
+      "Minerals (Paeds)" => "Minerals",
+      "Cell Count (Paeds)" => "Cell Count",
+      "Culture & Sensitivity (Paeds)" => "Culture & Sensitivity",
+      "Differential (Paeds)" => "Differential",
+      "Gram Stain (Paeds)"  => "Gram Stain",
+      "India Ink (Paeds)"  => "India Ink",
+      "Stool Analysis (Paeds)" => "Stool Analysis",
+      "Lipogram (Paeds)" => "Lipogram",
+      "HbA1c (Paeds)" => "HbA1c",
+      "Total Protein" => "Protein",
+      "ZN" => "ZN Stain",
+      "Urine chemistry" => "Urine chemistries",
+      "sickle cell" => "Sickling Test",
+      "Macroscopy" => "Urine Macroscopy",
+      "Culture/sensistivity" => "Culture & Sensitivity",
+      "TB Microscopy" => "TB Microscopic Exam",
+      "cryptococcal antigen" => "Cryptococcus Antigen Test",
+      "TB" => "TB Tests",
+      "CrAg" => "Cryptococcus Antigen Test",
+      "Haemoglobin" => "Heamoglobin",
+      "Genexpert MTB" => "TB Tests"
+      }
+  
+    password = configs['nlims_default_password']
+    username = configs['nlims_default_username']
+    url = "#{configs['nlims_controller_ip']}/api/v1/re_authenticate/#{username}/#{password}"
+    res = JSON.parse(RestClient.get(url,headers))
+
+    if res['error'] == false
+      token_ = res['data']['token']      
+    end
+    
+    res = UnsyncOrder.find_by_sql("SELECT specimens.id AS sample_id,unsync_orders.specimen_id AS test_id ,specimens.tracking_number, 
+                                    unsync_orders.data_not_synced AS test_status, unsync_orders.updated_by_name AS updater, 
+                                    unsync_orders.updated_by_id AS updater_id, unsync_orders.updated_at 
+                                    FROM unsync_orders    
+                                    INNER JOIN tests ON tests.id = unsync_orders.specimen_id                     
+                                    INNER JOIN specimens ON specimens.id = tests.specimen_id          
+                                  WHERE unsync_orders.data_level='test' AND unsync_orders.sync_status='not-synced'")
+          
+ 
+    if !res.blank?
+      res.each do |order|
+        tst_name = Test.find_by_sql("SELECT test_types.name AS test_name FROM tests INNER JOIN test_types ON test_types.id = tests.test_type_id WHERE tests.id='#{order.test_id}'")
+        tst_name = tst_name[0].test_name if !tst_name.blank?
+             
+        tst_name = test_types[tst_name] if !test_types[tst_name].blank?
+        tracking_number = order.tracking_number
+        test_status = order.test_status.gsub("-","_")       
+        updater_f_name =  order.updater.split(" ")[0]
+        updater_l_name =  order.updater.split(" ")[1]
+        updater_f_name = "N/A" if  order.updater.split(" ")[0].blank?
+        updater_l_name = "N/A" if order.updater.split(" ")[1].blank?
+        updater_id = order.updater_id
+        sample_id = order.sample_id
+        result_date = order.updated_at
+        test_status = "verified" if test_status == "result"
+        result_date = "" if test_status != "result"
+        json = {
+            :tracking_number => tracking_number,
+            :test_status => test_status,
+            :test_name => tst_name,
+            :result_date => result_date,
+            :who_updated => {
+              :first_name => updater_f_name,
+              :last_name => updater_l_name,
+              :id => updater_id
+            }
+          }
+
+        if order.test_status == "result"          
+          t_r = TestResult.find_by_sql("SELECT measures.name AS m_name, test_results.result AS result_va FROM test_results 
+                                INNER JOIN tests ON tests.id = test_results.test_id 
+                                INNER JOIN measures ON measures.id = test_results.measure_id
+                                WHERE test_results.test_id='#{order.test_id}'")
+          measures = {}
+          if !t_r.blank?
+            t_r.each do |rs_data|
+              measure_name = rs_data.m_name
+              measure_name = measures[measure_name] if !measures[measure_name].blank?
+              result_value = rs_data.result_va 
+              measures[measure_name] = result_value
+            end
+          end
+          json["results"] = measures            
+        end
+
+        headers = {
+          content_type: "application/json",
+          token: token_
+        }        
+       
+        test_status = "result" if test_status == "verified"
+        url = "#{configs['nlims_controller_ip']}/api/v1/update_test"
+        status = ApplicationController.up?("#{configs['nlims_service']}")
+        
+          if status == true
+            re = JSON.parse(RestClient.post(url,json,headers))
+            
+            if re['status'] == 200
+                r = UnsyncOrder.find_by(sync_status: "not-synced", data_not_synced: "#{test_status}", specimen_id: "#{order.test_id}")                
+                r.sync_status = "synced"
+                r.save
+            end
+          end
+          puts re   
+      end 
+         
+    end
   end
 
 
@@ -313,6 +572,7 @@ namespace :nlims do
         updater_l_name = "N/A" if order.updater.split(" ")[1].blank?
         updater_id = order.updater_id
         sample_id = order.sample_id
+
 	sam =  "verified" if sample_status == "verified"
         sam1 = "accept specimen" if sample_status == "accept specimen"
 	sample_status = "specimen_accepted" if sample_status == "verified"
@@ -403,8 +663,8 @@ namespace :nlims do
     "Yeast cell" => "Yeast cells",
     "HepB" => "Hepatitis B"
     }
-    
-    test_types = {
+
+     test_types = {
       "Hepatitis C" => "Hepatitis C Test",
       "Hepatitis B" => "Hepatitis B Test",
       "FBC (Paeds)" => "FBC",
@@ -441,6 +701,7 @@ namespace :nlims do
       "Haemoglobin" => "Heamoglobin",
       "Genexpert MTB" => "TB Tests"
       }                       
+  
     password = configs['nlims_default_password']
     username = configs['nlims_default_username']
     url = "#{configs['nlims_controller_ip']}/api/v1/re_authenticate/#{username}/#{password}"
@@ -466,6 +727,7 @@ namespace :nlims do
     	 tst_name = test_types[tst_name] if !test_types[tst_name].blank?
         puts tst_name
       
+        tst_name = test_types[tst_name] if !test_types[tst_name].blank?
         tracking_number = order.tracking_number
         test_status = order.test_status.gsub("-","_")       
         updater_f_name =  order.updater.split(" ")[0]
