@@ -247,6 +247,23 @@ namespace :nlims do
               end          
 
             end
+	  elsif res['status'] == 401 && res['message'] == "token expired"
+              url = "#{configs['nlims_controller_ip']}/api/v1/re_authenticate/#{username}/#{password}"
+              res = JSON.parse(RestClient.get(url,headers))
+          
+              if res['error'] == false
+                token_ = res['data']['token']   
+                headers = {
+                  content_type: "application/json",
+                  token: token_
+                }                
+                res = JSON.parse(RestClient.post(url,json,headers))
+                if res['status'] == 200
+                  r = UnsyncOrder.find_by(sync_status: "not-synced", data_not_synced: "new order", specimen_id: sample_id)
+                  r.sync_status = "synced"
+                  r.save
+                end
+              end   
           end
           puts res
          
@@ -293,8 +310,11 @@ namespace :nlims do
         updater_l_name = "N/A" if order.updater.split(" ")[1].blank?
         updater_id = order.updater_id
         sample_id = order.sample_id
-        sample_status = "specimen_accepted" if sample_status == "verified"
 
+	      sam =  "verified" if sample_status == "verified"
+        sam1 = "accept specimen" if sample_status == "accept specimen"
+	      sample_status = "specimen_accepted" if sample_status == "verified"
+        sample_status = "specimen_accepted" if sample_status == "accept specimen"
         json = {
           :tracking_number => tracking_number,
           :status => sample_status,
@@ -309,16 +329,16 @@ namespace :nlims do
           content_type: "application/json",
           token: token_
         }        
-       
-
+       sample_status = "verified" if sam == "verified"
+       sample_status = "accept specimen" if sam1 == "accept specimen"
+       sample_status = sample_status.gsub("_","-")
         url = "#{configs['nlims_controller_ip']}/api/v1/update_order"
         status = ApplicationController.up?("#{configs['nlims_service']}")
-      
           if status == true
             re = JSON.parse(RestClient.post(url,json,headers))
             
-            if re['status'] == 200
-                r = UnsyncOrder.find_by(sync_status: "not-synced", data_not_synced: "#{order.sample_status}", specimen_id: sample_id)
+            if re['status'] == 200 || re['message'] == "order not available"
+                r = UnsyncOrder.find_by(sync_status: "not-synced", data_not_synced: "#{sample_status}", specimen_id: sample_id)
                 r.sync_status = "synced"
                 r.save
             end
@@ -326,8 +346,7 @@ namespace :nlims do
         puts re          
       end
     end
-
-
+  
 
 
 
@@ -382,10 +401,9 @@ namespace :nlims do
     "Cryptococcal Anti" => "CrAg",
     "RIF RESISTANT" => "RIF Resistance",
     "Total Protien" => "Total Proteins"
-
     }
-                           
-    test_types = {
+
+     test_types = {
       "Hepatitis C" => "Hepatitis C Test",
       "Hepatitis B" => "Hepatitis B Test",
       "FBC (Paeds)" => "FBC",
@@ -421,7 +439,7 @@ namespace :nlims do
       "CrAg" => "Cryptococcus Antigen Test",
       "Haemoglobin" => "Heamoglobin",
       "Genexpert MTB" => "TB Tests"
-      }
+      }                       
   
     password = configs['nlims_default_password']
     username = configs['nlims_default_username']
@@ -445,7 +463,9 @@ namespace :nlims do
       res.each do |order|
         tst_name = Test.find_by_sql("SELECT test_types.name AS test_name FROM tests INNER JOIN test_types ON test_types.id = tests.test_type_id WHERE tests.id='#{order.test_id}'")
         tst_name = tst_name[0].test_name if !tst_name.blank?
-             
+    	 tst_name = test_types[tst_name] if !test_types[tst_name].blank?
+        puts tst_name
+      
         tst_name = test_types[tst_name] if !test_types[tst_name].blank?
         tracking_number = order.tracking_number
         test_status = order.test_status.gsub("-","_")       
@@ -457,6 +477,7 @@ namespace :nlims do
         sample_id = order.sample_id
         result_date = order.updated_at
         initial_stat = test_status
+	      xm = "verified"  if test_status == "result"
         test_status = "verified" if test_status == "result"
         result_date = "" if test_status != "result"
         json = {
@@ -480,7 +501,16 @@ namespace :nlims do
           if !t_r.blank?
             t_r.each do |rs_data|
               measure_name = rs_data.m_name
-              measure_name = measures[measure_name] if !measures[measure_name].blank?
+              if measure_name == "Epithelial cell" 
+		              measure_name = "Epithelial cells"
+              elsif measure_name == "Cast"
+		              measure_name = "Casts"
+	            elsif measure_name == "Yeast cell"
+                  measure_name = "Yeast cells"
+	            elsif measure_name == "HepB"
+                measure_name  = "Hepatitis B"
+              end
+		          measure_name = measures[measure_name] if !measures[measure_name].blank?   
               result_value = rs_data.result_va 
               measures[measure_name] = result_value
             end
@@ -488,12 +518,14 @@ namespace :nlims do
           json["results"] = measures            
         end
 
+       puts json
         headers = {
           content_type: "application/json",
           token: token_
         }        
-       
+
         test_status = "result" if initial_stat == "result"
+
         url = "#{configs['nlims_controller_ip']}/api/v1/update_test"
         status = ApplicationController.up?("#{configs['nlims_service']}")
         
@@ -501,7 +533,8 @@ namespace :nlims do
             re = JSON.parse(RestClient.post(url,json,headers))
             
             if re['status'] == 200
-                r = UnsyncOrder.find_by(sync_status: "not-synced", data_not_synced: "#{test_status}", specimen_id: "#{order.test_id}")                
+                r = UnsyncOrder.find_by(sync_status: "not-synced", data_not_synced: "#{test_status}", specimen_id: "#{order.test_id}")
+             
                 r.sync_status = "synced"
                 r.save
             end
@@ -510,6 +543,10 @@ namespace :nlims do
       end 
          
     end
+
+
+
+
   end
 
 
@@ -556,8 +593,11 @@ namespace :nlims do
         updater_l_name = "N/A" if order.updater.split(" ")[1].blank?
         updater_id = order.updater_id
         sample_id = order.sample_id
-        sample_status = "specimen_accepted" if sample_status == "verified"
 
+	      sam =  "verified" if sample_status == "verified"
+        sam1 = "accept specimen" if sample_status == "accept specimen"
+	      sample_status = "specimen_accepted" if sample_status == "verified"
+        sample_status = "specimen_accepted" if sample_status == "accept specimen"
         json = {
           :tracking_number => tracking_number,
           :status => sample_status,
@@ -572,16 +612,16 @@ namespace :nlims do
           content_type: "application/json",
           token: token_
         }        
-       
-
+       sample_status = "verified" if sam == "verified"
+       sample_status = "accept specimen" if sam1 == "accept specimen"
+       sample_status = sample_status.gsub("_","-")
         url = "#{configs['nlims_controller_ip']}/api/v1/update_order"
         status = ApplicationController.up?("#{configs['nlims_service']}")
-      
           if status == true
             re = JSON.parse(RestClient.post(url,json,headers))
             
-            if re['status'] == 200
-                r = UnsyncOrder.find_by(sync_status: "not-synced", data_not_synced: "#{order.sample_status}", specimen_id: sample_id)
+            if re['status'] == 200 || re['message'] == "order not available"
+                r = UnsyncOrder.find_by(sync_status: "not-synced", data_not_synced: "#{sample_status}", specimen_id: sample_id)
                 r.sync_status = "synced"
                 r.save
             end
@@ -639,10 +679,9 @@ namespace :nlims do
     "Cryptococcal Anti" => "CrAg",
     "RIF RESISTANT" => "RIF Resistance",
     "Total Protien" => "Total Proteins"
-
     }
-                           
-    test_types = {
+
+     test_types = {
       "Hepatitis C" => "Hepatitis C Test",
       "Hepatitis B" => "Hepatitis B Test",
       "FBC (Paeds)" => "FBC",
@@ -678,7 +717,7 @@ namespace :nlims do
       "CrAg" => "Cryptococcus Antigen Test",
       "Haemoglobin" => "Heamoglobin",
       "Genexpert MTB" => "TB Tests"
-      }
+      }                       
   
     password = configs['nlims_default_password']
     username = configs['nlims_default_username']
@@ -702,7 +741,7 @@ namespace :nlims do
       res.each do |order|
         tst_name = Test.find_by_sql("SELECT test_types.name AS test_name FROM tests INNER JOIN test_types ON test_types.id = tests.test_type_id WHERE tests.id='#{order.test_id}'")
         tst_name = tst_name[0].test_name if !tst_name.blank?
-    
+    	 tst_name = test_types[tst_name] if !test_types[tst_name].blank?
         puts tst_name
       
         tst_name = test_types[tst_name] if !test_types[tst_name].blank?
@@ -715,6 +754,7 @@ namespace :nlims do
         updater_id = order.updater_id
         sample_id = order.sample_id
         result_date = order.updated_at
+	      xm = "verified"  if test_status == "result"
         test_status = "verified" if test_status == "result"
         result_date = "" if test_status != "result"
         json = {
@@ -738,7 +778,16 @@ namespace :nlims do
           if !t_r.blank?
             t_r.each do |rs_data|
               measure_name = rs_data.m_name
-              measure_name = measures[measure_name] if !measures[measure_name].blank?
+              if measure_name == "Epithelial cell" 
+		              measure_name = "Epithelial cells"
+              elsif measure_name == "Cast"
+		              measure_name = "Casts"
+	            elsif measure_name == "Yeast cell"
+                  measure_name = "Yeast cells"
+	            elsif measure_name == "HepB"
+                measure_name  = "Hepatitis B"
+              end
+		          measure_name = measures[measure_name] if !measures[measure_name].blank?   
               result_value = rs_data.result_va 
               measures[measure_name] = result_value
             end
@@ -751,8 +800,7 @@ namespace :nlims do
           content_type: "application/json",
           token: token_
         }        
-       
-        test_status = "result" if test_status == "verified"
+               test_status = "result" if xm  == "verified"
         url = "#{configs['nlims_controller_ip']}/api/v1/update_test"
         status = ApplicationController.up?("#{configs['nlims_service']}")
         
@@ -760,7 +808,8 @@ namespace :nlims do
             re = JSON.parse(RestClient.post(url,json,headers))
             
             if re['status'] == 200
-                r = UnsyncOrder.find_by(sync_status: "not-synced", data_not_synced: "#{test_status}", specimen_id: "#{order.test_id}")                
+                r = UnsyncOrder.find_by(sync_status: "not-synced", data_not_synced: "#{test_status}", specimen_id: "#{order.test_id}")
+             
                 r.sync_status = "synced"
                 r.save
             end
