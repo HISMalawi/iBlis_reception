@@ -1,4 +1,4 @@
-class CreateUnsyncOrders < ActiveRecord::Migration
+class CreateUnsyncOrders < ActiveRecord::Migration[5.2]
   def change
     create_table :unsync_orders do |t|
       t.string :specimen_id, null: false
