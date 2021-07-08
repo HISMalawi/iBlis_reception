@@ -213,8 +213,8 @@ namespace :nlims do
              :national_patient_id=>  p_id,
              :phone_number=> '0000',
           }
-          puts json
-         puts "------------------------------------"
+          #puts json
+         #puts "------------------------------------"
           url = "#{configs['nlims_controller_ip']}/api/v1/create_order/"
           headers = {
             content_type: "application/json",
@@ -225,7 +225,8 @@ namespace :nlims do
           
           if status == true
             res = JSON.parse(RestClient.post(url,json,headers))
-            if res['status'] == 200
+           puts res
+	    if res['status'] == 200
                 r = UnsyncOrder.find_by(sync_status: "not-synced", data_not_synced: "new order", specimen_id: sample_id)
                 r.sync_status = "synced"
                 r.save
@@ -238,9 +239,11 @@ namespace :nlims do
                 headers = {
                   content_type: "application/json",
                   token: token_
-                }                
+                }
+		url = "#{configs['nlims_controller_ip']}/api/v1/create_order/"                
                 res = JSON.parse(RestClient.post(url,json,headers))
-                if res['status'] == 200
+               puts res
+		 if res['status'] == 200
                   r = UnsyncOrder.find_by(sync_status: "not-synced", data_not_synced: "new order", specimen_id: sample_id)
                   r.sync_status = "synced"
                   r.save
@@ -257,16 +260,18 @@ namespace :nlims do
                 headers = {
                   content_type: "application/json",
                   token: token_
-                }                
+                } 
+		url = "#{configs['nlims_controller_ip']}/api/v1/create_order/"               
                 res = JSON.parse(RestClient.post(url,json,headers))
-                if res['status'] == 200
+              puts res
+		  if res['status'] == 200
                   r = UnsyncOrder.find_by(sync_status: "not-synced", data_not_synced: "new order", specimen_id: sample_id)
                   r.sync_status = "synced"
                   r.save
                 end
               end   
           end
-          puts res
+          #puts res
          
     end
 
