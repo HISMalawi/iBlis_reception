@@ -164,7 +164,7 @@ namespace :nlims do
         test_id = tst.test_id
         date_of_collection = tst.time_created
       end
-
+#raise tests_.inspect
       vst = Visit.find_by_sql("SELECT ward_or_location AS ward, patients.name AS pat_name, patients.dob, patients.gender,
                         patients.phone_number, patients.patient_number
                         FROM visits INNER JOIN tests ON tests.visit_id =  visits.id 
@@ -213,7 +213,8 @@ namespace :nlims do
              :national_patient_id=>  p_id,
              :phone_number=> '0000',
           }
-          
+          puts json
+         puts "------------------------------------"
           url = "#{configs['nlims_controller_ip']}/api/v1/create_order/"
           headers = {
             content_type: "application/json",
@@ -247,7 +248,7 @@ namespace :nlims do
               end          
 
             end
-	  elsif res['status'] == 401 && res['message'] == "token expired"
+	  else #res['status'] == 401 && res['message'] == "token expired"
               url = "#{configs['nlims_controller_ip']}/api/v1/re_authenticate/#{username}/#{password}"
               res = JSON.parse(RestClient.get(url,headers))
           
@@ -534,8 +535,28 @@ namespace :nlims do
              
                 r.sync_status = "synced"
                 r.save
+           elsif re['status'] == 401 && re['message'] == "order with such test not available"
+              json = {
+                :tracking_number => tracking_number,
+                :tests => [tst_name],
+                :who_updated => {
+                  :first_name => updater_f_name,
+                  :last_name => updater_l_name,
+                  :id => updater_id
+                }
+              }
+
+              url = "#{configs['nlims_controller_ip']}/api/v1/add_test"
+
+              re = JSON.parse(RestClient.post(url,json,headers))
+              if re['status'] == 200
+                r = UnsyncOrder.find_by(sync_status: "not-synced", data_not_synced: "#{test_status}", specimen_id: "#{order.test_id}")
+                r.sync_status = "synced"
+                r.save
+              end
             end
           end
+
           puts re   
       end 
          
@@ -724,7 +745,7 @@ namespace :nlims do
     if res['error'] == false
       token_ = res['data']['token']      
     end
-    
+    #raise res.inspect
     res = UnsyncOrder.find_by_sql("SELECT specimens.id AS sample_id,unsync_orders.specimen_id AS test_id ,specimens.tracking_number, 
                                     unsync_orders.data_not_synced AS test_status, unsync_orders.updated_by_name AS updater, 
                                     unsync_orders.updated_by_id AS updater_id, unsync_orders.updated_at 
@@ -792,7 +813,7 @@ namespace :nlims do
           json["results"] = measures            
         end
 
-       puts json
+       #puts json
         headers = {
           content_type: "application/json",
           token: token_
@@ -800,7 +821,7 @@ namespace :nlims do
                test_status = "result" if xm  == "verified"
         url = "#{configs['nlims_controller_ip']}/api/v1/update_test"
         status = ApplicationController.up?("#{configs['nlims_service']}")
-        
+        raise "hello------------".inspect
           if status == true
             re = JSON.parse(RestClient.post(url,json,headers))
             
@@ -809,6 +830,25 @@ namespace :nlims do
              
                 r.sync_status = "synced"
                 r.save
+            elsif re['status'] == 401 && re['message'] == "order with such test not available"
+              json = {
+                :tracking_number => tracking_number,
+                :tests => tst_name,
+                :who_updated => {
+                  :first_name => updater_f_name,
+                  :last_name => updater_l_name,
+                  :id => updater_id
+                }
+              }
+
+              url = "#{configs['nlims_controller_ip']}/api/v1/add_test"
+
+              re = JSON.parse(RestClient.post(url,json,headers))
+              if re['status'] == 200
+                r = UnsyncOrder.find_by(sync_status: "not-synced", data_not_synced: "#{test_status}", specimen_id: "#{order.test_id}")             
+                r.sync_status = "synced"
+                r.save
+              end
             end
           end
           puts re   
