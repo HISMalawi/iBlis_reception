@@ -477,6 +477,7 @@ namespace :nlims do
         updater_id = order.updater_id
         sample_id = order.sample_id
         result_date = order.updated_at
+        initial_stat = test_status
 	      xm = "verified"  if test_status == "result"
         test_status = "verified" if test_status == "result"
         result_date = "" if test_status != "result"
@@ -523,7 +524,9 @@ namespace :nlims do
           content_type: "application/json",
           token: token_
         }        
-               test_status = "result" if xm  == "verified"
+
+        test_status = "result" if initial_stat == "result"
+
         url = "#{configs['nlims_controller_ip']}/api/v1/update_test"
         status = ApplicationController.up?("#{configs['nlims_service']}")
         
