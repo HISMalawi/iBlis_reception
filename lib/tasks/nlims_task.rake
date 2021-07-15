@@ -19,7 +19,7 @@ namespace :nlims do
     else
       puts res
     end
-
+puts "national lims"
   end
 
 
@@ -75,6 +75,7 @@ namespace :nlims do
                                     INNER JOIN specimen_types ON specimens.specimen_type_id = specimen_types.id
                                     INNER JOIN specimen_statuses ON specimen_statuses.id = specimens.specimen_status_id           
                                   WHERE (data_level='specimen' AND sync_status='not-synced') AND data_not_synced='new order'")
+
 
     headers = {
         content_type: "application/json",
