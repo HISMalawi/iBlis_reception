@@ -63,7 +63,7 @@ namespace :nlims do
   end
 
 
-  desc "TODO"
+  desc "TODO "
   task synchronize_with_nlims: :environment do
     puts "--creating orders to nlims--"
     settings = YAML.load_file("#{Rails.root}/config/application.yml")
@@ -247,7 +247,7 @@ namespace :nlims do
               end          
 
             end
-	  elsif res['status'] == 401 && res['message'] == "token expired"
+	        else
               url = "#{configs['nlims_controller_ip']}/api/v1/re_authenticate/#{username}/#{password}"
               res = JSON.parse(RestClient.get(url,headers))
           
@@ -298,6 +298,8 @@ namespace :nlims do
                                     INNER JOIN specimens ON specimens.id = unsync_orders.specimen_id          
                                   WHERE (data_level='specimen' AND sync_status='not-synced') AND 
                                   (data_not_synced='specimen-rejected' OR data_not_synced='verified' OR data_not_synced='specimen-accepted' OR data_not_synced='specimen-collected' OR data_not_synced='accept specimen')")
+    
+                                  
     if !res.blank?
       res.each do |order|
       
@@ -458,7 +460,7 @@ namespace :nlims do
                                     INNER JOIN specimens ON specimens.id = tests.specimen_id          
                                   WHERE unsync_orders.data_level='test' AND unsync_orders.sync_status='not-synced'")
           
- 
+  
     if !res.blank?
       res.each do |order|
         tst_name = Test.find_by_sql("SELECT test_types.name AS test_name FROM tests INNER JOIN test_types ON test_types.id = tests.test_type_id WHERE tests.id='#{order.test_id}'")
@@ -534,6 +536,23 @@ namespace :nlims do
              
                 r.sync_status = "synced"
                 r.save
+            elsif res['status'] == 401 && res['message'] == "order with such test not available"
+              json = {
+                :tracking_number => tracking_number,
+                :tests => tst_name,
+                :who_updated => {
+                  :first_name => updater_f_name,
+                  :last_name => updater_l_name,
+                  :id => updater_id
+                }
+              }
+              url = "#{configs['nlims_controller_ip']}/api/v1/add_test"
+              re = JSON.parse(RestClient.post(url,json,headers))
+              if re['status'] == 200
+                r = UnsyncOrder.find_by(sync_status: "not-synced", data_not_synced: "#{test_status}", specimen_id: "#{order.test_id}")             
+                r.sync_status = "synced"
+                r.save
+              end
             end
           end
           puts re   

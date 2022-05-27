@@ -347,7 +347,7 @@ puts "--------------------------------------------------------------------------
     
     
     
-        data.each do |order|      
+data.each do |order|      
           json = {}
                    
           priority = order.priority      
@@ -381,7 +381,7 @@ puts "--------------------------------------------------------------------------
                           )
           
           tests.each do |tst|
-            
+		        #raise tst.test_status.inspect  
             tests_.push(test_type_look_up(tst.test_name))
             test_id = tst.test_id
             
@@ -402,7 +402,7 @@ puts "--------------------------------------------------------------------------
             
             date_of_collection = tst.date_ordered
           end
-          
+	        #raise tests_with_statuses.push.inspect
           vst = Visit.find_by_sql("SELECT ward_or_location AS ward, patients.name AS pat_name, patients.dob, patients.gender,
                             patients.phone_number, patients.patient_number
                             FROM visits INNER JOIN tests ON tests.visit_id =  visits.id 
@@ -512,10 +512,10 @@ puts "--------------------------------------------------------------------------
               json = JSON.generate(json)
               status = ApplicationController.up?("#{configs['nlims_service']}")
               
-              if status == true
+            if status == true
                 res = JSON.parse(RestClient.post(url,json,headers))
-                
-                if res['status'] == 401 && res['message'] == "token expired"
+		
+		          if res['status'] == 401 && res['message'] == "token expired"
                   url = "#{configs['nlims_controller_ip']}/api/v1/re_authenticate/#{username}/#{password}"
                   res = JSON.parse(RestClient.get(url,headers))
                   
@@ -530,18 +530,19 @@ puts "--------------------------------------------------------------------------
                   url = "#{configs['nlims_controller_ip']}/api/v1/create_order/"
                   res = JSON.parse(RestClient.post(url,json,headers))
                 end
-
-                if res['status'] == 200
-                
+		
+                if res['status'] == 200                
                   if order.tracking_number.blank?
                     r = Specimen.find_by(id: "#{sample_id}")
                     r.tracking_number = res['data']['tracking_number'] 
                     r.save
                     tracking_number = res['data']['tracking_number'] 
-                  Iend
+                  end
+                  		              
                   previous_tracking_number =  order.tracking_number
                   tests_with_statuses.each do |tst_status|                
-                    status = tst_status[1]
+			              
+		                status = tst_status[1]
                     test_n = test_type_look_up(tst_status[0])                       
                         json_ = {
                           :tracking_number => tracking_number,
@@ -558,8 +559,7 @@ puts "--------------------------------------------------------------------------
                         re = JSON.parse(RestClient.post(url,json_,headers))                                         
                         if re['status'] == 200
                           
-                        end
-                        
+                        end                        
                   end
 
                   tests_with_results.each do |rst_|       
@@ -588,7 +588,7 @@ puts "--------------------------------------------------------------------------
                         res.each do |result_details|              
                           measure_name = result_details.m_name
                           next if measure_name.blank?
-			  measure_name = measure_look_up(measure_name)
+			                  measure_name = measure_look_up(measure_name)
                           result_value = result_details.result_va
                           result_value = result_value.force_encoding("ASCII-8BIT").encode('UTF-8', undef: :replace, replace: '')
                           measures[measure_name] = result_value
@@ -598,7 +598,7 @@ puts "--------------------------------------------------------------------------
                         json_["results"] = measures
                         json_["result_date"] = r_date
 		
-			json_ = JSON.generate(json_)
+			                  json_ = JSON.generate(json_)
                         url = "#{configs['nlims_controller_ip']}/api/v1/update_test"
                         
                             re = JSON.parse(RestClient.post(url,json_,headers))                                    
@@ -610,10 +610,9 @@ puts "--------------------------------------------------------------------------
                   File.open("#{Rails.root}/public/sample_tracker","w"){ |w|
                     w.write(sample_id)
                   }
-                end
               end
+            end
                
               counter = counter + 1             
             puts "records migrated: #{counter}"
-        end
- end
+    end
