@@ -203,7 +203,8 @@ class TestController < ApplicationController
                 specimen.accepted_by = User.current.id
                 specimen.priority = params[:priority].blank? ? 'Routine' : params[:priority]
                 specimen.accession_number = acc_num
-                specimen.tracking_number = tracking_number              
+                specimen.tracking_number = tracking_number 
+                specimen.date_of_collection = date_sample_collected             
                 specimen.save
               end
               

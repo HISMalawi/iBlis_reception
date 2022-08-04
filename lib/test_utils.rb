@@ -16,7 +16,13 @@ module TestUtils
     record = Specimen.find_by_sql("SELECT * FROM specimens WHERE accession_number IS NOT NULL ORDER BY id DESC LIMIT 1").last.accession_number rescue nil
 
     if !record.blank?
-      max_acc_num = record[5..20].match(/\d+/)[0].to_i #first 5 chars are for facility code and 2 digit year
+      if code.length == 4
+        max_acc_num = record[6..20].match(/\d+/)[0].to_i #first 5 chars are for facility code and 2 digit year
+      elsif code.length == 5
+        max_acc_num = record[7..20].match(/\d+/)[0].to_i #first 5 chars are for facility code and 2 digit year
+      else
+        max_acc_num = record[5..20].match(/\d+/)[0].to_i #first 5 chars are for facility code and 2 digit year
+      end
     end
 
     if (max_acc_num < sentinel)
