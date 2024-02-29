@@ -237,7 +237,11 @@ P1'
   def calDOB(params)
     if params[:person]['birth_year'] == "Unknown"
       # birthdate = Date.new(Date.today.year - params[:person]["age_estimate"].to_i, 7, 15)
-      birthdate = Date.new(Date.today.year - params[:person]["age_estimate"].to_i, Date.today.month, Date.today.day)
+      year = Date.today.year - params[:person]["age_estimate"].to_i
+      day = Date.today.day
+      month = Date.today.month
+      day = Date.leap?(year) ? 29 : 28 if day == 29 && month == 2
+      birthdate = Date.new(year, month, day)
     else
       year = params[:person]["birth_year"].to_i
       month = params[:person]["birth_month"]
