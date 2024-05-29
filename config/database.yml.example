@@ -10,8 +10,10 @@
 #   http://dev.mysql.com/doc/refman/5.0/en/old-client.html
 #
 default: &default
-  adapter: mysql
+  adapter: mysql2
   encoding: utf8
+  host: 127.0.0.1
+  port: 3306
   pool: 5
   username: root
   password: password
@@ -22,7 +24,7 @@ development:
   database: iblis
 
 openmrs:
-  adapter: mysql
+  adapter: mysql2
   host: 0.0.0.0
   database: anc_mlambe
   username: root
