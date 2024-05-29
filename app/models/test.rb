@@ -17,6 +17,7 @@ class Test < BlisConnection
     self.test_type.short_name rescue nil
   end
   def self.supported?(test_types = [])
+    return false if test_types.nil?
     test_types.each do |tname|
       return false if (TestType.find_by_name(tname).blank? && PanelType.find_by_name(tname).blank?)
     end

@@ -122,7 +122,6 @@ module NlimsService
 			else
 				value = counter.to_s rescue "001"
 			end
-			
 
 			tracking_number = "X" + site_code + year.to_s +  get_month(month).to_s +  get_day(day).to_s + value.to_s
 			

@@ -28,7 +28,6 @@ class PeopleController < ApplicationController
     if tracking_number && tracking_number.match(/X/i)
       remote_url = "#{nlims['nlims_controller_ip']}/api/v1/query_order_by_tracking_number/#{tracking_number}"
       _token = File.read("#{Rails.root}/tmp/nlims_token")
-     
       headers = {
         content_type: "application/json",
         token: _token
@@ -65,7 +64,7 @@ class PeopleController < ApplicationController
     elsif @result['type'] == 'remote_order' and !@result['data'].blank?
 
       @data = @result['data']
-      @is_supported_test = Test.supported?(@data['data']['tests'].keys)
+      @is_supported_test = Test.supported?(@data['data']['tests']&.keys)
       @trac_number = tracking_number
       render :layout => false, :template => "/test/preview_remote_order",
              :tracking_number => tracking_number and return
@@ -92,12 +91,12 @@ class PeopleController < ApplicationController
     i = 1 if field_name == 'last_name_code'
 
     names = Patient.where("#{field_name} LIKE '#{search_string.soundex}%' ").limit(20).map {|pat| pat.name.split(/\s+/)[i] }
-    render :text => "<li>" + names.uniq.map{|n| n } .join("</li><li>") + "</li>"
+    render plain: "<li>" + names.uniq.map{|n| n } .join("</li><li>") + "</li>"
   end
 
   def addresses
     names = Patient.where("address LIKE (?)", "#{params[:search_string]}%").limit(20).map {|pat| pat.address }
-    render :text => "<li>" + names.uniq.map{|n| n } .join("</li><li>") + "</li>"
+    render plain: "<li>" + names.uniq.map{|n| n } .join("</li><li>") + "</li>"
   end
 
   def people_search_results
@@ -173,7 +172,7 @@ P1'
     end
 
     wards = wards.reject{|w| !w.match(/#{params[:search_string]}/i) || w.match(/^facilities$/i)}
-    render :text => "<li>" + wards.uniq.map{|n| n } .join("</li><li>") + "</li>"
+    render plain: "<li>" + wards.uniq.map{|n| n } .join("</li><li>") + "</li>"
   end
 
   def view

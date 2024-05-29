@@ -119,7 +119,7 @@ class TestController < ApplicationController
     tests.sort!
     tests = (panelS + tests).uniq - paneled_tests - to_remove
 
-    render :text => "<li>" + tests.uniq.map{|n| n } .join("</li><li>") + "</li>"
+    render plain: "<li>" + tests.uniq.map{|n| n } .join("</li><li>") + "</li>"
   end
 
   def check_clinician
@@ -128,7 +128,7 @@ class TestController < ApplicationController
     if (clinician == "unknown" || clinician == "Unknown")
         redirect_to("/test/new?patient_id=#{params[:patient_id]}", flash: {error: 'clinician can not be unknown'})   
     end
-    render :text => "good"
+    render plain: "good"
   end
   def create
     settings = YAML.load_file("#{Rails.root}/config/application.yml")
@@ -381,7 +381,7 @@ class TestController < ApplicationController
       visit = Visit.new if visit.blank?
       visit.patient_id = patient.id
       visit.visit_type = VisitType.find_by_name('Referral').id if visit.visit_type.blank?
-      visit.ward_or_location = 'CWC' if data['data']['other']['order_location'].blank?
+      visit.ward_or_location = data['data']['other']['order_location'].blank? ? 'CWC' : data['data']['other']['order_location']
       visit.save!
 
       test.visit_id = visit.id
@@ -585,7 +585,7 @@ class TestController < ApplicationController
                                         GROUP BY requested_by
                                         ORDER BY cc DESC LIMIT 100;").map(&:requested_by)
 
-    render :text => "<li></li><li " + clinicians.map{|clinician| "value=\"#{clinician}\">#{clinician}" }.join("</li><li ") + "</li>"
+    render plain: "<li></li><li " + clinicians.map{|clinician| "value=\"#{clinician}\">#{clinician}" }.join("</li><li ") + "</li>"
   end
 
   private

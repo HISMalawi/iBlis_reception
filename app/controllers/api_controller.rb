@@ -54,7 +54,7 @@ class ApiController < ApplicationController
                   }
       end
 
-      render :layout => false, :text => result.to_json
+      render :layout => false, plain: result.to_json
     end
   end
 
@@ -91,7 +91,7 @@ class ApiController < ApplicationController
       end
     end
 
-    render :layout => false, :text => result.to_json
+    render :layout => false, plain: result.to_json
   end
 
   protected
