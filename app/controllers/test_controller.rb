@@ -1,4 +1,4 @@
-require 'will_paginate/array' 
+require 'will_paginate/array'
 require 'nlims_service.rb'
 require 'test_utils.rb'
 
@@ -124,25 +124,25 @@ class TestController < ApplicationController
 
   def check_clinician
 	name = params[:clinician]
-       
+
     if (clinician == "unknown" || clinician == "Unknown")
-        redirect_to("/test/new?patient_id=#{params[:patient_id]}", flash: {error: 'clinician can not be unknown'})   
+        redirect_to("/test/new?patient_id=#{params[:patient_id]}", flash: {error: 'clinician can not be unknown'})
     end
     render :text => "good"
   end
   def create
     settings = YAML.load_file("#{Rails.root}/config/application.yml")
     patient = Patient.find(params[:patient_id])
-    nlims = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")  
+    nlims = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")
     #status = ApplicationController.up?("#{nlims['nlims_service']}")
 
     #Patient Details
     first_name = patient.name.strip.scan(/^\w+\s/).first
     last_name = patient.name.strip.scan(/\s\w+$/).last
     middle_name = patient.name.strip.scan(/\s\w+\s/).last
-	
+
     date_sample_collected = params[:day_sample_collected].to_s + " " + params[:time_sample_collected].to_s
-    date_sample_collected = date_sample_collected.to_time.strftime("%Y%m%d%H%M%S")     
+    date_sample_collected = date_sample_collected.to_time.strftime("%Y%m%d%H%M%S")
 
 
     #Orderer
@@ -185,9 +185,10 @@ class TestController < ApplicationController
              :requesting_clinician => '',
              :return_json => 'true'
           }
-   
+              @mutex = Mutex.new if @mutex.blank?
+              @mutex.lock
               res = NlimsService.create_local_tracking_number
-              NlimsService.prepare_next_tracking_number            
+              NlimsService.prepare_next_tracking_number
               tracking_number = res
 
               acc_num = TestUtils.new_accession_number
@@ -203,21 +204,21 @@ class TestController < ApplicationController
                 specimen.accepted_by = User.current.id
                 specimen.priority = params[:priority].blank? ? 'Routine' : params[:priority]
                 specimen.accession_number = acc_num
-                specimen.tracking_number = tracking_number 
-                specimen.date_of_collection = date_sample_collected             
+                specimen.tracking_number = tracking_number
+                specimen.date_of_collection = date_sample_collected
                 specimen.save
               end
-              
-              
+              @mutex.unlock
+
                 order = UnsyncOrder.new
                 order.specimen_id = specimen.id
-                order.data_not_synced = 'new order'    
+                order.data_not_synced = 'new order'
                 order.data_level = 'specimen'
                 order.sync_status = 'not-synced'
                 order.updated_by_name = User.current.name
                 order.updated_by_id = User.current.id
                 order.save
-              
+
 
               params[:test_types].each do |name|
                 name = CGI.unescapeHTML(name)
@@ -258,7 +259,7 @@ class TestController < ApplicationController
                 end
               end
               # Sender.send_data(patient, specimen)
-              
+
               print_and_redirect("/test/print_accession_number?specimen_id=#{specimen.id}", "/tests/all?patient_id=#{visit.patient_id}&show_actions=true")
    end
   end
@@ -266,9 +267,9 @@ class TestController < ApplicationController
   def accept
 
     settings = YAML.load_file("#{Rails.root}/config/application.yml")
-    nlims = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")  
+    nlims = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")
     status = ApplicationController.up?("#{nlims['nlims_service']}")
-   
+
     specimen = Specimen.find(params[:specimen_id])
     patient = specimen.tests.last.visit.patient
     tracking_number = specimen.tracking_number
@@ -295,7 +296,7 @@ class TestController < ApplicationController
     else
       order = UnsyncOrder.new
       order.specimen_id = specimen.id
-      order.data_not_synced = 'accept specimen'    
+      order.data_not_synced = 'accept specimen'
       order.data_level = 'specimen'
       order.sync_status = 'not-synced'
       order.updated_by_name = User.current.name
@@ -330,7 +331,7 @@ class TestController < ApplicationController
     end
     patient.save!
 
-   
+
     if specimen.blank?
       specimen = Specimen.new
       specimen.specimen_type_id = SpecimenType.where(:name => data['data']['other']['sample_type']).last.id
@@ -343,11 +344,11 @@ class TestController < ApplicationController
     specimen.specimen_status_id = SpecimenStatus.find_by_name('specimen-accepted').id
     specimen.accepted_by = User.current.id if specimen.accepted_by.blank? || specimen.accepted_by.to_s == '0'
     specimen.priority = data['data']['other']['priority']
-    specimen.time_accepted = Time.now 
+    specimen.time_accepted = Time.now
     specimen.save!
 
     panel_type = data['data']['tests'].collect{|t| PanelType.find_by_name(t)}.compact.last rescue nil
-   
+
 
     test_panel = TestPanel.new
     panel = []
@@ -357,7 +358,7 @@ class TestController < ApplicationController
     end
 
     (data['data']['tests'].keys || []).each do |name|
-     
+
       name = CGI.unescapeHTML(name)
       type = TestType.find_by_name(name).id rescue next
       test = specimen.tests.where(:test_type_id => type).last
@@ -381,7 +382,9 @@ class TestController < ApplicationController
       visit = Visit.new if visit.blank?
       visit.patient_id = patient.id
       visit.visit_type = VisitType.find_by_name('Referral').id if visit.visit_type.blank?
-      visit.ward_or_location = 'CWC' if data['data']['other']['order_location'].blank?
+      ward_or_location = data['data']['other']['order_location']
+      ward_or_location = 'CWC' if data['data']['other']['order_location'].blank?
+      visit.ward_or_location = ward_or_location
       visit.save!
 
       test.visit_id = visit.id
@@ -415,9 +418,9 @@ class TestController < ApplicationController
   def do_reject
 
     settings = YAML.load_file("#{Rails.root}/config/application.yml")
-    nlims = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")  
+    nlims = YAML.load_file("#{Rails.root}/config/nlims_connection.yml")
     status = ApplicationController.up?("#{nlims['nlims_service']}")
-   
+
     specimen = Specimen.find(params[:specimen_id])
     patient = specimen.tests.last.visit.patient
 
@@ -442,11 +445,11 @@ class TestController < ApplicationController
 
 
     if status == true
-      res = NlimsService.update_specimen(update_details)  
+      res = NlimsService.update_specimen(update_details)
     else
       order = UnsyncOrder.new
       order.specimen_id = specimen.id
-      order.data_not_synced = 'specimen-rejection'    
+      order.data_not_synced = 'specimen-rejection'
       order.data_level = 'specimen'
       order.sync_status = 'not-synced'
       order.updated_by_name = User.current.name

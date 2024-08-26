@@ -540,7 +540,6 @@ puts "national lims"
         
           if status == true
             re = JSON.parse(RestClient.post(url,json,headers))
-e
            elsif re['status'] == 401 && re['message'] == "order with such test not available"
               json = {
                 :tracking_number => tracking_number,
@@ -865,5 +864,5 @@ e
   end
   
 
-end
+# end
 
