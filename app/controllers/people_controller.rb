@@ -27,15 +27,15 @@ class PeopleController < ApplicationController
 
     if tracking_number && tracking_number.match(/X/i)
       remote_url = "#{nlims['nlims_controller_ip']}/api/v1/query_order_by_tracking_number/#{tracking_number}"
-      _token = File.read("#{Rails.root}/tmp/nlims_token")
-     
+      nlims_token = JSON.parse(RestClient.get("#{nlims['nlims_controller_ip']}/api/v1/re_authenticate/#{nlims['nlims_custome_username']}/#{nlims['nlims_custome_password']}"))
+      _token = nlims_token['message'] == "re authenticated successfuly" ? nlims_token['data']['token'] : ''
       headers = {
         content_type: "application/json",
         token: _token
       }
-      
+
       if status  == true
-        remote_results = JSON.parse(RestClient.get(remote_url,headers)) 
+        remote_results = JSON.parse(RestClient.get(remote_url,headers))
         @result = {'type' => 'remote_order', 'data' => remote_results} if remote_results
 
         if @result['data'].blank?
@@ -63,7 +63,7 @@ class PeopleController < ApplicationController
     if @result['type'] == 'local_order' and !@result['data'].blank?
       redirect_to "/tests/all/?tracking_number=" + tracking_number
     elsif @result['type'] == 'remote_order' and !@result['data'].blank?
-
+      # byebug
       @data = @result['data']
       @is_supported_test = Test.supported?(@data['data']['tests'].keys)
       @trac_number = tracking_number
@@ -80,13 +80,13 @@ class PeopleController < ApplicationController
   def family_names
     search("last_name_code", params[:search_string])
   end
-  
+
   def given_names
     search("first_name_code", params[:search_string])
   end
-  
+
   def search(field_name, search_string)
-    
+
     search_string = "" if search_string.nil?
     i = 0 if field_name == 'first_name_code'
     i = 1 if field_name == 'last_name_code'
@@ -105,7 +105,7 @@ class PeopleController < ApplicationController
     f_name =  params[:name]['family_name']
     given_name = params[:name]['given_name'].soundex  rescue nil
     family_name = params[:name]['family_name'].soundex rescue nil
-    
+
     @patients = Patient.where("first_name_code = ? AND last_name_code = ? AND gender = ?",
      "#{given_name}" ,"#{family_name}", params[:gender]).limit(50)
     @exact_patients = []
